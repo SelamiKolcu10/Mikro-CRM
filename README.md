@@ -136,6 +136,12 @@ Micro-CRM/
 ### Kritik İlişki
 `Feedback.revenueImpact` ve `Feedback.priority` alanları, bağlı müşterinin `mrr` değerinden **otomatik hesaplanır**. Müşterinin planı değiştiğinde, ilişkili tüm geri bildirimler de güncellenir.
 
+## 🔄 Değişiklik Geçmişi (Changelog)
+
+Projeye eklenen yeni özellikler, güncellemeler ve hata düzeltmeleri burada listelenecektir.
+
+- **[Tarih Eklenecek]** - İlk versiyon (v1.0.0) yayınlandı.
+
 ## 📄 Lisans
 
 MIT
