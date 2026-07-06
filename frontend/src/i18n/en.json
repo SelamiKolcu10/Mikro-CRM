@@ -1,0 +1,129 @@
+{
+  "common": {
+    "appName": "Micro CRM",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search...",
+    "loading": "Loading...",
+    "noData": "No data found",
+    "confirm": "Confirm",
+    "actions": "Actions",
+    "back": "Back",
+    "close": "Close",
+    "create": "Create",
+    "update": "Update",
+    "yes": "Yes",
+    "no": "No",
+    "perMonth": "/mo",
+    "error": "An error occurred",
+    "loadError": "Failed to load data"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full Name",
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Sign in to your account to continue",
+    "registerSubtitle": "Create a new account",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "logout": "Sign Out",
+    "loginSuccess": "Signed in successfully!",
+    "registerSuccess": "Signed up successfully!"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "customers": "Customers",
+    "feedbacks": "Feedbacks",
+    "menu": "Menu",
+    "main": "Main Menu"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Revenue-driven feedback overview",
+    "totalCustomers": "Total Customers",
+    "totalMRR": "Monthly Revenue",
+    "openBugs": "Open Bugs",
+    "revenueAtRisk": "Revenue at Risk",
+    "topFeedbacks": "Highest Revenue Impact Feedbacks",
+    "planDistribution": "Plan Distribution",
+    "typeDistribution": "Type Distribution",
+    "statusDistribution": "Status Distribution",
+    "priorityDistribution": "Priority Distribution",
+    "recentFeedbacks": "Recent Feedbacks",
+    "activeIssues": "awaiting resolution",
+    "fromPremium": "from premium customers"
+  },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "Manage your SaaS customers",
+    "addCustomer": "Add Customer",
+    "editCustomer": "Edit Customer",
+    "name": "Customer Name",
+    "email": "Email",
+    "company": "Company",
+    "plan": "Plan",
+    "mrr": "Monthly Revenue (MRR)",
+    "mrrShort": "Monthly Revenue",
+    "source": "Source",
+    "notes": "Notes",
+    "allPlans": "All Plans",
+    "deleteConfirm": "Are you sure you want to delete this customer?",
+    "deleteWarning": "This action cannot be undone. All feedbacks associated with this customer will also be deleted.",
+    "plans": {
+      "free": "Free",
+      "starter": "Starter",
+      "premium": "Premium",
+      "vip": "VIP"
+    },
+    "sources": {
+      "twitter": "Twitter",
+      "discord": "Discord",
+      "email": "Email",
+      "in-app": "In-App",
+      "other": "Other"
+    }
+  },
+  "feedbacks": {
+    "title": "Feedbacks",
+    "subtitle": "Feedbacks sorted by revenue impact",
+    "addFeedback": "Add Feedback",
+    "editFeedback": "Edit Feedback",
+    "feedbackTitle": "Title",
+    "description": "Description",
+    "type": "Type",
+    "status": "Status",
+    "priority": "Priority",
+    "customer": "Customer",
+    "revenueImpact": "Revenue Impact",
+    "selectCustomer": "Select a customer",
+    "allTypes": "All Types",
+    "allStatuses": "All Statuses",
+    "allPriorities": "All Priorities",
+    "types": {
+      "bug": "Bug",
+      "feature": "Feature Request",
+      "improvement": "Improvement"
+    },
+    "statuses": {
+      "open": "Open",
+      "in-progress": "In Progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priorities": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "deleteConfirm": "Are you sure you want to delete this feedback?",
+    "deleteWarning": "This action cannot be undone.",
+    "autoCalculated": "Auto-calculated based on customer's MRR"
+  }
+}

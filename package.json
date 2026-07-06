@@ -1,0 +1,15 @@
+{
+  "name": "micro-saas-crm",
+  "version": "1.0.0",
+  "description": "Revenue-driven feedback prioritization CRM for SaaS teams",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "seed": "cd backend && npm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

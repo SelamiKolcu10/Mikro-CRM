@@ -1,0 +1,129 @@
+{
+  "common": {
+    "appName": "Micro CRM",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "search": "Ara...",
+    "loading": "Yükleniyor...",
+    "noData": "Veri bulunamadı",
+    "confirm": "Onayla",
+    "actions": "İşlemler",
+    "back": "Geri",
+    "close": "Kapat",
+    "create": "Oluştur",
+    "update": "Güncelle",
+    "yes": "Evet",
+    "no": "Hayır",
+    "perMonth": "/ay",
+    "error": "Bir hata oluştu",
+    "loadError": "Veriler yüklenemedi"
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "email": "E-posta",
+    "password": "Şifre",
+    "name": "Ad Soyad",
+    "loginTitle": "Tekrar Hoşgeldiniz",
+    "loginSubtitle": "Hesabınıza giriş yaparak devam edin",
+    "registerSubtitle": "Yeni bir hesap oluşturun",
+    "noAccount": "Hesabınız yok mu?",
+    "hasAccount": "Zaten hesabınız var mı?",
+    "logout": "Çıkış Yap",
+    "loginSuccess": "Giriş başarılı!",
+    "registerSuccess": "Kayıt başarılı!"
+  },
+  "nav": {
+    "dashboard": "Kontrol Paneli",
+    "customers": "Müşteriler",
+    "feedbacks": "Geri Bildirimler",
+    "menu": "Menü",
+    "main": "Ana Menü"
+  },
+  "dashboard": {
+    "title": "Kontrol Paneli",
+    "subtitle": "Gelir odaklı geri bildirim özeti",
+    "totalCustomers": "Toplam Müşteri",
+    "totalMRR": "Aylık Gelir",
+    "openBugs": "Açık Hatalar",
+    "revenueAtRisk": "Risk Altındaki Gelir",
+    "topFeedbacks": "En Yüksek Gelir Etkili Geri Bildirimler",
+    "planDistribution": "Plan Dağılımı",
+    "typeDistribution": "Tür Dağılımı",
+    "statusDistribution": "Durum Dağılımı",
+    "priorityDistribution": "Öncelik Dağılımı",
+    "recentFeedbacks": "Son Geri Bildirimler",
+    "activeIssues": "çözüm bekliyor",
+    "fromPremium": "Premium müşterilerden"
+  },
+  "customers": {
+    "title": "Müşteriler",
+    "subtitle": "SaaS müşterilerinizi yönetin",
+    "addCustomer": "Müşteri Ekle",
+    "editCustomer": "Müşteri Düzenle",
+    "name": "Müşteri Adı",
+    "email": "E-posta",
+    "company": "Şirket",
+    "plan": "Plan",
+    "mrr": "Aylık Gelir (MRR)",
+    "mrrShort": "Aylık Gelir",
+    "source": "Kaynak",
+    "notes": "Notlar",
+    "allPlans": "Tüm Planlar",
+    "deleteConfirm": "Bu müşteriyi silmek istediğinize emin misiniz?",
+    "deleteWarning": "Bu işlem geri alınamaz. Müşteriye ait tüm geri bildirimler de silinecektir.",
+    "plans": {
+      "free": "Ücretsiz",
+      "starter": "Başlangıç",
+      "premium": "Premium",
+      "vip": "VIP"
+    },
+    "sources": {
+      "twitter": "Twitter",
+      "discord": "Discord",
+      "email": "E-posta",
+      "in-app": "Uygulama İçi",
+      "other": "Diğer"
+    }
+  },
+  "feedbacks": {
+    "title": "Geri Bildirimler",
+    "subtitle": "Gelir etkisine göre sıralanmış geri bildirimler",
+    "addFeedback": "Geri Bildirim Ekle",
+    "editFeedback": "Geri Bildirim Düzenle",
+    "feedbackTitle": "Başlık",
+    "description": "Açıklama",
+    "type": "Tür",
+    "status": "Durum",
+    "priority": "Öncelik",
+    "customer": "Müşteri",
+    "revenueImpact": "Gelir Etkisi",
+    "selectCustomer": "Müşteri seçin",
+    "allTypes": "Tüm Türler",
+    "allStatuses": "Tüm Durumlar",
+    "allPriorities": "Tüm Öncelikler",
+    "types": {
+      "bug": "Hata",
+      "feature": "Özellik İsteği",
+      "improvement": "İyileştirme"
+    },
+    "statuses": {
+      "open": "Açık",
+      "in-progress": "Devam Ediyor",
+      "resolved": "Çözüldü",
+      "closed": "Kapatıldı"
+    },
+    "priorities": {
+      "low": "Düşük",
+      "medium": "Orta",
+      "high": "Yüksek",
+      "critical": "Kritik"
+    },
+    "deleteConfirm": "Bu geri bildirimi silmek istediğinize emin misiniz?",
+    "deleteWarning": "Bu işlem geri alınamaz.",
+    "autoCalculated": "Müşterinin MRR'ına göre otomatik hesaplanır"
+  }
+}
