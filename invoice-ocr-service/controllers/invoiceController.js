@@ -81,65 +81,10 @@ exports.bulkUploadInvoices = async (req, res, next) => {
 
     const results = [];
 
-    // --- MENTÖR SUNUM MODU (MOCK DATA) ---
-    // Eğer Google API kotaları tükenirse mentör sunumu aksamasın diye
-    // test faturalarını isimlerinden tanıyıp otomatik %100 doğru JSON döner.
-    const getMockInvoiceData = (fileName) => {
-      const lowerName = fileName.toLowerCase();
-      
-      if (lowerName.includes('fatura 1') || lowerName.includes('restoran')) {
-        return {
-          vendorName: "Akatlar Gıda A.Ş.", vendorTaxNumber: "1234567890", invoiceNumber: "INV-1001", invoiceDate: "2024-03-01",
-          lineItems: [{ description: "Personel Öğle Yemeği Bedeli", quantity: 1, unitPrice: 1500, baseAmount: 1500, vatRate: 10, vatAmount: 150, totalAmount: 1650 }],
-          grandTotal: 1650, confidenceScore: 99
-        };
-      }
-      if (lowerName.includes('fatura 2') || lowerName.includes('donanım')) {
-        return {
-          vendorName: "Vatan Teknoloji Marketleri", vendorTaxNumber: "9876543210", invoiceNumber: "INV-1002", invoiceDate: "2024-03-02",
-          lineItems: [{ description: "Kablosuz Klavye & Mouse Seti", quantity: 1, unitPrice: 3200, baseAmount: 3200, vatRate: 20, vatAmount: 640, totalAmount: 3840 }],
-          grandTotal: 3840, confidenceScore: 99
-        };
-      }
-      if (lowerName.includes('fatura 3') || lowerName.includes('kitap')) {
-        return {
-          vendorName: "ABC Yayıncılık Dağıtım", vendorTaxNumber: "4561237890", invoiceNumber: "INV-1003", invoiceDate: "2024-03-03",
-          lineItems: [{ description: "Yazılım Eğitim Kitapları Serisi", quantity: 1, unitPrice: 800, baseAmount: 800, vatRate: 1, vatAmount: 8, totalAmount: 808 }],
-          grandTotal: 808, confidenceScore: 99
-        };
-      }
-      if (lowerName.includes('fatura 5') || lowerName.includes('tüm kdv')) {
-        return {
-          vendorName: "Evrensel Lojistik ve Ticaret", vendorTaxNumber: "1112223334", invoiceNumber: "INV-1005", invoiceDate: "2024-03-05",
-          lineItems: [
-            { description: "Kargo Taşıma Bedeli", quantity: 1, unitPrice: 1000, baseAmount: 1000, vatRate: 20, vatAmount: 200, totalAmount: 1200 },
-            { description: "Hazır Yemek Dağıtımı", quantity: 1, unitPrice: 2000, baseAmount: 2000, vatRate: 10, vatAmount: 200, totalAmount: 2200 },
-            { description: "Buğday Unu Çuvalı", quantity: 1, unitPrice: 5000, baseAmount: 5000, vatRate: 1, vatAmount: 50, totalAmount: 5050 }
-          ],
-          grandTotal: 8450, confidenceScore: 99
-        };
-      }
-      
-      // Varsayılan Mock Data (Eğer dosya ismi yukarıdakilere uymuyorsa)
-      return {
-        vendorName: "Karaca Süpermarket", vendorTaxNumber: "7891234560", invoiceNumber: "INV-1004", invoiceDate: "2024-03-04",
-        lineItems: [
-          { description: "Temizlik Malzemeleri", quantity: 1, unitPrice: 400, baseAmount: 400, vatRate: 20, vatAmount: 80, totalAmount: 480 },
-          { description: "Temel Gıda Ürünleri", quantity: 1, unitPrice: 600, baseAmount: 600, vatRate: 10, vatAmount: 60, totalAmount: 660 }
-        ],
-        grandTotal: 1140, confidenceScore: 99
-      };
-    };
-
-    // Process each file
+    // Process each file with real OpenAI OCR
     for (const file of req.files) {
       try {
-        let parsed = getMockInvoiceData(file.originalname);
-        
-        // Disable Google API Fallback temporarily to ensure user doesn't hit 429
-        // if (!parsed) {
-        //   parsed = await ocrService.processInvoice(file.path, file.mimetype);
-        // }
+        const parsed = await ocrService.processInvoice(file.path, file.mimetype);
         const dataValidation = validateInvoiceData(parsed);
 
         if (!dataValidation.valid) {

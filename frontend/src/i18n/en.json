@@ -43,7 +43,9 @@
     "invoices": "Invoices",
     "menu": "Menu",
     "main": "Main Menu",
-    "finance": "Finance"
+    "finance": "Finance",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -126,7 +128,9 @@
     },
     "deleteConfirm": "Are you sure you want to delete this feedback?",
     "deleteWarning": "This action cannot be undone.",
-    "autoCalculated": "Auto-calculated based on customer's MRR"
+    "autoCalculated": "Automatically calculated based on Customer's MRR",
+    "activeFeedbacks": "Active Feedbacks",
+    "resolvedFeedbacks": "Resolved"
   },
   "invoices": {
     "title": "Invoices",
@@ -176,5 +180,41 @@
     },
     "noInvoices": "No invoices uploaded yet",
     "uploadFirst": "Start by uploading your first invoice"
+  },
+  "mockData": {
+    "Giriş sayfası mobilde çöküyor": "Login page crashes on mobile",
+    "Giriş sayfası iOS Safari'de beyaz ekran hatası veriyor. Kullanıcılar hesaplarına erişemiyor. Bu tüm ekibimizin işini engelliyor.": "The login page throws a white screen error on iOS Safari. Users cannot access their accounts. This is blocking our entire team.",
+    "Veri dışa aktarımı bozuk CSV dosyaları oluşturuyor": "Data export generates corrupt CSV files",
+    "1000 satırdan fazla dışa aktarırken CSV dosyası kesiliyor ve kodlama sorunları yaşıyor. Aylık raporlarımız için buna ihtiyacımız var.": "When exporting more than 1000 rows, the CSV file is truncated and has encoding issues. We need this for our monthly reports.",
+    "API istek limiti çok kısıtlayıcı": "API rate limiting is too aggressive",
+    "Entegrasyonumuz dakikada sadece 50 istekten sonra limite takılıyor. İş akışı otomasyonumuz için en az 200'e ihtiyacımız var.": "Our integration hits the rate limit after just 50 requests per minute. We need at least 200 for our workflow automation.",
+    "Kontrol paneli 15+ saniyede yükleniyor": "Dashboard loading takes 15+ seconds",
+    "500'den fazla kaydımız olduğunda ana kontrol paneli çok yavaş yükleniyor. Performans ekibimiz için kabul edilemez.": "The main dashboard takes forever to load when we have more than 500 records. Performance is unacceptable for our team.",
+    "Entegrasyonlar için webhook desteği gerekiyor": "Need webhook support for integrations",
+    "CRM'imizi Slack ile bağlamak ve yeni veri geldiğinde gerçek zamanlı bildirimler almak istiyoruz.": "We want to connect our CRM with Slack and get real-time notifications when new data comes in.",
+    "Toplu içe aktarma sessizce başarısız oluyor": "Bulk import fails silently",
+    "Büyük bir CSV içe aktarırken bazı satırlar başarısız oluyor ama hata günlüğü yok. Hangi kayıtların aktarılmadığını anlayamıyoruz.": "When importing a large CSV, some rows fail but there is no error log. We cannot tell which records were not imported.",
+    "Ekip işbirliği özellikleri ekleyin": "Add team collaboration features",
+    "Ekip üyelerine görev atama ve kayıtlar üzerinde yorum yapma yeteneğine ihtiyacımız var.": "We need the ability to assign tasks to team members and leave comments on records.",
+    "Arama işlevi çok yetersiz": "Search functionality is too basic",
+    "Tarih aralığına göre arama yapılamıyor veya gelişmiş filtreler kullanılamıyor. Daha güçlü arama yeteneklerine ihtiyacımız var.": "Cannot search by date range or use advanced filters. We need more powerful search capabilities.",
+    "E-posta bildirimleri ulaşmıyor": "Email notifications not arriving",
+    "Son 3 gündür hiçbir e-posta bildirimi almadık. Spam klasörünü de kontrol ettik.": "We have not received any email notifications for the past 3 days. Checked spam folder too.",
+    "Karanlık mod desteği ekleyin": "Add dark mode support",
+    "Karanlık mod seçeneği harika olurdu. Gece geç saatlere kadar çalışıyorum ve parlak arayüz gözleri yoruyor.": "Would love to have a dark mode option. I work late at night and the bright interface is hard on the eyes.",
+    "Mobil uygulama isteği": "Mobile app request",
+    "Hareket halindeyken bir şeyleri kontrol etmek için mobil bir uygulamanın olması harika olurdu.": "It would be great to have a mobile app to check things on the go.",
+    "Ayarlar sayfasında yazım hatası": "Typo in settings page",
+    "Ayarlar sayfası başlığında yazım hatası var. \"Ayarlar\" yerine yanlış yazılmış.": "There is a spelling mistake in the settings page header. Says \"Settigns\" instead of \"Settings\".",
+    "Arka plan rengini pembe yap": "Change background color to pink",
+    "Bence uygulama pembe bir arka planla daha iyi görünürdü. Sadece bir öneri!": "I think the app would look better with a pink background. Just a suggestion!",
+    "Yorumlara emoji tepkileri ekleyin": "Add emoji reactions to comments",
+    "Discord'daki gibi emoji tepkileri vermek eğlenceli olurdu.": "Would be fun to react to things with emojis like on Discord.",
+    "Logoyu büyütün": "Make logo bigger",
+    "Üst kısımdaki logo çok küçük. En az 2 kat büyütün.": "The logo in the header is too small. Make it at least 2x bigger.",
+    "Oyunlaştırma lider tablosu ekleyin": "Add gaming leaderboard",
+    "Oyunlaştırma özelliği uygulamayı daha çekici hale getirirdi. Görevleri tamamlamak için puanlar!": "A gamification feature would make the app more engaging. Points for completing tasks!",
+    "Türkçe dil desteği": "Support for Turkish language",
+    "Uygulama Türkçe dilini desteklemeli. Türkiye'deki birçok kullanıcı bunu takdir eder.": "The app should support Turkish language. Many users in Turkey would appreciate it."
   }
 }

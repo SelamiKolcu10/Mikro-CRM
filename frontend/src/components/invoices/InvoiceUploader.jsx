@@ -38,9 +38,12 @@ const InvoiceUploader = ({ onUpload, uploading }) => {
     }
   };
 
-  const handleUploadClick = () => {
+  const handleUploadClick = async () => {
     if (selectedFiles.length > 0 && onUpload) {
-      onUpload(selectedFiles);
+      const success = await onUpload(selectedFiles);
+      if (success !== false) {
+        setSelectedFiles([]);
+      }
     }
   };
 

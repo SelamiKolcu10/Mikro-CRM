@@ -49,29 +49,29 @@ const seedCustomers = [
 
 const feedbackTemplates = [
   // Critical bugs (from VIP customers)
-  { title: 'Login page crashes on mobile', description: 'The login page throws a white screen error on iOS Safari. Users cannot access their accounts. This is blocking our entire team.', type: 'bug', customerIndex: 0 },
-  { title: 'Data export generates corrupt CSV files', description: 'When exporting more than 1000 rows, the CSV file is truncated and has encoding issues. We need this for our monthly reports.', type: 'bug', customerIndex: 1 },
-  { title: 'API rate limiting is too aggressive', description: 'Our integration hits the rate limit after just 50 requests per minute. We need at least 200 for our workflow automation.', type: 'improvement', customerIndex: 2 },
-  { title: 'Dashboard loading takes 15+ seconds', description: 'The main dashboard takes forever to load when we have more than 500 records. Performance is unacceptable for our team.', type: 'bug', customerIndex: 0 },
+  { title: 'Giriş sayfası mobilde çöküyor', description: 'Giriş sayfası iOS Safari\'de beyaz ekran hatası veriyor. Kullanıcılar hesaplarına erişemiyor. Bu tüm ekibimizin işini engelliyor.', type: 'bug', customerIndex: 0 },
+  { title: 'Veri dışa aktarımı bozuk CSV dosyaları oluşturuyor', description: '1000 satırdan fazla dışa aktarırken CSV dosyası kesiliyor ve kodlama sorunları yaşıyor. Aylık raporlarımız için buna ihtiyacımız var.', type: 'bug', customerIndex: 1 },
+  { title: 'API istek limiti çok kısıtlayıcı', description: 'Entegrasyonumuz dakikada sadece 50 istekten sonra limite takılıyor. İş akışı otomasyonumuz için en az 200\'e ihtiyacımız var.', type: 'improvement', customerIndex: 2 },
+  { title: 'Kontrol paneli 15+ saniyede yükleniyor', description: '500\'den fazla kaydımız olduğunda ana kontrol paneli çok yavaş yükleniyor. Performans ekibimiz için kabul edilemez.', type: 'bug', customerIndex: 0 },
 
   // High priority (from Premium customers)
-  { title: 'Need webhook support for integrations', description: 'We want to connect our CRM with Slack and get real-time notifications when new data comes in.', type: 'feature', customerIndex: 3 },
-  { title: 'Bulk import fails silently', description: 'When importing a large CSV, some rows fail but there is no error log. We cannot tell which records were not imported.', type: 'bug', customerIndex: 4 },
-  { title: 'Add team collaboration features', description: 'We need the ability to assign tasks to team members and leave comments on records.', type: 'feature', customerIndex: 5 },
-  { title: 'Search functionality is too basic', description: 'Cannot search by date range or use advanced filters. We need more powerful search capabilities.', type: 'improvement', customerIndex: 6 },
-  { title: 'Email notifications not arriving', description: 'We have not received any email notifications for the past 3 days. Checked spam folder too.', type: 'bug', customerIndex: 3 },
+  { title: 'Entegrasyonlar için webhook desteği gerekiyor', description: 'CRM\'imizi Slack ile bağlamak ve yeni veri geldiğinde gerçek zamanlı bildirimler almak istiyoruz.', type: 'feature', customerIndex: 3 },
+  { title: 'Toplu içe aktarma sessizce başarısız oluyor', description: 'Büyük bir CSV içe aktarırken bazı satırlar başarısız oluyor ama hata günlüğü yok. Hangi kayıtların aktarılmadığını anlayamıyoruz.', type: 'bug', customerIndex: 4 },
+  { title: 'Ekip işbirliği özellikleri ekleyin', description: 'Ekip üyelerine görev atama ve kayıtlar üzerinde yorum yapma yeteneğine ihtiyacımız var.', type: 'feature', customerIndex: 5 },
+  { title: 'Arama işlevi çok yetersiz', description: 'Tarih aralığına göre arama yapılamıyor veya gelişmiş filtreler kullanılamıyor. Daha güçlü arama yeteneklerine ihtiyacımız var.', type: 'improvement', customerIndex: 6 },
+  { title: 'E-posta bildirimleri ulaşmıyor', description: 'Son 3 gündür hiçbir e-posta bildirimi almadık. Spam klasörünü de kontrol ettik.', type: 'bug', customerIndex: 3 },
 
   // Medium priority (from Starter customers)
-  { title: 'Add dark mode support', description: 'Would love to have a dark mode option. I work late at night and the bright interface is hard on the eyes.', type: 'feature', customerIndex: 7 },
-  { title: 'Mobile app request', description: 'It would be great to have a mobile app to check things on the go.', type: 'feature', customerIndex: 8 },
-  { title: 'Typo in settings page', description: 'There is a spelling mistake in the settings page header. Says "Settigns" instead of "Settings".', type: 'bug', customerIndex: 9 },
+  { title: 'Karanlık mod desteği ekleyin', description: 'Karanlık mod seçeneği harika olurdu. Gece geç saatlere kadar çalışıyorum ve parlak arayüz gözleri yoruyor.', type: 'feature', customerIndex: 7 },
+  { title: 'Mobil uygulama isteği', description: 'Hareket halindeyken bir şeyleri kontrol etmek için mobil bir uygulamanın olması harika olurdu.', type: 'feature', customerIndex: 8 },
+  { title: 'Ayarlar sayfasında yazım hatası', description: 'Ayarlar sayfası başlığında yazım hatası var. "Ayarlar" yerine yanlış yazılmış.', type: 'bug', customerIndex: 9 },
 
   // Low priority (from Free customers)
-  { title: 'Change background color to pink', description: 'I think the app would look better with a pink background. Just a suggestion!', type: 'improvement', customerIndex: 10 },
-  { title: 'Add emoji reactions to comments', description: 'Would be fun to react to things with emojis like on Discord.', type: 'feature', customerIndex: 11 },
-  { title: 'Make logo bigger', description: 'The logo in the header is too small. Make it at least 2x bigger.', type: 'improvement', customerIndex: 12 },
-  { title: 'Add gaming leaderboard', description: 'A gamification feature would make the app more engaging. Points for completing tasks!', type: 'feature', customerIndex: 13 },
-  { title: 'Support for Turkish language', description: 'The app should support Turkish language. Many users in Turkey would appreciate it.', type: 'feature', customerIndex: 14 },
+  { title: 'Arka plan rengini pembe yap', description: 'Bence uygulama pembe bir arka planla daha iyi görünürdü. Sadece bir öneri!', type: 'improvement', customerIndex: 10 },
+  { title: 'Yorumlara emoji tepkileri ekleyin', description: 'Discord\'daki gibi emoji tepkileri vermek eğlenceli olurdu.', type: 'feature', customerIndex: 11 },
+  { title: 'Logoyu büyütün', description: 'Üst kısımdaki logo çok küçük. En az 2 kat büyütün.', type: 'improvement', customerIndex: 12 },
+  { title: 'Oyunlaştırma lider tablosu ekleyin', description: 'Oyunlaştırma özelliği uygulamayı daha çekici hale getirirdi. Görevleri tamamlamak için puanlar!', type: 'feature', customerIndex: 13 },
+  { title: 'Türkçe dil desteği', description: 'Uygulama Türkçe dilini desteklemeli. Türkiye\'deki birçok kullanıcı bunu takdir eder.', type: 'feature', customerIndex: 14 },
 ];
 
 const seedDatabase = async () => {

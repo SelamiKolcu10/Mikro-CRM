@@ -72,9 +72,11 @@ const Invoices = () => {
 
       // Refresh list
       await fetchInvoices();
+      return true;
     } catch (err) {
       const message = err.response?.data?.error || err.message || t('common.error');
       toast.error(message);
+      return false;
     } finally {
       setUploading(false);
     }

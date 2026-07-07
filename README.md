@@ -78,7 +78,7 @@ Micro-CRM/
 │   └── utils/                  # Yardımcı fonksiyonlar
 │
 ├── invoice-ocr-service/        # 🧾 Bağımsız Fatura OCR Mikroservisi
-│   ├── services/               # Gemini AI & OCR entegrasyonu
+│   ├── services/               # OpenAI GPT-4o-mini & OCR entegrasyonu
 │   ├── utils/                  # KDV hesaplama motoru
 │   ├── models/                 # Fatura veri modeli
 │   ├── controllers/            # API handler'ları
@@ -159,12 +159,17 @@ Micro-CRM/
 
 Projeye eklenen yeni özellikler, güncellemeler ve hata düzeltmeleri burada listelenecektir.
 
+- **2026-07-07** — 🔄 **AI Motor Değişikliği: Google Gemini → OpenAI GPT-4o-mini** (v1.2.0)
+  - Fatura OCR altyapısı Google Gemini Vision API'den **OpenAI GPT-4o-mini Vision**'a geçirildi
+  - Daha güvenilir ve düşük maliyetli fatura okuma deneyimi
+  - `@google/generative-ai` paketi kaldırılıp `openai` paketi eklendi
+  - `.env` yapılandırması `GEMINI_API_KEY` → `OPENAI_API_KEY` olarak güncellendi
 - **2026-07-06** — 💬 **Müşteri Satırından Hızlı Geri Bildirim** eklendi (v1.1.1)
   - Müşteriler (Customers) sayfasındaki tabloya, her müşteri için "Geri Bildirim Ekle" kısayol butonu eklendi.
   - Tıklandığında o müşterinin bilgileri otomatik olarak yüklenmiş şekilde Geri Bildirim oluşturma modalı açılıyor.
 - **2026-07-06** — 🧾 **Akıllı Fatura ve KDV Ayrıştırma Modülü** eklendi (v1.1.0)
   - Bağımsız `invoice-ocr-service/` mikroservisi oluşturuldu (port 5001)
-  - Google Gemini Vision API ile fatura OCR entegrasyonu
+  - OpenAI GPT-4o-mini Vision API ile fatura OCR entegrasyonu
   - Satır bazlı KDV ayrıştırma ve matematiksel doğrulama motoru
   - Toplu fatura yükleme desteği (10-20 adet)
   - Frontend: Drag & drop upload, fatura tablosu, KDV detay modalı

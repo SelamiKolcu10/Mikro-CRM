@@ -1,33 +1,31 @@
 /**
- * OCR Service — Google Gemini Vision API Integration
+ * OCR Service — OpenAI GPT-4o-mini Vision API Integration
  *
- * Processes invoice images/PDFs using Gemini's multimodal capabilities
+ * Processes invoice images/PDFs using OpenAI's vision capabilities
  * to extract structured invoice data (vendor info, line items, VAT breakdown).
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const OpenAI = require('openai');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const { parseAIResponse } = require('./parserService');
 
-// Initialize Gemini AI
-let genAI = null;
-let model = null;
+// Initialize OpenAI client
+let client = null;
 
-function getModel() {
-  if (!model) {
-    if (!config.geminiApiKey) {
-      throw new Error('GEMINI_API_KEY ortam değişkeni ayarlanmamış. .env dosyasını kontrol edin.');
+function getClient() {
+  if (!client) {
+    if (!config.openaiApiKey) {
+      throw new Error('OPENAI_API_KEY ortam değişkeni ayarlanmamış. .env dosyasını kontrol edin.');
     }
-    genAI = new GoogleGenerativeAI(config.geminiApiKey);
-    model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    client = new OpenAI({ apiKey: config.openaiApiKey });
   }
-  return model;
+  return client;
 }
 
 /**
- * The structured prompt sent to Gemini for invoice parsing.
+ * The structured prompt sent to GPT-4o-mini for invoice parsing.
  * This is critical — it tells the AI exactly what format to return.
  */
 const INVOICE_EXTRACTION_PROMPT = `
@@ -70,7 +68,7 @@ SADECE JSON döndür, başka hiçbir açıklama veya metin ekleme.
 `;
 
 /**
- * Process a single invoice file through Gemini Vision API.
+ * Process a single invoice file through OpenAI Vision API.
  *
  * @param {string} filePath - Path to the uploaded invoice file
  * @param {string} mimeType - MIME type of the file
@@ -78,47 +76,57 @@ SADECE JSON döndür, başka hiçbir açıklama veya metin ekleme.
  */
 async function processInvoice(filePath, mimeType) {
   try {
-    const aiModel = getModel();
+    const openai = getClient();
 
     // Read the file as base64
     const fileBuffer = fs.readFileSync(filePath);
     const base64Data = fileBuffer.toString('base64');
 
-    // Prepare the image part for Gemini
-    const imagePart = {
-      inlineData: {
-        data: base64Data,
-        mimeType: mimeType,
-      },
-    };
+    // Build the data URL for OpenAI vision
+    const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
-    // Retry logic for Google Gemini Free Tier limits (429 Too Many Requests)
+    // Retry logic for rate limits (429 Too Many Requests)
     let result = null;
     let retries = 3;
-    let delay = 20000; // 20 seconds base delay
+    let delay = 5000; // 5 seconds base delay
 
     for (let i = 0; i < retries; i++) {
       try {
-        // Send to Gemini
-        result = await aiModel.generateContent([
-          INVOICE_EXTRACTION_PROMPT,
-          imagePart,
-        ]);
+        // Send to OpenAI GPT-4o-mini with vision
+        result = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: INVOICE_EXTRACTION_PROMPT },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: dataUrl,
+                    detail: 'high',
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 2000,
+          temperature: 0.1, // Low temperature for deterministic extraction
+        });
         break; // Success, exit retry loop
       } catch (err) {
         if (err.status === 429 || (err.message && err.message.includes('429'))) {
           console.warn(`[OCR] Rate limit hit (429). Retrying in ${delay / 1000}s... (Attempt ${i + 1}/${retries})`);
-          if (i === retries - 1) throw err; // If last attempt, throw the error
+          if (i === retries - 1) throw err;
           await new Promise(resolve => setTimeout(resolve, delay));
           delay *= 1.5; // Exponential backoff
         } else {
-          throw err; // Not a rate limit error, throw immediately
+          throw err;
         }
       }
     }
 
-    const response = result.response;
-    const text = response.text();
+    const text = result.choices[0].message.content;
 
     // Parse the AI response
     const parsed = parseAIResponse(text);

@@ -1,9 +1,24 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { HiOutlineViewGrid, HiOutlineUsers, HiOutlineChatAlt2, HiOutlineDocumentText } from 'react-icons/hi';
+import { HiOutlineViewGrid, HiOutlineUsers, HiOutlineChatAlt2, HiOutlineDocumentText, HiOutlineSun, HiOutlineMoon } from 'react-icons/hi';
 import { useLanguage } from '../../context/LanguageContext';
 
 const Sidebar = () => {
   const { t } = useLanguage();
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   const mainItems = [
     { path: '/', icon: <HiOutlineViewGrid />, label: t('nav.dashboard') },
@@ -48,6 +63,21 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
+
+      {/* Theme Toggle Button */}
+      <div className="sidebar-footer" style={{ marginTop: 'auto', padding: 'var(--space-md)' }}>
+        <button 
+          className="btn btn-secondary" 
+          onClick={toggleTheme}
+          style={{ width: '100%', justifyContent: 'center' }}
+        >
+          {theme === 'dark' ? (
+            <><HiOutlineSun className="icon" /> <span>{t('nav.lightMode')}</span></>
+          ) : (
+            <><HiOutlineMoon className="icon" /> <span>{t('nav.darkMode')}</span></>
+          )}
+        </button>
+      </div>
     </aside>
   );
 };

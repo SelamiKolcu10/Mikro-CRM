@@ -67,8 +67,8 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
       }
       footer={
         <div className="modal-actions">
-          {invoice.validationStatus === 'mismatch' && !editing && (
-            <button className="btn btn-warning" onClick={handleEditStart} id="start-correction-btn">
+          {!editing && (
+            <button className="btn btn-secondary" onClick={handleEditStart} id="start-correction-btn">
               {t('invoices.manualCorrection')}
             </button>
           )}

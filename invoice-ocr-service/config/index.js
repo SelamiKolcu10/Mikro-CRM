@@ -8,7 +8,7 @@ const config = {
   port: parseInt(process.env.PORT, 10) || 5001,
   nodeEnv: process.env.NODE_ENV || 'development',
   mongoUri: process.env.MONGO_URI,
-  geminiApiKey: process.env.GEMINI_API_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
 
   upload: {
     maxFileSizeMB: parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 10,
@@ -22,7 +22,7 @@ const config = {
   },
 
   vat: {
-    tolerance: parseFloat(process.env.VAT_TOLERANCE) || 0.50,
+    tolerance: parseFloat(process.env.VAT_TOLERANCE) || 30.00,
   },
 };
 

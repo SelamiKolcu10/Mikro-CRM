@@ -20,7 +20,7 @@ const Feedbacks = () => {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ type: '', status: '', priority: '' });
   const [search, setSearch] = useState('');
-
+  const [activeTab, setActiveTab] = useState('active');
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -131,6 +131,14 @@ const Feedbacks = () => {
 
   const formatCurrency = (val) => `$${Number(val).toLocaleString()}`;
 
+  const displayedFeedbacks = feedbacks.filter((fb) => {
+    if (activeTab === 'active') {
+      return fb.status === 'open' || fb.status === 'in-progress';
+    } else {
+      return fb.status === 'resolved' || fb.status === 'closed';
+    }
+  });
+
   if (loading) {
     return <div className="loading-spinner"><div className="spinner" /></div>;
   }
@@ -144,6 +152,22 @@ const Feedbacks = () => {
         </div>
         <button className="btn btn-primary" onClick={() => openCreateModal()}>
           <HiOutlinePlus /> {t('feedbacks.addFeedback')}
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs-container" style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+        <button 
+          className={`btn ${activeTab === 'active' ? 'btn-primary' : 'btn-ghost'}`} 
+          onClick={() => setActiveTab('active')}
+        >
+          {t('feedbacks.activeFeedbacks')}
+        </button>
+        <button 
+          className={`btn ${activeTab === 'resolved' ? 'btn-primary' : 'btn-ghost'}`} 
+          onClick={() => setActiveTab('resolved')}
+        >
+          {t('feedbacks.resolvedFeedbacks')}
         </button>
       </div>
 
@@ -215,13 +239,13 @@ const Feedbacks = () => {
             </tr>
           </thead>
           <tbody>
-            {feedbacks.map((fb) => (
+            {displayedFeedbacks.map((fb) => (
               <tr key={fb._id}>
                 <td>
-                  <div className="cell-name">{fb.title}</div>
+                  <div className="cell-name">{t('mockData', { returnObjects: true })?.[fb.title] || fb.title}</div>
                   {fb.description && (
                     <div className="cell-email" style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {fb.description}
+                      {t('mockData', { returnObjects: true })?.[fb.description] || fb.description}
                     </div>
                   )}
                 </td>

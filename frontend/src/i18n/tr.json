@@ -43,7 +43,9 @@
     "invoices": "Faturalar",
     "menu": "Menü",
     "main": "Ana Menü",
-    "finance": "Finans"
+    "finance": "Finans",
+    "lightMode": "Aydınlık Mod",
+    "darkMode": "Karanlık Mod"
   },
   "dashboard": {
     "title": "Kontrol Paneli",
@@ -126,7 +128,9 @@
     },
     "deleteConfirm": "Bu geri bildirimi silmek istediğinize emin misiniz?",
     "deleteWarning": "Bu işlem geri alınamaz.",
-    "autoCalculated": "Müşterinin MRR'ına göre otomatik hesaplanır"
+    "autoCalculated": "Müşterinin MRR'ına göre otomatik hesaplanır",
+    "activeFeedbacks": "Aktif Bildirimler",
+    "resolvedFeedbacks": "Çözülenler"
   },
   "invoices": {
     "title": "Faturalar",
@@ -176,5 +180,41 @@
     },
     "noInvoices": "Henüz fatura yüklenmedi",
     "uploadFirst": "İlk faturanızı yükleyerek başlayın"
+  },
+  "mockData": {
+    "Giriş sayfası mobilde çöküyor": "Giriş sayfası mobilde çöküyor",
+    "Giriş sayfası iOS Safari'de beyaz ekran hatası veriyor. Kullanıcılar hesaplarına erişemiyor. Bu tüm ekibimizin işini engelliyor.": "Giriş sayfası iOS Safari'de beyaz ekran hatası veriyor. Kullanıcılar hesaplarına erişemiyor. Bu tüm ekibimizin işini engelliyor.",
+    "Veri dışa aktarımı bozuk CSV dosyaları oluşturuyor": "Veri dışa aktarımı bozuk CSV dosyaları oluşturuyor",
+    "1000 satırdan fazla dışa aktarırken CSV dosyası kesiliyor ve kodlama sorunları yaşıyor. Aylık raporlarımız için buna ihtiyacımız var.": "1000 satırdan fazla dışa aktarırken CSV dosyası kesiliyor ve kodlama sorunları yaşıyor. Aylık raporlarımız için buna ihtiyacımız var.",
+    "API istek limiti çok kısıtlayıcı": "API istek limiti çok kısıtlayıcı",
+    "Entegrasyonumuz dakikada sadece 50 istekten sonra limite takılıyor. İş akışı otomasyonumuz için en az 200'e ihtiyacımız var.": "Entegrasyonumuz dakikada sadece 50 istekten sonra limite takılıyor. İş akışı otomasyonumuz için en az 200'e ihtiyacımız var.",
+    "Kontrol paneli 15+ saniyede yükleniyor": "Kontrol paneli 15+ saniyede yükleniyor",
+    "500'den fazla kaydımız olduğunda ana kontrol paneli çok yavaş yükleniyor. Performans ekibimiz için kabul edilemez.": "500'den fazla kaydımız olduğunda ana kontrol paneli çok yavaş yükleniyor. Performans ekibimiz için kabul edilemez.",
+    "Entegrasyonlar için webhook desteği gerekiyor": "Entegrasyonlar için webhook desteği gerekiyor",
+    "CRM'imizi Slack ile bağlamak ve yeni veri geldiğinde gerçek zamanlı bildirimler almak istiyoruz.": "CRM'imizi Slack ile bağlamak ve yeni veri geldiğinde gerçek zamanlı bildirimler almak istiyoruz.",
+    "Toplu içe aktarma sessizce başarısız oluyor": "Toplu içe aktarma sessizce başarısız oluyor",
+    "Büyük bir CSV içe aktarırken bazı satırlar başarısız oluyor ama hata günlüğü yok. Hangi kayıtların aktarılmadığını anlayamıyoruz.": "Büyük bir CSV içe aktarırken bazı satırlar başarısız oluyor ama hata günlüğü yok. Hangi kayıtların aktarılmadığını anlayamıyoruz.",
+    "Ekip işbirliği özellikleri ekleyin": "Ekip işbirliği özellikleri ekleyin",
+    "Ekip üyelerine görev atama ve kayıtlar üzerinde yorum yapma yeteneğine ihtiyacımız var.": "Ekip üyelerine görev atama ve kayıtlar üzerinde yorum yapma yeteneğine ihtiyacımız var.",
+    "Arama işlevi çok yetersiz": "Arama işlevi çok yetersiz",
+    "Tarih aralığına göre arama yapılamıyor veya gelişmiş filtreler kullanılamıyor. Daha güçlü arama yeteneklerine ihtiyacımız var.": "Tarih aralığına göre arama yapılamıyor veya gelişmiş filtreler kullanılamıyor. Daha güçlü arama yeteneklerine ihtiyacımız var.",
+    "E-posta bildirimleri ulaşmıyor": "E-posta bildirimleri ulaşmıyor",
+    "Son 3 gündür hiçbir e-posta bildirimi almadık. Spam klasörünü de kontrol ettik.": "Son 3 gündür hiçbir e-posta bildirimi almadık. Spam klasörünü de kontrol ettik.",
+    "Karanlık mod desteği ekleyin": "Karanlık mod desteği ekleyin",
+    "Karanlık mod seçeneği harika olurdu. Gece geç saatlere kadar çalışıyorum ve parlak arayüz gözleri yoruyor.": "Karanlık mod seçeneği harika olurdu. Gece geç saatlere kadar çalışıyorum ve parlak arayüz gözleri yoruyor.",
+    "Mobil uygulama isteği": "Mobil uygulama isteği",
+    "Hareket halindeyken bir şeyleri kontrol etmek için mobil bir uygulamanın olması harika olurdu.": "Hareket halindeyken bir şeyleri kontrol etmek için mobil bir uygulamanın olması harika olurdu.",
+    "Ayarlar sayfasında yazım hatası": "Ayarlar sayfasında yazım hatası",
+    "Ayarlar sayfası başlığında yazım hatası var. \"Ayarlar\" yerine yanlış yazılmış.": "Ayarlar sayfası başlığında yazım hatası var. \"Ayarlar\" yerine yanlış yazılmış.",
+    "Arka plan rengini pembe yap": "Arka plan rengini pembe yap",
+    "Bence uygulama pembe bir arka planla daha iyi görünürdü. Sadece bir öneri!": "Bence uygulama pembe bir arka planla daha iyi görünürdü. Sadece bir öneri!",
+    "Yorumlara emoji tepkileri ekleyin": "Yorumlara emoji tepkileri ekleyin",
+    "Discord'daki gibi emoji tepkileri vermek eğlenceli olurdu.": "Discord'daki gibi emoji tepkileri vermek eğlenceli olurdu.",
+    "Logoyu büyütün": "Logoyu büyütün",
+    "Üst kısımdaki logo çok küçük. En az 2 kat büyütün.": "Üst kısımdaki logo çok küçük. En az 2 kat büyütün.",
+    "Oyunlaştırma lider tablosu ekleyin": "Oyunlaştırma lider tablosu ekleyin",
+    "Oyunlaştırma özelliği uygulamayı daha çekici hale getirirdi. Görevleri tamamlamak için puanlar!": "Oyunlaştırma özelliği uygulamayı daha çekici hale getirirdi. Görevleri tamamlamak için puanlar!",
+    "Türkçe dil desteği": "Türkçe dil desteği",
+    "Uygulama Türkçe dilini desteklemeli. Türkiye'deki birçok kullanıcı bunu takdir eder.": "Uygulama Türkçe dilini desteklemeli. Türkiye'deki birçok kullanıcı bunu takdir eder."
   }
 }

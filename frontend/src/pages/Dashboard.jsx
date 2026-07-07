@@ -143,7 +143,7 @@ const Dashboard = () => {
                 {idx + 1}
               </div>
               <div className="top-feedback-info">
-                <div className="top-feedback-title">{fb.title}</div>
+                <div className="top-feedback-title">{t('mockData', { returnObjects: true })?.[fb.title] || fb.title}</div>
                 <div className="top-feedback-meta">
                   <span className={getTypeBadgeClass(fb.type)}>
                     {t(`feedbacks.types.${fb.type}`)}
