@@ -10,6 +10,7 @@ import {
   HiOutlinePencil,
   HiOutlineTrash,
   HiOutlineSearch,
+  HiOutlineChatAlt2,
 } from 'react-icons/hi';
 
 const Feedbacks = () => {
@@ -62,9 +63,9 @@ const Feedbacks = () => {
     loadCustomers();
   }, []);
 
-  const openCreateModal = () => {
+  const openCreateModal = (prefilledCustomerId = '') => {
     setEditingId(null);
-    setForm({ title: '', description: '', type: 'bug', customer: '', status: 'open' });
+    setForm({ title: '', description: '', type: 'bug', customer: typeof prefilledCustomerId === 'string' ? prefilledCustomerId : '', status: 'open' });
     setModalOpen(true);
   };
 
@@ -141,7 +142,7 @@ const Feedbacks = () => {
           <h1>{t('feedbacks.title')}</h1>
           <p>{t('feedbacks.subtitle')}</p>
         </div>
-        <button className="btn btn-primary" onClick={openCreateModal}>
+        <button className="btn btn-primary" onClick={() => openCreateModal()}>
           <HiOutlinePlus /> {t('feedbacks.addFeedback')}
         </button>
       </div>
@@ -263,6 +264,15 @@ const Feedbacks = () => {
                 </td>
                 <td>
                   <div className="cell-actions">
+                    {fb.customer && (
+                      <button
+                        className="btn-icon feedback-quick-btn"
+                        onClick={() => openCreateModal(fb.customer._id)}
+                        title={t('feedbacks.addFeedback')}
+                      >
+                        <HiOutlineChatAlt2 />
+                      </button>
+                    )}
                     <button className="btn-icon" onClick={() => openEditModal(fb)} title={t('common.edit')}>
                       <HiOutlinePencil />
                     </button>
@@ -358,20 +368,50 @@ const Feedbacks = () => {
           {!editingId && (
             <div className="form-group">
               <label className="form-label">{t('feedbacks.customer')} *</label>
-              <select
-                className="form-select"
-                value={form.customer}
-                onChange={(e) => setForm({ ...form, customer: e.target.value })}
-                required
-              >
-                <option value="">{t('feedbacks.selectCustomer')}</option>
-                {customers.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name} — {t(`customers.plans.${c.plan}`).toUpperCase()} (${c.mrr}{t('common.perMonth')})
-                  </option>
-                ))}
-              </select>
-              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '4px', display: 'block' }}>
+              
+              {form.customer ? (
+                <div className="feedback-customer-info" style={{ marginTop: 'var(--space-xs)', marginBottom: 'var(--space-sm)', position: 'relative' }}>
+                  <button 
+                    type="button"
+                    className="btn-icon" 
+                    onClick={() => setForm({ ...form, customer: '' })}
+                    style={{ position: 'absolute', top: 'var(--space-sm)', right: 'var(--space-sm)' }}
+                    title="Müşteriyi Değiştir"
+                  >
+                    ✕
+                  </button>
+                  <div className="feedback-customer-avatar">
+                    {customers.find(c => c._id === form.customer)?.name.charAt(0).toUpperCase() || '?'}
+                  </div>
+                  <div>
+                    <div className="cell-name">{customers.find(c => c._id === form.customer)?.name}</div>
+                    <div className="cell-email">{customers.find(c => c._id === form.customer)?.email}</div>
+                    <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`badge badge-${customers.find(c => c._id === form.customer)?.plan}`}>
+                        {t(`customers.plans.${customers.find(c => c._id === form.customer)?.plan || 'free'}`).toUpperCase()}
+                      </span>
+                      <span className={`revenue-impact ${customers.find(c => c._id === form.customer)?.mrr >= 200 ? 'high' : customers.find(c => c._id === form.customer)?.mrr > 0 ? 'medium' : 'low'}`}>
+                        ${customers.find(c => c._id === form.customer)?.mrr}{t('common.perMonth')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <select
+                  className="form-select"
+                  value={form.customer}
+                  onChange={(e) => setForm({ ...form, customer: e.target.value })}
+                  required
+                >
+                  <option value="">{t('feedbacks.selectCustomer')}</option>
+                  {customers.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name} — {t(`customers.plans.${c.plan}`).toUpperCase()} (${c.mrr}{t('common.perMonth')})
+                    </option>
+                  ))}
+                </select>
+              )}
+              <span className="form-hint">
                 💡 {t('feedbacks.autoCalculated')}
               </span>
             </div>

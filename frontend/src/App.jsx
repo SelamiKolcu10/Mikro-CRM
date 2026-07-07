@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
 import Feedbacks from './pages/Feedbacks';
+import Invoices from './pages/Invoices';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -72,6 +73,7 @@ const App = () => {
               <Route path="/" element={<Dashboard />} />
               <Route path="/customers" element={<Customers />} />
               <Route path="/feedbacks" element={<Feedbacks />} />
+              <Route path="/invoices" element={<Invoices />} />
             </Route>
 
             {/* Catch all */}

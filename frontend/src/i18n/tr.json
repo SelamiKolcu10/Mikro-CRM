@@ -40,8 +40,10 @@
     "dashboard": "Kontrol Paneli",
     "customers": "Müşteriler",
     "feedbacks": "Geri Bildirimler",
+    "invoices": "Faturalar",
     "menu": "Menü",
-    "main": "Ana Menü"
+    "main": "Ana Menü",
+    "finance": "Finans"
   },
   "dashboard": {
     "title": "Kontrol Paneli",
@@ -125,5 +127,54 @@
     "deleteConfirm": "Bu geri bildirimi silmek istediğinize emin misiniz?",
     "deleteWarning": "Bu işlem geri alınamaz.",
     "autoCalculated": "Müşterinin MRR'ına göre otomatik hesaplanır"
+  },
+  "invoices": {
+    "title": "Faturalar",
+    "subtitle": "Akıllı fatura işleme ve KDV ayrıştırma",
+    "upload": "Fatura Yükle",
+    "bulkUpload": "Toplu Yükleme",
+    "dropzone": "Fatura görsellerini buraya sürükleyin veya tıklayın",
+    "dropzoneHint": "JPEG, PNG, WebP veya PDF — Tek seferde en fazla 20 dosya",
+    "processing": "İşleniyor...",
+    "processComplete": "İşleme tamamlandı",
+    "vendor": "Satıcı",
+    "vendorTax": "Vergi No",
+    "invoiceNo": "Fatura No",
+    "invoiceDate": "Fatura Tarihi",
+    "description": "Açıklama",
+    "quantity": "Miktar",
+    "unitPrice": "Birim Fiyat",
+    "baseAmount": "Matrah",
+    "vatRate": "KDV Oranı",
+    "vatAmount": "KDV Tutarı",
+    "totalAmount": "Toplam",
+    "grandTotal": "Genel Toplam",
+    "totalBase": "Toplam Matrah",
+    "totalVat": "Toplam KDV",
+    "lineItems": "Kalem Detayları",
+    "vatBreakdown": "KDV Kırılımı",
+    "status": "Durum",
+    "confidence": "Güven Skoru",
+    "fileName": "Dosya Adı",
+    "statuses": {
+      "verified": "Doğrulandı",
+      "mismatch": "Uyuşmazlık",
+      "pending": "Beklemede"
+    },
+    "deleteConfirm": "Bu faturayı silmek istediğinize emin misiniz?",
+    "deleteWarning": "Bu işlem geri alınamaz.",
+    "manualCorrection": "Manuel Düzeltme",
+    "correctionHint": "Yapay zekâ bu faturadan emin olamadı, lütfen gözle kontrol edin.",
+    "allStatuses": "Tüm Durumlar",
+    "stats": {
+      "totalProcessed": "İşlenen Fatura",
+      "verified": "Doğrulanan",
+      "mismatch": "Uyuşmazlık",
+      "accuracy": "Doğruluk Oranı",
+      "totalVat": "Toplam KDV",
+      "avgConfidence": "Ort. Güven"
+    },
+    "noInvoices": "Henüz fatura yüklenmedi",
+    "uploadFirst": "İlk faturanızı yükleyerek başlayın"
   }
 }

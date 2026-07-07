@@ -3,3 +3,5 @@ node_modules/
 dist/
 .DS_Store
 *.log
+invoice-ocr-service/uploads/*
+!invoice-ocr-service/uploads/.gitkeep

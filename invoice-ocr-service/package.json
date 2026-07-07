@@ -1,0 +1,24 @@
+{
+  "name": "invoice-ocr-service",
+  "version": "1.0.0",
+  "description": "Smart Invoice OCR & VAT Extraction Microservice — Decoupled from Micro-CRM",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "test": "jest --verbose --forceExit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "mongoose": "^8.9.5",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

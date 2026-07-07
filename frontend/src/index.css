@@ -1391,3 +1391,514 @@ tbody td {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   INVOICE MODULE — Styles
+   ============================================================ */
+
+/* ---- Dropzone ---- */
+.invoice-uploader {
+  padding: var(--space-md);
+}
+
+.dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl) var(--space-xl);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--glass-bg);
+}
+
+.dropzone:hover {
+  border-color: var(--accent-primary);
+  background: var(--glass-bg-hover);
+}
+
+.dropzone-active {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-glow);
+  box-shadow: var(--shadow-glow);
+}
+
+.dropzone-uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.dropzone-icon {
+  font-size: 2.5rem;
+  color: var(--accent-primary);
+  opacity: 0.8;
+}
+
+.dropzone-text {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.dropzone-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.dropzone-spinner {
+  margin-bottom: var(--space-sm);
+}
+
+/* ---- Selected Files ---- */
+.selected-files {
+  margin-top: var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.selected-files-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.selected-files-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.selected-file-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+  transition: background var(--transition-fast);
+}
+
+.selected-file-item:last-child {
+  border-bottom: none;
+}
+
+.selected-file-item:hover {
+  background: var(--bg-hover);
+}
+
+.file-icon {
+  color: var(--accent-primary);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* ---- Upload Results ---- */
+.upload-results {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.upload-results-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.upload-result-item {
+  text-align: center;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.upload-result-item.success {
+  background: var(--color-success-soft);
+}
+
+.upload-result-item.warning {
+  background: var(--color-warning-soft);
+}
+
+.upload-result-item.info {
+  background: var(--color-info-soft);
+}
+
+.upload-result-item.danger {
+  background: var(--color-danger-soft);
+}
+
+.upload-result-value {
+  display: block;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.upload-result-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ---- Invoice Status Badges ---- */
+.badge-verified {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.badge-mismatch {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.badge-pending {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+/* ---- Confidence Bar ---- */
+.confidence-bar {
+  position: relative;
+  width: 80px;
+  height: 6px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-warning), var(--color-success));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.confidence-value {
+  position: absolute;
+  top: -18px;
+  right: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ---- Table Row Warning ---- */
+.row-warning {
+  border-left: 3px solid var(--color-warning);
+}
+
+/* ---- Vendor Cell ---- */
+.vendor-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.vendor-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.vendor-tax {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  font-family: 'Courier New', monospace;
+}
+
+/* ---- Invoice Detail Modal ---- */
+.modal-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: var(--space-sm);
+  vertical-align: middle;
+}
+
+.alert {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.alert-warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.detail-section {
+  margin-bottom: var(--space-lg);
+}
+
+.detail-section h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-sm);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-item label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.detail-item span {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+/* ---- Compact Table ---- */
+.data-table.compact th,
+.data-table.compact td {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.form-input.compact,
+.form-select.compact {
+  padding: 4px 8px;
+  font-size: var(--font-size-sm);
+  min-height: auto;
+}
+
+/* ---- VAT Summary Cards ---- */
+.vat-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md);
+}
+
+.vat-summary-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+  transition: border-color var(--transition-fast);
+}
+
+.vat-summary-card:hover {
+  border-color: var(--accent-primary);
+}
+
+.vat-rate-badge {
+  background: var(--accent-primary-glow);
+  color: var(--accent-primary);
+  font-weight: 700;
+  font-size: var(--font-size-md);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.vat-summary-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vat-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.vat-detail-row.total {
+  border-top: 1px solid var(--border-color);
+  padding-top: 4px;
+  margin-top: 2px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.vat-highlight {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+/* ---- Invoice Totals ---- */
+.invoice-totals {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  border: 1px solid var(--border-color);
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.totals-row.grand {
+  border-top: 2px solid var(--accent-primary);
+  margin-top: var(--space-xs);
+  padding-top: var(--space-sm);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ---- Modal Actions ---- */
+.modal-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.btn-warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.btn-warning:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* ---- Stat Card Cyan (for VAT total) ---- */
+.stat-card.cyan {
+  border-color: rgba(34, 211, 238, 0.15);
+}
+
+.stat-icon.cyan {
+  background: rgba(34, 211, 238, 0.1);
+  color: #22d3ee;
+}
+
+/* ---- Text helpers ---- */
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+/* ---- Responsive: Upload results ---- */
+@media (max-width: 640px) {
+  .upload-results-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vat-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   QUICK FEEDBACK FROM CUSTOMER — Styles
+   ============================================================ */
+
+/* Feedback button in customer row actions */
+.feedback-quick-btn {
+  color: var(--accent-primary) !important;
+  position: relative;
+}
+
+.feedback-quick-btn:hover {
+  color: var(--accent-primary-hover) !important;
+  background: var(--accent-primary-glow);
+}
+
+/* Customer info card at top of feedback modal */
+.feedback-customer-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.feedback-customer-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+/* Form hint text */
+.form-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: var(--space-xs);
+  display: block;
+}

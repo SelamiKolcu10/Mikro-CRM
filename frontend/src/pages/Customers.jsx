@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import customerService from '../services/customerService';
+import feedbackService from '../services/feedbackService';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2 } from 'react-icons/hi';
 
 const initialForm = {
   name: '', email: '', company: '', plan: 'free', mrr: 0, source: 'email', notes: '',
+};
+
+const initialFeedbackForm = {
+  title: '', description: '', type: 'bug',
 };
 
 const Customers = () => {
@@ -17,11 +22,17 @@ const Customers = () => {
   const [filter, setFilter] = useState('');
   const [search, setSearch] = useState('');
 
-  // Modal state
+  // Customer Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
+
+  // Feedback Modal state
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [feedbackCustomer, setFeedbackCustomer] = useState(null);
+  const [feedbackForm, setFeedbackForm] = useState(initialFeedbackForm);
+  const [savingFeedback, setSavingFeedback] = useState(false);
 
   // Delete confirm
   const [deleteId, setDeleteId] = useState(null);
@@ -79,6 +90,30 @@ const Customers = () => {
       notes: customer.notes || '',
     });
     setModalOpen(true);
+  };
+
+  // --- Quick Feedback from Customer Row ---
+  const openFeedbackModal = (customer) => {
+    setFeedbackCustomer(customer);
+    setFeedbackForm(initialFeedbackForm);
+    setFeedbackModalOpen(true);
+  };
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    setSavingFeedback(true);
+    try {
+      await feedbackService.create({
+        ...feedbackForm,
+        customer: feedbackCustomer._id,
+      });
+      toast.success(t('common.create') + ' ✓');
+      setFeedbackModalOpen(false);
+    } catch (err) {
+      toast.error(err.response?.data?.error || t('common.error'));
+    } finally {
+      setSavingFeedback(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -188,6 +223,13 @@ const Customers = () => {
                 <td>{t(`customers.sources.${c.source}`)}</td>
                 <td>
                   <div className="cell-actions">
+                    <button
+                      className="btn-icon feedback-quick-btn"
+                      onClick={() => openFeedbackModal(c)}
+                      title={t('feedbacks.addFeedback')}
+                    >
+                      <HiOutlineChatAlt2 />
+                    </button>
                     <button className="btn-icon" onClick={() => openEditModal(c)} title={t('common.edit')}>
                       <HiOutlinePencil />
                     </button>
@@ -212,7 +254,7 @@ const Customers = () => {
         </table>
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Create/Edit Customer Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -310,6 +352,87 @@ const Customers = () => {
               rows="3"
             />
           </div>
+        </form>
+      </Modal>
+
+      {/* Quick Feedback Modal — triggered from customer row */}
+      <Modal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+        title={<>💬 {t('feedbacks.addFeedback')}</>}
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setFeedbackModalOpen(false)}>
+              {t('common.cancel')}
+            </button>
+            <button className="btn btn-primary" onClick={handleFeedbackSubmit} disabled={savingFeedback}>
+              {savingFeedback ? t('common.loading') : t('common.create')}
+            </button>
+          </>
+        }
+      >
+        {/* Customer info card at top of modal */}
+        {feedbackCustomer && (
+          <div className="feedback-customer-info">
+            <div className="feedback-customer-avatar">
+              {feedbackCustomer.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="cell-name">{feedbackCustomer.name}</div>
+              <div className="cell-email">{feedbackCustomer.email}</div>
+              <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className={`badge badge-${feedbackCustomer.plan}`}>
+                  {t(`customers.plans.${feedbackCustomer.plan}`).toUpperCase()}
+                </span>
+                <span className={`revenue-impact ${feedbackCustomer.mrr >= 200 ? 'high' : feedbackCustomer.mrr > 0 ? 'medium' : 'low'}`}>
+                  ${feedbackCustomer.mrr}{t('common.perMonth')}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleFeedbackSubmit}>
+          <div className="form-group">
+            <label className="form-label">{t('feedbacks.feedbackTitle')} *</label>
+            <input
+              type="text"
+              className="form-input"
+              value={feedbackForm.title}
+              onChange={(e) => setFeedbackForm({ ...feedbackForm, title: e.target.value })}
+              placeholder={t('feedbacks.feedbackTitle')}
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">{t('feedbacks.description')}</label>
+            <textarea
+              className="form-textarea"
+              value={feedbackForm.description}
+              onChange={(e) => setFeedbackForm({ ...feedbackForm, description: e.target.value })}
+              rows="3"
+              placeholder={t('feedbacks.description')}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">{t('feedbacks.type')} *</label>
+            <select
+              className="form-select"
+              value={feedbackForm.type}
+              onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
+            >
+              {['bug', 'feature', 'improvement'].map((type) => (
+                <option key={type} value={type}>{t(`feedbacks.types.${type}`)}</option>
+              ))}
+            </select>
+          </div>
+
+          <span className="form-hint">
+            💡 {t('feedbacks.autoCalculated')}
+          </span>
         </form>
       </Modal>
 

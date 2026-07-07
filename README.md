@@ -76,6 +76,14 @@ Micro-CRM/
 │   ├── routes/                 # API route tanımları
 │   ├── seed/                   # Demo veri scripti
 │   └── utils/                  # Yardımcı fonksiyonlar
+│
+├── invoice-ocr-service/        # 🧾 Bağımsız Fatura OCR Mikroservisi
+│   ├── services/               # Gemini AI & OCR entegrasyonu
+│   ├── utils/                  # KDV hesaplama motoru
+│   ├── models/                 # Fatura veri modeli
+│   ├── controllers/            # API handler'ları
+│   ├── tests/                  # Jest unit testleri
+│   └── README.md               # Bağımsız kurulum kılavuzu
 ```
 
 ## 🔌 API Uç Noktaları
@@ -133,6 +141,17 @@ Micro-CRM/
 }
 ```
 
+### Invoices (Fatura — Bağımsız Servis, Port 5001)
+| Method | Endpoint | Açıklama |
+|---|---|---|
+| POST | `/api/invoices/upload` | Tek fatura yükle + AI ile işle |
+| POST | `/api/invoices/bulk-upload` | Toplu fatura yükle (10-20 adet) |
+| GET | `/api/invoices` | Fatura listesi (pagination + filtre) |
+| GET | `/api/invoices/:id` | Fatura detayı + KDV kırılımı |
+| PUT | `/api/invoices/:id` | Manuel düzeltme |
+| DELETE | `/api/invoices/:id` | Fatura sil |
+| GET | `/api/invoices/stats/summary` | İşleme istatistikleri |
+
 ### Kritik İlişki
 `Feedback.revenueImpact` ve `Feedback.priority` alanları, bağlı müşterinin `mrr` değerinden **otomatik hesaplanır**. Müşterinin planı değiştiğinde, ilişkili tüm geri bildirimler de güncellenir.
 
@@ -140,6 +159,19 @@ Micro-CRM/
 
 Projeye eklenen yeni özellikler, güncellemeler ve hata düzeltmeleri burada listelenecektir.
 
+- **2026-07-06** — 💬 **Müşteri Satırından Hızlı Geri Bildirim** eklendi (v1.1.1)
+  - Müşteriler (Customers) sayfasındaki tabloya, her müşteri için "Geri Bildirim Ekle" kısayol butonu eklendi.
+  - Tıklandığında o müşterinin bilgileri otomatik olarak yüklenmiş şekilde Geri Bildirim oluşturma modalı açılıyor.
+- **2026-07-06** — 🧾 **Akıllı Fatura ve KDV Ayrıştırma Modülü** eklendi (v1.1.0)
+  - Bağımsız `invoice-ocr-service/` mikroservisi oluşturuldu (port 5001)
+  - Google Gemini Vision API ile fatura OCR entegrasyonu
+  - Satır bazlı KDV ayrıştırma ve matematiksel doğrulama motoru
+  - Toplu fatura yükleme desteği (10-20 adet)
+  - Frontend: Drag & drop upload, fatura tablosu, KDV detay modalı
+  - Türkiye KDV oranları desteği (%1, %10, %20)
+  - Jest unit testleri (vatCalculator)
+  - Türkçe/İngilizce i18n desteği
+  - Sidebar'a "Finans" bölümü eklendi
 - **[Tarih Eklenecek]** - İlk versiyon (v1.0.0) yayınlandı.
 
 ## 📄 Lisans
