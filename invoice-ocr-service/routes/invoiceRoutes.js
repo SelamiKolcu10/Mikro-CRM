@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
+const { protect, authorize } = require('../middleware/auth');
 const {
   uploadSingleInvoice,
   bulkUploadInvoices,
@@ -10,6 +11,9 @@ const {
   deleteInvoice,
   getInvoiceStats,
 } = require('../controllers/invoiceController');
+
+// Only super_admin and accountant may touch invoice data
+router.use(protect, authorize('super_admin', 'accountant'));
 
 // POST /api/invoices/upload — Single invoice upload + process
 router.post('/upload', upload.single('invoice'), uploadSingleInvoice);

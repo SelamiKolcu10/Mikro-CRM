@@ -8,6 +8,16 @@ const invoiceV2Api = axios.create({
   },
 });
 
+// This service requires auth (super_admin/accountant only) — attach the same
+// JWT the main backend issues, since all three services share JWT_SECRET.
+invoiceV2Api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('micro-crm-token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 const invoiceV2Service = {
   // Upload single invoice
   upload: (file) => {

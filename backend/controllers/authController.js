@@ -1,48 +1,33 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const CustomerUser = require('../models/CustomerUser');
 
-// Generate JWT token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+// Generate JWT token — role/status claims let the invoice microservices verify
+// authorization without a DB lookup; aud:'internal' separates this from the
+// customer-portal token audience below.
+const generateInternalToken = (user) => {
+  return jwt.sign(
+    { id: user._id, role: user.role, status: user.status, aud: 'internal' },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 };
 
-/**
- * @route   POST /api/auth/register
- * @desc    Register a new CRM user
- */
-const register = async (req, res, next) => {
-  try {
-    const { name, email, password } = req.body;
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: 'User with this email already exists',
-      });
-    }
-
-    const user = await User.create({ name, email, password });
-
-    res.status(201).json({
-      success: true,
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
+const generatePortalToken = (customerUser) => {
+  return jwt.sign(
+    { id: customerUser._id, customerId: customerUser.customer, aud: 'portal' },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 };
 
 /**
  * @route   POST /api/auth/login
- * @desc    Authenticate user & get token
+ * @desc    Single login entry point for both staff and customers. There is
+ *          no separate portal login — an email either belongs to a `User`
+ *          (staff) or a `CustomerUser` (customer portal), never both, so we
+ *          try internal first and fall back to the portal account. The
+ *          response's `accountType` tells the frontend which panel to open.
  */
 const login = async (req, res, next) => {
   try {
@@ -55,26 +40,66 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Find user and include password field for comparison
     const user = await User.findOne({ email }).select('+password');
+    if (user) {
+      if (!(await user.matchPassword(password))) {
+        return res.status(401).json({ success: false, error: 'Invalid email or password' });
+      }
 
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid email or password',
+      if (user.status !== 'approved') {
+        return res.status(403).json({
+          success: false,
+          error:
+            user.status === 'pending'
+              ? 'Hesabınız henüz onaylanmadı. Lütfen yöneticinizin onayını bekleyin.'
+              : 'Hesabınız reddedildi.',
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          accountType: 'internal',
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          token: generateInternalToken(user),
+        },
       });
     }
 
-    res.json({
-      success: true,
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
-      },
-    });
+    // Not a staff account — check the customer portal.
+    const customerUser = await CustomerUser.findOne({ email })
+      .select('+password')
+      .populate('customer', 'name email company plan mrr');
+
+    if (customerUser) {
+      if (!(await customerUser.matchPassword(password))) {
+        return res.status(401).json({ success: false, error: 'Invalid email or password' });
+      }
+
+      if (customerUser.status !== 'active') {
+        return res.status(403).json({ success: false, error: 'Portal erişiminiz devre dışı bırakılmış.' });
+      }
+
+      customerUser.lastLoginAt = new Date();
+      await customerUser.save();
+
+      return res.json({
+        success: true,
+        data: {
+          accountType: 'customer',
+          _id: customerUser._id,
+          email: customerUser.email,
+          customer: customerUser.customer,
+          token: generatePortalToken(customerUser),
+        },
+      });
+    }
+
+    res.status(401).json({ success: false, error: 'Invalid email or password' });
   } catch (error) {
     next(error);
   }
@@ -82,17 +107,28 @@ const login = async (req, res, next) => {
 
 /**
  * @route   GET /api/auth/me
- * @desc    Get current logged-in user
+ * @desc    Returns whichever account type the token's `aud` claim maps to
+ *          (see middleware/identify.js).
  */
 const getMe = async (req, res, next) => {
   try {
+    if (req.accountType === 'internal') {
+      return res.json({ success: true, data: { accountType: 'internal', ...req.user.toObject() } });
+    }
+
+    const cu = req.customerUser;
     res.json({
       success: true,
-      data: req.user,
+      data: {
+        accountType: 'customer',
+        _id: cu._id,
+        email: cu.email,
+        customer: cu.customer,
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = { register, login, getMe };
+module.exports = { login, getMe };

@@ -36,6 +36,16 @@ const protect = async (req, res, next) => {
       });
     }
 
+    if (req.user.status !== 'approved') {
+      return res.status(403).json({
+        success: false,
+        error:
+          req.user.status === 'pending'
+            ? 'Hesabınız henüz onaylanmadı. Lütfen yöneticinizin onayını bekleyin.'
+            : 'Hesabınız reddedildi.',
+      });
+    }
+
     next();
   } catch (error) {
     return res.status(401).json({

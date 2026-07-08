@@ -6,6 +6,8 @@ const customerService = {
   create: (data) => api.post('/customers', data),
   update: (id, data) => api.put(`/customers/${id}`, data),
   delete: (id) => api.delete(`/customers/${id}`),
+  grantPortalAccess: (id) => api.post(`/customers/${id}/portal-access`),
+  disablePortalAccess: (id) => api.patch(`/customers/${id}/portal-access/disable`),
 };
 
 export default customerService;

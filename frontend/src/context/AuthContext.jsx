@@ -3,12 +3,20 @@ import api from '../services/api';
 
 const AuthContext = createContext();
 
+/**
+ * Single auth context for both staff and customer-portal sessions — one
+ * login page, one token, one "who am I" check. `session.accountType` is
+ * 'internal' (staff, has `role`) or 'customer' (has `customer` CRM record).
+ * `user` / `customerUser` are convenience views over the same session so
+ * existing components don't need to branch on accountType themselves.
+ */
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem('micro-crm-token'));
   const [loading, setLoading] = useState(true);
 
-  // On mount, verify the stored token
+  // On mount, verify the stored token — works for either account type since
+  // the backend reads the token's own audience claim.
   useEffect(() => {
     const verifyToken = async () => {
       if (!token) {
@@ -17,12 +25,12 @@ export const AuthProvider = ({ children }) => {
       }
       try {
         const res = await api.get('/auth/me');
-        setUser(res.data.data);
+        setSession(res.data.data);
       } catch {
         // Token is invalid or expired
         localStorage.removeItem('micro-crm-token');
         setToken(null);
-        setUser(null);
+        setSession(null);
       } finally {
         setLoading(false);
       }
@@ -32,31 +40,38 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    const { token: newToken, ...userData } = res.data.data;
+    const { token: newToken, ...data } = res.data.data;
     localStorage.setItem('micro-crm-token', newToken);
     setToken(newToken);
-    setUser(userData);
-    return res.data;
-  };
-
-  const register = async (name, email, password) => {
-    const res = await api.post('/auth/register', { name, email, password });
-    const { token: newToken, ...userData } = res.data.data;
-    localStorage.setItem('micro-crm-token', newToken);
-    setToken(newToken);
-    setUser(userData);
+    setSession(data);
     return res.data;
   };
 
   const logout = () => {
     localStorage.removeItem('micro-crm-token');
     setToken(null);
-    setUser(null);
+    setSession(null);
   };
+
+  const isInternal = session?.accountType === 'internal';
+  const isCustomer = session?.accountType === 'customer';
+  const hasRole = (...roles) => isInternal && roles.includes(session.role);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, register, logout, isAuthenticated: !!user }}
+      value={{
+        session,
+        user: isInternal ? session : null,
+        customerUser: isCustomer ? session : null,
+        token,
+        loading,
+        login,
+        logout,
+        hasRole,
+        isInternal,
+        isCustomer,
+        isAuthenticated: !!session,
+      }}
     >
       {children}
     </AuthContext.Provider>

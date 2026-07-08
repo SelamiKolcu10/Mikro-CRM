@@ -1,5 +1,7 @@
+const crypto = require('crypto');
 const Customer = require('../models/Customer');
 const Feedback = require('../models/Feedback');
+const CustomerUser = require('../models/CustomerUser');
 
 /**
  * @route   GET /api/customers
@@ -156,10 +158,72 @@ const deleteCustomer = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   POST /api/customers/:id/portal-access
+ * @desc    Grant (or reset) this customer's portal login. There is no email
+ *          infrastructure yet, so the generated password is returned once in
+ *          the response — staff relays it to the customer out-of-band.
+ */
+const grantPortalAccess = async (req, res, next) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    if (!customer) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    const tempPassword = crypto.randomBytes(9).toString('base64url'); // 12-char, URL-safe
+
+    let customerUser = await CustomerUser.findOne({ customer: customer._id });
+    if (customerUser) {
+      customerUser.password = tempPassword;
+      customerUser.status = 'active';
+      await customerUser.save();
+    } else {
+      customerUser = await CustomerUser.create({
+        email: customer.email,
+        password: tempPassword,
+        customer: customer._id,
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        email: customerUser.email,
+        temporaryPassword: tempPassword,
+        status: customerUser.status,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   PATCH /api/customers/:id/portal-access/disable
+ */
+const disablePortalAccess = async (req, res, next) => {
+  try {
+    const customerUser = await CustomerUser.findOneAndUpdate(
+      { customer: req.params.id },
+      { status: 'disabled' },
+      { new: true }
+    );
+    if (!customerUser) {
+      return res.status(404).json({ success: false, error: 'Bu müşterinin portal erişimi yok.' });
+    }
+    res.json({ success: true, data: customerUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCustomers,
   getCustomer,
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  grantPortalAccess,
+  disablePortalAccess,
 };

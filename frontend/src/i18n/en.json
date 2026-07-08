@@ -23,18 +23,14 @@
   },
   "auth": {
     "login": "Sign In",
-    "register": "Sign Up",
     "email": "Email",
     "password": "Password",
     "name": "Full Name",
     "loginTitle": "Welcome Back",
     "loginSubtitle": "Sign in to your account to continue",
-    "registerSubtitle": "Create a new account",
-    "noAccount": "Don't have an account?",
-    "hasAccount": "Already have an account?",
+    "noAccountHint": "If you haven't received your account details, contact your administrator.",
     "logout": "Sign Out",
-    "loginSuccess": "Signed in successfully!",
-    "registerSuccess": "Signed up successfully!"
+    "loginSuccess": "Signed in successfully!"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -42,11 +38,37 @@
     "feedbacks": "Feedbacks",
     "invoices": "Invoices",
     "invoicesV2": "Invoices v2 (Local OCR)",
+    "spendingReport": "Spending Overview",
+    "knowledgeBase": "Knowledge Base",
+    "users": "User Management",
     "menu": "Menu",
     "main": "Main Menu",
     "finance": "Finance",
+    "admin": "Administration",
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode"
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Approve user accounts and manage their roles",
+    "createUser": "Add New User",
+    "createUserHint": "There is no public registration form — new staff accounts are created here.",
+    "userCreated": "User Created",
+    "userCreatedHint": "account has been created. Share these credentials with them over a secure channel.",
+    "role": "Role",
+    "status": "Status",
+    "allStatuses": "All Statuses",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved": "User approved ✅",
+    "rejected": "User rejected",
+    "statuses": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "deleteConfirm": "Are you sure you want to delete this user?",
+    "deleteWarning": "This action cannot be undone."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -80,6 +102,11 @@
     "allPlans": "All Plans",
     "deleteConfirm": "Are you sure you want to delete this customer?",
     "deleteWarning": "This action cannot be undone. All feedbacks associated with this customer will also be deleted.",
+    "grantPortalAccess": "Grant Portal Access",
+    "portalAccessGranted": "Portal Access Created",
+    "portalAccessHint": "now has a customer portal login. Share these credentials with them over a secure channel.",
+    "portalAccessWarning": "This password is shown only once and cannot be retrieved again.",
+    "temporaryPassword": "Temporary Password",
     "plans": {
       "free": "Free",
       "starter": "Starter",
@@ -185,6 +212,31 @@
   "invoicesV2": {
     "title": "Invoices v2 — Local OCR (Tesseract)",
     "subtitle": "Fully local OCR and regex-based invoice processing, zero external API dependency"
+  },
+  "reports": {
+    "title": "Spending Overview",
+    "subtitle": "Combined spending & VAT summary from Invoices v1 and v2",
+    "export": "Download Excel/CSV",
+    "exportSuccess": "Report downloaded ✅",
+    "totalSpend": "Total Spend",
+    "totalVat": "Total VAT",
+    "totalBase": "Total Base",
+    "invoiceCount": "Invoice Count",
+    "byMonth": "Monthly Breakdown",
+    "byService": "By Service"
+  },
+  "knowledgeBase": {
+    "title": "Knowledge Base",
+    "subtitle": "Internal procedures, policies, and FAQs",
+    "newArticle": "New Article",
+    "editArticle": "Edit Article",
+    "articleTitle": "Title",
+    "content": "Content",
+    "category": "Category",
+    "deleteConfirm": "Are you sure you want to delete this article?",
+    "deleteWarning": "This action cannot be undone.",
+    "noArticles": "No articles yet",
+    "lastUpdated": "Last updated"
   },
   "mockData": {
     "Giriş sayfası mobilde çöküyor": "Login page crashes on mobile",

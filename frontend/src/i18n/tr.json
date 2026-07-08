@@ -23,18 +23,14 @@
   },
   "auth": {
     "login": "Giriş Yap",
-    "register": "Kayıt Ol",
     "email": "E-posta",
     "password": "Şifre",
     "name": "Ad Soyad",
     "loginTitle": "Tekrar Hoşgeldiniz",
     "loginSubtitle": "Hesabınıza giriş yaparak devam edin",
-    "registerSubtitle": "Yeni bir hesap oluşturun",
-    "noAccount": "Hesabınız yok mu?",
-    "hasAccount": "Zaten hesabınız var mı?",
+    "noAccountHint": "Hesap bilgilerinizi almadıysanız yöneticinizle iletişime geçin.",
     "logout": "Çıkış Yap",
-    "loginSuccess": "Giriş başarılı!",
-    "registerSuccess": "Kayıt başarılı!"
+    "loginSuccess": "Giriş başarılı!"
   },
   "nav": {
     "dashboard": "Kontrol Paneli",
@@ -42,11 +38,37 @@
     "feedbacks": "Geri Bildirimler",
     "invoices": "Faturalar",
     "invoicesV2": "Fatura v2 (Yerli OCR)",
+    "spendingReport": "Genel Harcama",
+    "knowledgeBase": "Bilgi Bankası",
+    "users": "Kullanıcı Yönetimi",
     "menu": "Menü",
     "main": "Ana Menü",
     "finance": "Finans",
+    "admin": "Yönetim",
     "lightMode": "Aydınlık Mod",
     "darkMode": "Karanlık Mod"
+  },
+  "users": {
+    "title": "Kullanıcı Yönetimi",
+    "subtitle": "Kullanıcı hesaplarını onaylayın, rollerini yönetin",
+    "createUser": "Yeni Kullanıcı Ekle",
+    "createUserHint": "Sistemde dışarıdan kayıt formu yoktur — yeni personel hesapları burada oluşturulur.",
+    "userCreated": "Kullanıcı Oluşturuldu",
+    "userCreatedHint": "için hesap oluşturuldu. Bu bilgileri güvenli bir kanaldan ilgili kişiye iletin.",
+    "role": "Rol",
+    "status": "Durum",
+    "allStatuses": "Tüm Durumlar",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "approved": "Kullanıcı onaylandı ✅",
+    "rejected": "Kullanıcı reddedildi",
+    "statuses": {
+      "pending": "Onay Bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi"
+    },
+    "deleteConfirm": "Bu kullanıcıyı silmek istediğinize emin misiniz?",
+    "deleteWarning": "Bu işlem geri alınamaz."
   },
   "dashboard": {
     "title": "Kontrol Paneli",
@@ -80,6 +102,11 @@
     "allPlans": "Tüm Planlar",
     "deleteConfirm": "Bu müşteriyi silmek istediğinize emin misiniz?",
     "deleteWarning": "Bu işlem geri alınamaz. Müşteriye ait tüm geri bildirimler de silinecektir.",
+    "grantPortalAccess": "Portal Erişimi Ver",
+    "portalAccessGranted": "Portal Erişimi Oluşturuldu",
+    "portalAccessHint": "için müşteri portalı girişi oluşturuldu. Bu bilgileri güvenli bir kanaldan müşteriye iletin.",
+    "portalAccessWarning": "Bu şifre yalnızca bir kez gösterilir, tekrar görüntülenemez.",
+    "temporaryPassword": "Geçici Şifre",
     "plans": {
       "free": "Ücretsiz",
       "starter": "Başlangıç",
@@ -185,6 +212,31 @@
   "invoicesV2": {
     "title": "Fatura v2 — Yerli OCR (Tesseract)",
     "subtitle": "Dış API bağımlılığı olmadan, tamamen yerel OCR ve regex tabanlı fatura işleme"
+  },
+  "reports": {
+    "title": "Genel Harcama Raporu",
+    "subtitle": "Fatura v1 ve v2'den birleştirilmiş harcama ve KDV özeti",
+    "export": "Excel/CSV İndir",
+    "exportSuccess": "Rapor indirildi ✅",
+    "totalSpend": "Toplam Harcama",
+    "totalVat": "Toplam KDV",
+    "totalBase": "Toplam Matrah",
+    "invoiceCount": "Fatura Sayısı",
+    "byMonth": "Aylık Kırılım",
+    "byService": "Servis Bazında Kırılım"
+  },
+  "knowledgeBase": {
+    "title": "Bilgi Bankası",
+    "subtitle": "Şirket içi prosedürler, kurallar ve sıkça sorulan sorular",
+    "newArticle": "Yeni Döküman",
+    "editArticle": "Dökümanı Düzenle",
+    "articleTitle": "Başlık",
+    "content": "İçerik",
+    "category": "Kategori",
+    "deleteConfirm": "Bu dökümanı silmek istediğinize emin misiniz?",
+    "deleteWarning": "Bu işlem geri alınamaz.",
+    "noArticles": "Henüz döküman eklenmedi",
+    "lastUpdated": "Son güncelleme"
   },
   "mockData": {
     "Giriş sayfası mobilde çöküyor": "Giriş sayfası mobilde çöküyor",

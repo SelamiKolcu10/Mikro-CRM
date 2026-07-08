@@ -4,8 +4,9 @@ import customerService from '../services/customerService';
 import feedbackService from '../services/feedbackService';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import PermissionGate from '../components/auth/PermissionGate';
 import toast from 'react-hot-toast';
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2 } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2, HiOutlineKey } from 'react-icons/hi';
 
 const initialForm = {
   name: '', email: '', company: '', plan: 'free', mrr: 0, source: 'email', notes: '',
@@ -37,6 +38,10 @@ const Customers = () => {
   // Delete confirm
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Portal access grant result (temp password shown once)
+  const [portalAccessResult, setPortalAccessResult] = useState(null);
+  const [grantingPortalId, setGrantingPortalId] = useState(null);
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -150,6 +155,18 @@ const Customers = () => {
     }
   };
 
+  const handleGrantPortalAccess = async (customer) => {
+    setGrantingPortalId(customer._id);
+    try {
+      const res = await customerService.grantPortalAccess(customer._id);
+      setPortalAccessResult({ customerName: customer.name, ...res.data.data });
+    } catch (err) {
+      toast.error(err.response?.data?.error || t('common.error'));
+    } finally {
+      setGrantingPortalId(null);
+    }
+  };
+
   const getPlanBadge = (plan) => `badge badge-${plan}`;
 
   const formatCurrency = (val) => `$${Number(val).toLocaleString()}`;
@@ -230,6 +247,16 @@ const Customers = () => {
                     >
                       <HiOutlineChatAlt2 />
                     </button>
+                    <PermissionGate resource="customers" action="write">
+                      <button
+                        className="btn-icon"
+                        onClick={() => handleGrantPortalAccess(c)}
+                        disabled={grantingPortalId === c._id}
+                        title={t('customers.grantPortalAccess')}
+                      >
+                        <HiOutlineKey />
+                      </button>
+                    </PermissionGate>
                     <button className="btn-icon" onClick={() => openEditModal(c)} title={t('common.edit')}>
                       <HiOutlinePencil />
                     </button>
@@ -445,6 +472,33 @@ const Customers = () => {
         message={t('customers.deleteWarning')}
         loading={deleting}
       />
+
+      {/* Portal Access Granted — shown once, staff relays it to the customer */}
+      <Modal
+        isOpen={!!portalAccessResult}
+        onClose={() => setPortalAccessResult(null)}
+        title={<>🔑 {t('customers.portalAccessGranted')}</>}
+        footer={
+          <button className="btn btn-primary" onClick={() => setPortalAccessResult(null)}>
+            {t('common.close')}
+          </button>
+        }
+      >
+        {portalAccessResult && (
+          <div>
+            <p>{portalAccessResult.customerName} {t('customers.portalAccessHint')}</p>
+            <div className="form-group">
+              <label className="form-label">{t('customers.email')}</label>
+              <input type="text" className="form-input" value={portalAccessResult.email} readOnly />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('customers.temporaryPassword')}</label>
+              <input type="text" className="form-input" value={portalAccessResult.temporaryPassword} readOnly />
+            </div>
+            <span className="form-hint">⚠️ {t('customers.portalAccessWarning')}</span>
+          </div>
+        )}
+      </Modal>
     </>
   );
 };

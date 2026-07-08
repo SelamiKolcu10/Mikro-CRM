@@ -8,16 +8,30 @@ const {
   getStats,
 } = require('../controllers/feedbackController');
 const { protect } = require('../middleware/authMiddleware');
+const { authorize } = require('../middleware/authorize');
+const { ROLES } = require('../config/permissions');
 
 const router = express.Router();
 
 // All feedback routes are protected
 router.use(protect);
 
-// Stats route must come before /:id to avoid matching "stats" as an ID
-router.get('/stats/summary', getStats);
+const READ_ROLES = [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN];
+const WRITE_ROLES = [ROLES.SUPER_ADMIN, ROLES.STAFF];
+// Support handles tickets day-to-day (status/assignment updates) but can't
+// create or delete feedback entries — that stays with staff/super_admin.
+const UPDATE_ROLES = [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT];
 
-router.route('/').get(getFeedbacks).post(createFeedback);
-router.route('/:id').get(getFeedback).put(updateFeedback).delete(deleteFeedback);
+// Stats route must come before /:id to avoid matching "stats" as an ID
+router.get('/stats/summary', authorize(...READ_ROLES), getStats);
+
+router.route('/')
+  .get(authorize(...READ_ROLES), getFeedbacks)
+  .post(authorize(...WRITE_ROLES), createFeedback);
+
+router.route('/:id')
+  .get(authorize(...READ_ROLES), getFeedback)
+  .put(authorize(...UPDATE_ROLES), updateFeedback)
+  .delete(authorize(...WRITE_ROLES), deleteFeedback);
 
 module.exports = router;

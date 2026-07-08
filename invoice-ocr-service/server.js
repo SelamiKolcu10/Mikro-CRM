@@ -1,8 +1,14 @@
 const express = require('express');
-const cors = require('cors');
 const mongoose = require('mongoose');
 const config = require('./config');
 const errorHandler = require('./middleware/errorHandler');
+const { applySecurity } = require('./middleware/security');
+const { protect } = require('./middleware/auth');
+
+if (!process.env.JWT_SECRET) {
+  console.error('❌ JWT_SECRET tanımlı değil — sunucu güvenli başlatılamaz.');
+  process.exit(1);
+}
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -19,12 +25,13 @@ connectDB();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Security middleware (helmet, restricted CORS, rate limiting, sanitization)
+applySecurity(app, { frontendUrl: process.env.FRONTEND_URL });
 
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
+app.use(express.json({ limit: '1mb' }));
+
+// Uploaded invoice files require a valid session — not publicly browsable
+app.use('/uploads', protect, express.static('uploads'));
 
 // API Routes
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
