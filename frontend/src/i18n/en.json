@@ -41,6 +41,7 @@
     "customers": "Customers",
     "feedbacks": "Feedbacks",
     "invoices": "Invoices",
+    "invoicesV2": "Invoices v2 (Local OCR)",
     "menu": "Menu",
     "main": "Main Menu",
     "finance": "Finance",
@@ -180,6 +181,10 @@
     },
     "noInvoices": "No invoices uploaded yet",
     "uploadFirst": "Start by uploading your first invoice"
+  },
+  "invoicesV2": {
+    "title": "Invoices v2 — Local OCR (Tesseract)",
+    "subtitle": "Fully local OCR and regex-based invoice processing, zero external API dependency"
   },
   "mockData": {
     "Giriş sayfası mobilde çöküyor": "Login page crashes on mobile",

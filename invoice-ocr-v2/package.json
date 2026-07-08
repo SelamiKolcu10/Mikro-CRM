@@ -1,0 +1,24 @@
+{
+  "name": "invoice-ocr-v2",
+  "version": "1.0.0",
+  "description": "Yerli OCR Fatura Servisi — Tesseract.js + Regex Parser (Dışa Bağımlılık Sıfır)",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "test": "jest --verbose --forceExit"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "mongoose": "^8.9.5",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.5",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

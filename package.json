@@ -4,13 +4,15 @@
   "description": "Revenue-driven feedback prioritization CRM for SaaS teams",
   "scripts": {
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "dev:all": "concurrently \"npm run backend\" \"npm run frontend\" \"npm run invoice-service\"",
+    "dev:all": "concurrently \"npm run backend\" \"npm run frontend\" \"npm run invoice-service\" \"npm run invoice-v2\"",
     "backend": "cd backend && npm run dev",
     "frontend": "cd frontend && npm run dev",
     "invoice-service": "cd invoice-ocr-service && npm run dev",
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../invoice-ocr-service && npm install",
+    "invoice-v2": "cd invoice-ocr-v2 && npm run dev",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../invoice-ocr-service && npm install && cd ../invoice-ocr-v2 && npm install",
     "seed": "cd backend && npm run seed",
-    "test:invoices": "cd invoice-ocr-service && npm test"
+    "test:invoices": "cd invoice-ocr-service && npm test",
+    "test:invoices-v2": "cd invoice-ocr-v2 && npm test"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -25,10 +25,15 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
       vendorName: invoice.vendorName || '',
       vendorTaxNumber: invoice.vendorTaxNumber || '',
       invoiceNumber: invoice.invoiceNumber || '',
+      invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
       lineItems: invoice.lineItems?.map((item) => ({ ...item })) || [],
       grandTotal: invoice.grandTotal || 0,
     });
     setEditing(true);
+  };
+
+  const handleFieldChange = (field, value) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleLineItemChange = (index, field, value) => {
@@ -102,19 +107,55 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
         <div className="detail-grid">
           <div className="detail-item">
             <label>{t('invoices.vendor')}</label>
-            <span>{invoice.vendorName || '—'}</span>
+            {editing ? (
+              <input
+                type="text"
+                className="form-input compact"
+                value={editForm.vendorName}
+                onChange={(e) => handleFieldChange('vendorName', e.target.value)}
+              />
+            ) : (
+              <span>{invoice.vendorName || '—'}</span>
+            )}
           </div>
           <div className="detail-item">
             <label>{t('invoices.vendorTax')}</label>
-            <span>{invoice.vendorTaxNumber || '—'}</span>
+            {editing ? (
+              <input
+                type="text"
+                className="form-input compact"
+                value={editForm.vendorTaxNumber}
+                onChange={(e) => handleFieldChange('vendorTaxNumber', e.target.value)}
+              />
+            ) : (
+              <span>{invoice.vendorTaxNumber || '—'}</span>
+            )}
           </div>
           <div className="detail-item">
             <label>{t('invoices.invoiceNo')}</label>
-            <span>{invoice.invoiceNumber || '—'}</span>
+            {editing ? (
+              <input
+                type="text"
+                className="form-input compact"
+                value={editForm.invoiceNumber}
+                onChange={(e) => handleFieldChange('invoiceNumber', e.target.value)}
+              />
+            ) : (
+              <span>{invoice.invoiceNumber || '—'}</span>
+            )}
           </div>
           <div className="detail-item">
             <label>{t('invoices.invoiceDate')}</label>
-            <span>{formatDate(invoice.invoiceDate)}</span>
+            {editing ? (
+              <input
+                type="date"
+                className="form-input compact"
+                value={editForm.invoiceDate}
+                onChange={(e) => handleFieldChange('invoiceDate', e.target.value)}
+              />
+            ) : (
+              <span>{formatDate(invoice.invoiceDate)}</span>
+            )}
           </div>
         </div>
       </div>

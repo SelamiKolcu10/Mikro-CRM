@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { HiOutlineViewGrid, HiOutlineUsers, HiOutlineChatAlt2, HiOutlineDocumentText, HiOutlineSun, HiOutlineMoon } from 'react-icons/hi';
+import { HiOutlineViewGrid, HiOutlineUsers, HiOutlineChatAlt2, HiOutlineDocumentText, HiOutlineBeaker, HiOutlineSun, HiOutlineMoon } from 'react-icons/hi';
 import { useLanguage } from '../../context/LanguageContext';
 
 const Sidebar = () => {
@@ -28,6 +28,7 @@ const Sidebar = () => {
 
   const financeItems = [
     { path: '/invoices', icon: <HiOutlineDocumentText />, label: t('nav.invoices') },
+    { path: '/invoices-v2', icon: <HiOutlineBeaker />, label: t('nav.invoicesV2') },
   ];
 
   return (

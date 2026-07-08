@@ -41,6 +41,7 @@
     "customers": "Müşteriler",
     "feedbacks": "Geri Bildirimler",
     "invoices": "Faturalar",
+    "invoicesV2": "Fatura v2 (Yerli OCR)",
     "menu": "Menü",
     "main": "Ana Menü",
     "finance": "Finans",
@@ -180,6 +181,10 @@
     },
     "noInvoices": "Henüz fatura yüklenmedi",
     "uploadFirst": "İlk faturanızı yükleyerek başlayın"
+  },
+  "invoicesV2": {
+    "title": "Fatura v2 — Yerli OCR (Tesseract)",
+    "subtitle": "Dış API bağımlılığı olmadan, tamamen yerel OCR ve regex tabanlı fatura işleme"
   },
   "mockData": {
     "Giriş sayfası mobilde çöküyor": "Giriş sayfası mobilde çöküyor",

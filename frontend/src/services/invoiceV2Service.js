@@ -1,0 +1,57 @@
+import axios from 'axios';
+
+// Dedicated API instance for Invoice OCR v2 Service — Yerli OCR / Tesseract.js (port 5002)
+const invoiceV2Api = axios.create({
+  baseURL: 'http://localhost:5002/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+const invoiceV2Service = {
+  // Upload single invoice
+  upload: (file) => {
+    const formData = new FormData();
+    formData.append('invoice', file);
+    return invoiceV2Api.post('/invoices/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  // Bulk upload invoices
+  bulkUpload: (files, onProgress) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('invoices', file));
+    return invoiceV2Api.post('/invoices/bulk-upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress,
+    });
+  },
+
+  // Get all invoices with pagination & filters
+  getAll: (params = {}) => {
+    return invoiceV2Api.get('/invoices', { params });
+  },
+
+  // Get single invoice by ID
+  getById: (id) => {
+    return invoiceV2Api.get(`/invoices/${id}`);
+  },
+
+  // Update invoice (manual correction)
+  update: (id, data) => {
+    return invoiceV2Api.put(`/invoices/${id}`, data);
+  },
+
+  // Delete invoice
+  delete: (id) => {
+    return invoiceV2Api.delete(`/invoices/${id}`);
+  },
+
+  // Get processing statistics
+  getStats: () => {
+    return invoiceV2Api.get('/invoices/stats/summary');
+  },
+};
+
+export default invoiceV2Service;

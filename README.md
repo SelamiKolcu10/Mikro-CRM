@@ -77,13 +77,21 @@ Micro-CRM/
 │   ├── seed/                   # Demo veri scripti
 │   └── utils/                  # Yardımcı fonksiyonlar
 │
-├── invoice-ocr-service/        # 🧾 Bağımsız Fatura OCR Mikroservisi
+├── invoice-ocr-service/        # 🧾 Bağımsız Fatura OCR Mikroservisi (v1)
 │   ├── services/               # OpenAI GPT-4o-mini & OCR entegrasyonu
 │   ├── utils/                  # KDV hesaplama motoru
 │   ├── models/                 # Fatura veri modeli
 │   ├── controllers/            # API handler'ları
 │   ├── tests/                  # Jest unit testleri
 │   └── README.md               # Bağımsız kurulum kılavuzu
+│
+├── invoice-ocr-v2/              # 🧾 Yerli OCR Fatura Mikroservisi (v2, port 5002)
+│   ├── services/                # Tesseract.js OCR + Sharp ön-işleme + regex parser
+│   ├── utils/                   # KDV hesaplama motoru (v1 ile aynı)
+│   ├── models/                  # Fatura veri modeli
+│   ├── controllers/             # API handler'ları (v1 ile aynı interface)
+│   ├── tests/                   # Jest unit testleri
+│   └── README.md                # Bağımsız kurulum kılavuzu
 ```
 
 ## 🔌 API Uç Noktaları
@@ -141,7 +149,8 @@ Micro-CRM/
 }
 ```
 
-### Invoices (Fatura — Bağımsız Servis, Port 5001)
+### Invoices v1 (Fatura — Bağımsız Servis, Port 5001, OpenAI)
+
 | Method | Endpoint | Açıklama |
 |---|---|---|
 | POST | `/api/invoices/upload` | Tek fatura yükle + AI ile işle |
@@ -152,6 +161,10 @@ Micro-CRM/
 | DELETE | `/api/invoices/:id` | Fatura sil |
 | GET | `/api/invoices/stats/summary` | İşleme istatistikleri |
 
+### Invoices v2 (Fatura — Bağımsız Servis, Port 5002, Yerli OCR/Tesseract.js)
+
+Aynı endpoint seti, `invoice-ocr-v2/` üzerinden `http://localhost:5002/api` adresinde. Dış API bağımlılığı yoktur, `invoicesv2` koleksiyonunu kullanır. Detaylar için [invoice-ocr-v2/README.md](invoice-ocr-v2/README.md).
+
 ### Kritik İlişki
 `Feedback.revenueImpact` ve `Feedback.priority` alanları, bağlı müşterinin `mrr` değerinden **otomatik hesaplanır**. Müşterinin planı değiştiğinde, ilişkili tüm geri bildirimler de güncellenir.
 
@@ -159,6 +172,16 @@ Micro-CRM/
 
 Projeye eklenen yeni özellikler, güncellemeler ve hata düzeltmeleri burada listelenecektir.
 
+- **2026-07-08** — 🧾 **Fatura v2 — Yerli OCR Mikroservisi** eklendi (v1.3.0)
+  - Bağımsız `invoice-ocr-v2/` mikroservisi oluşturuldu (port 5002), v1'e dokunulmadı
+  - Tesseract.js ile tamamen yerel OCR — dış API bağımlılığı ve maliyet sıfır
+  - Sharp ile görüntü ön-işleme pipeline'ı (grayscale, kontrast, keskinleştirme, eşikleme)
+  - Kendi Türkçe fatura regex pattern engine'i (`invoiceParser.js`)
+  - v1 ile birebir aynı KDV motoru, doğrulama ve API interface'i yeniden kullanıldı
+  - Ayrı `invoicesv2` MongoDB koleksiyonu
+  - Frontend: `/invoices-v2` sayfası, Sidebar'a "Fatura v2 (Yerli OCR)" menü öğesi
+  - Türkçe/İngilizce i18n desteği
+  - 44 Jest unit testi (vatCalculator + invoiceParser)
 - **2026-07-07** — 🔄 **AI Motor Değişikliği: Google Gemini → OpenAI GPT-4o-mini** (v1.2.0)
   - Fatura OCR altyapısı Google Gemini Vision API'den **OpenAI GPT-4o-mini Vision**'a geçirildi
   - Daha güvenilir ve düşük maliyetli fatura okuma deneyimi

@@ -5,3 +5,5 @@ dist/
 *.log
 invoice-ocr-service/uploads/*
 !invoice-ocr-service/uploads/.gitkeep
+invoice-ocr-v2/uploads/*
+!invoice-ocr-v2/uploads/.gitkeep
