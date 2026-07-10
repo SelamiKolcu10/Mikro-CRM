@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
+const { verifyFileSignature } = require('../middleware/fileSignature');
 const { protect, authorize } = require('../middleware/auth');
 const {
   uploadSingleInvoice,
@@ -16,10 +17,10 @@ const {
 router.use(protect, authorize('super_admin', 'accountant'));
 
 // POST /api/invoices/upload — Single invoice upload + process
-router.post('/upload', upload.single('invoice'), uploadSingleInvoice);
+router.post('/upload', upload.single('invoice'), verifyFileSignature, uploadSingleInvoice);
 
 // POST /api/invoices/bulk-upload — Bulk invoice upload (10-20 files)
-router.post('/bulk-upload', upload.array('invoices', 20), bulkUploadInvoices);
+router.post('/bulk-upload', upload.array('invoices', 20), verifyFileSignature, bulkUploadInvoices);
 
 // GET /api/invoices — List all invoices (with pagination & filters)
 router.get('/', getAllInvoices);

@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/authorize');
+const { handleValidationErrors } = require('../middleware/validate');
+const {
+  createUserValidators,
+  approveUserValidators,
+  updateUserRoleValidators,
+  rejectUserValidators,
+} = require('../validators/userValidators');
 const {
   createUser,
   getAllUsers,
@@ -16,13 +23,13 @@ const {
 // Kullanıcı yönetimi — sadece super_admin
 router.use(protect, authorize('super_admin'));
 
-router.post('/', createUser);
+router.post('/', createUserValidators, handleValidationErrors, createUser);
 router.get('/', getAllUsers);
 router.get('/pending', getPendingUsers);
 router.get('/:id', getUserById);
-router.patch('/:id/approve', approveUser);
-router.patch('/:id/reject', rejectUser);
-router.patch('/:id/role', updateUserRole);
+router.patch('/:id/approve', approveUserValidators, handleValidationErrors, approveUser);
+router.patch('/:id/reject', rejectUserValidators, handleValidationErrors, rejectUser);
+router.patch('/:id/role', updateUserRoleValidators, handleValidationErrors, updateUserRole);
 router.delete('/:id', deleteUser);
 
 module.exports = router;

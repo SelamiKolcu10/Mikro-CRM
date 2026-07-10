@@ -1,6 +1,11 @@
 const Feedback = require('../models/Feedback');
 const Customer = require('../models/Customer');
 const { calculatePriority } = require('../utils/revenueImpact');
+const auditService = require('../utils/auditService');
+
+const FEEDBACK_WATCHED_FIELDS = ['title', 'description', 'type', 'status', 'assignedTo'];
+
+const notFound = (message) => Object.assign(new Error(message), { statusCode: 404 });
 
 /**
  * @route   GET /api/feedbacks
@@ -12,6 +17,7 @@ const getFeedbacks = async (req, res, next) => {
       type,
       status,
       priority,
+      customer,
       sort = '-revenueImpact',
       page = 1,
       limit = 20,
@@ -22,6 +28,7 @@ const getFeedbacks = async (req, res, next) => {
     if (type) filter.type = type;
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
+    if (customer) filter.customer = customer;
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -148,35 +155,69 @@ const getFeedback = async (req, res, next) => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// execute* — business logic only, no `req`/`res` dependency. Reused by the
+// direct HTTP handlers below and by approvalController.js on approval of a
+// queued request. Auditing stays out of these (needs actor context that
+// differs per caller — see callers below).
+// ---------------------------------------------------------------------------
+
+async function executeCreateFeedback({ customer: customerId, title, description, type, assignedTo }) {
+  const customer = await Customer.findById(customerId);
+  if (!customer) throw notFound('Customer not found');
+
+  const feedback = await Feedback.create({
+    title,
+    description,
+    type,
+    customer: customerId,
+    revenueImpact: customer.mrr,
+    priority: calculatePriority(customer.mrr),
+    assignedTo: assignedTo || null,
+  });
+
+  await feedback.populate('customer', 'name email company plan mrr');
+  return feedback;
+}
+
+async function executeUpdateFeedback(id, payload) {
+  // revenueImpact/priority are auto-calculated from customer MRR — never
+  // settable directly, whether the write comes from the direct route or an
+  // approved queued request.
+  const { revenueImpact, priority, ...updateData } = payload;
+
+  const before = await Feedback.findById(id);
+  if (!before) throw notFound('Feedback not found');
+  const beforeSnapshot = before.toObject();
+
+  const feedback = await Feedback.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+    .populate('customer', 'name email company plan mrr')
+    .populate('assignedTo', 'name email');
+
+  return { feedback, beforeSnapshot };
+}
+
+async function executeDeleteFeedback(id) {
+  const feedback = await Feedback.findByIdAndDelete(id);
+  if (!feedback) throw notFound('Feedback not found');
+  return feedback;
+}
+
 /**
  * @route   POST /api/feedbacks
  * @desc    Create feedback — auto-calculates revenueImpact & priority from customer's MRR
  */
 const createFeedback = async (req, res, next) => {
   try {
-    const { customer: customerId, title, description, type } = req.body;
+    const feedback = await executeCreateFeedback(req.body);
 
-    // Fetch customer to get MRR for automatic priority calculation
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        error: 'Customer not found',
-      });
-    }
-
-    const feedback = await Feedback.create({
-      title,
-      description,
-      type,
-      customer: customerId,
-      revenueImpact: customer.mrr,
-      priority: calculatePriority(customer.mrr),
-      assignedTo: req.body.assignedTo || null,
+    await auditService.record({
+      req,
+      collectionName: 'Feedback',
+      documentId: feedback._id,
+      action: 'create',
+      after: feedback.toObject(),
     });
-
-    // Populate customer info before returning
-    await feedback.populate('customer', 'name email company plan mrr');
 
     res.status(201).json({
       success: true,
@@ -193,24 +234,17 @@ const createFeedback = async (req, res, next) => {
  */
 const updateFeedback = async (req, res, next) => {
   try {
-    // Don't allow direct modification of revenueImpact or priority
-    // (these are auto-calculated from customer MRR)
-    const { revenueImpact, priority, ...updateData } = req.body;
+    const { feedback, beforeSnapshot } = await executeUpdateFeedback(req.params.id, req.body);
 
-    const feedback = await Feedback.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    )
-      .populate('customer', 'name email company plan mrr')
-      .populate('assignedTo', 'name email');
-
-    if (!feedback) {
-      return res.status(404).json({
-        success: false,
-        error: 'Feedback not found',
-      });
-    }
+    await auditService.record({
+      req,
+      collectionName: 'Feedback',
+      documentId: feedback._id,
+      action: 'update',
+      before: beforeSnapshot,
+      after: feedback.toObject(),
+      watchedFields: FEEDBACK_WATCHED_FIELDS,
+    });
 
     res.json({
       success: true,
@@ -227,14 +261,15 @@ const updateFeedback = async (req, res, next) => {
  */
 const deleteFeedback = async (req, res, next) => {
   try {
-    const feedback = await Feedback.findByIdAndDelete(req.params.id);
+    const feedback = await executeDeleteFeedback(req.params.id);
 
-    if (!feedback) {
-      return res.status(404).json({
-        success: false,
-        error: 'Feedback not found',
-      });
-    }
+    await auditService.record({
+      req,
+      collectionName: 'Feedback',
+      documentId: feedback._id,
+      action: 'delete',
+      before: feedback.toObject(),
+    });
 
     res.json({
       success: true,
@@ -252,4 +287,8 @@ module.exports = {
   updateFeedback,
   deleteFeedback,
   getStats,
+  executeCreateFeedback,
+  executeUpdateFeedback,
+  executeDeleteFeedback,
+  FEEDBACK_WATCHED_FIELDS,
 };

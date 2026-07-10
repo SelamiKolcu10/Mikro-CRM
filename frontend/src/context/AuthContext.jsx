@@ -53,9 +53,18 @@ export const AuthProvider = ({ children }) => {
     setSession(null);
   };
 
+  // After a password change, the backend issues a fresh token (cleared
+  // mustChangePassword claim). Storing it re-triggers the /me verify effect
+  // above, which pulls the updated session — no full page reload needed.
+  const updateToken = (newToken) => {
+    localStorage.setItem('micro-crm-token', newToken);
+    setToken(newToken);
+  };
+
   const isInternal = session?.accountType === 'internal';
   const isCustomer = session?.accountType === 'customer';
   const hasRole = (...roles) => isInternal && roles.includes(session.role);
+  const mustChangePassword = isInternal && !!session.mustChangePassword;
 
   return (
     <AuthContext.Provider
@@ -67,9 +76,11 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
+        updateToken,
         hasRole,
         isInternal,
         isCustomer,
+        mustChangePassword,
         isAuthenticated: !!session,
       }}
     >

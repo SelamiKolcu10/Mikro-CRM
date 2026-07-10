@@ -30,8 +30,21 @@ applySecurity(app, { frontendUrl: process.env.FRONTEND_URL });
 
 app.use(express.json({ limit: '1mb' }));
 
-// Uploaded invoice files require a valid session — not publicly browsable
-app.use('/uploads', protect, express.static('uploads'));
+// Uploaded invoice files require a valid session — not publicly browsable.
+// Defense-in-depth alongside middleware/fileSignature.js: even if a
+// mismatched file somehow ended up here, forcing download instead of
+// inline rendering (Content-Disposition) and disabling MIME-sniffing
+// (X-Content-Type-Options) means a browser will never execute it as HTML/JS.
+app.use(
+  '/uploads',
+  protect,
+  express.static('uploads', {
+    setHeaders: (res) => {
+      res.setHeader('Content-Disposition', 'attachment');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  })
+);
 
 // API Routes
 app.use('/api/invoices', require('./routes/invoiceRoutes'));

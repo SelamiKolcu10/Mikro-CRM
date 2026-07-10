@@ -2,6 +2,12 @@ const crypto = require('crypto');
 const Customer = require('../models/Customer');
 const Feedback = require('../models/Feedback');
 const CustomerUser = require('../models/CustomerUser');
+const auditService = require('../utils/auditService');
+const { calculatePriority } = require('../utils/revenueImpact');
+
+const CUSTOMER_WATCHED_FIELDS = ['name', 'email', 'company', 'plan', 'mrr', 'source', 'notes'];
+
+const notFound = (message) => Object.assign(new Error(message), { statusCode: 404 });
 
 /**
  * @route   GET /api/customers
@@ -73,13 +79,63 @@ const getCustomer = async (req, res, next) => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// execute* — the actual business logic (DB write + any cascading effects),
+// with no dependency on `req`/`res`. Reused by both the direct HTTP handlers
+// below AND approvalController.js when a queued request gets approved, so
+// there is exactly one place MRR-cascade/etc. logic lives. Auditing is
+// deliberately NOT done in here — it needs actor/IP context that differs
+// between "a user did this directly" and "an admin approved someone else's
+// queued request" — see the callers.
+// ---------------------------------------------------------------------------
+
+async function executeCreateCustomer(payload) {
+  return Customer.create(payload);
+}
+
+async function executeUpdateCustomer(id, payload) {
+  const before = await Customer.findById(id);
+  if (!before) throw notFound('Customer not found');
+  const beforeSnapshot = before.toObject();
+
+  const customer = await Customer.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
+
+  // If MRR changed, update all related feedbacks' revenueImpact & priority
+  if (payload.mrr !== undefined || payload.plan !== undefined) {
+    await Feedback.updateMany(
+      { customer: customer._id },
+      { revenueImpact: customer.mrr, priority: calculatePriority(customer.mrr) }
+    );
+  }
+
+  return { customer, beforeSnapshot };
+}
+
+async function executeDeleteCustomer(id) {
+  const customer = await Customer.findById(id);
+  if (!customer) throw notFound('Customer not found');
+
+  await Feedback.deleteMany({ customer: customer._id });
+  await Customer.findByIdAndDelete(id);
+
+  return customer;
+}
+
 /**
  * @route   POST /api/customers
  * @desc    Create a new customer
  */
 const createCustomer = async (req, res, next) => {
   try {
-    const customer = await Customer.create(req.body);
+    const customer = await executeCreateCustomer(req.body);
+
+    await auditService.record({
+      req,
+      collectionName: 'Customer',
+      documentId: customer._id,
+      action: 'create',
+      after: customer.toObject(),
+    });
 
     res.status(201).json({
       success: true,
@@ -96,30 +152,17 @@ const createCustomer = async (req, res, next) => {
  */
 const updateCustomer = async (req, res, next) => {
   try {
-    const customer = await Customer.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const { customer, beforeSnapshot } = await executeUpdateCustomer(req.params.id, req.body);
 
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        error: 'Customer not found',
-      });
-    }
-
-    // If MRR changed, update all related feedbacks' revenueImpact & priority
-    if (req.body.mrr !== undefined || req.body.plan !== undefined) {
-      const { calculatePriority } = require('../utils/revenueImpact');
-      await Feedback.updateMany(
-        { customer: customer._id },
-        {
-          revenueImpact: customer.mrr,
-          priority: calculatePriority(customer.mrr),
-        }
-      );
-    }
+    await auditService.record({
+      req,
+      collectionName: 'Customer',
+      documentId: customer._id,
+      action: 'update',
+      before: beforeSnapshot,
+      after: customer.toObject(),
+      watchedFields: CUSTOMER_WATCHED_FIELDS,
+    });
 
     res.json({
       success: true,
@@ -136,18 +179,15 @@ const updateCustomer = async (req, res, next) => {
  */
 const deleteCustomer = async (req, res, next) => {
   try {
-    const customer = await Customer.findById(req.params.id);
+    const customer = await executeDeleteCustomer(req.params.id);
 
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        error: 'Customer not found',
-      });
-    }
-
-    // Delete all feedbacks belonging to this customer
-    await Feedback.deleteMany({ customer: customer._id });
-    await Customer.findByIdAndDelete(req.params.id);
+    await auditService.record({
+      req,
+      collectionName: 'Customer',
+      documentId: customer._id,
+      action: 'delete',
+      before: customer.toObject(),
+    });
 
     res.json({
       success: true,
@@ -174,6 +214,7 @@ const grantPortalAccess = async (req, res, next) => {
     const tempPassword = crypto.randomBytes(9).toString('base64url'); // 12-char, URL-safe
 
     let customerUser = await CustomerUser.findOne({ customer: customer._id });
+    const isNew = !customerUser;
     if (customerUser) {
       customerUser.password = tempPassword;
       customerUser.status = 'active';
@@ -185,6 +226,16 @@ const grantPortalAccess = async (req, res, next) => {
         customer: customer._id,
       });
     }
+
+    await auditService.record({
+      req,
+      collectionName: 'CustomerUser',
+      documentId: customerUser._id,
+      action: isNew ? 'create' : 'update',
+      before: isNew ? undefined : { status: 'reset' },
+      after: { email: customerUser.email, status: customerUser.status },
+      watchedFields: isNew ? [] : ['status'],
+    });
 
     res.json({
       success: true,
@@ -226,4 +277,8 @@ module.exports = {
   deleteCustomer,
   grantPortalAccess,
   disablePortalAccess,
+  executeCreateCustomer,
+  executeUpdateCustomer,
+  executeDeleteCustomer,
+  CUSTOMER_WATCHED_FIELDS,
 };

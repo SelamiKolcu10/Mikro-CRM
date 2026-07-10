@@ -38,6 +38,15 @@ const customerUserSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Account-level brute-force lockout — mirrors User.js.
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -53,6 +62,30 @@ customerUserSchema.pre('save', async function (next) {
 
 customerUserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+customerUserSchema.methods.isLocked = function () {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+};
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 15 * 60 * 1000;
+
+customerUserSchema.methods.registerFailedLogin = async function () {
+  this.failedLoginAttempts += 1;
+  if (this.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+    this.lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
+    this.failedLoginAttempts = 0;
+  }
+  await this.save();
+};
+
+customerUserSchema.methods.registerSuccessfulLogin = async function () {
+  if (this.failedLoginAttempts > 0 || this.lockUntil) {
+    this.failedLoginAttempts = 0;
+    this.lockUntil = null;
+    await this.save();
+  }
 };
 
 module.exports = mongoose.model('CustomerUser', customerUserSchema);

@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { INVOICE_V2_API_URL } from '../config/apiUrls';
 
 // Dedicated API instance for Invoice OCR v2 Service — Yerli OCR / Tesseract.js (port 5002)
 const invoiceV2Api = axios.create({
-  baseURL: 'http://localhost:5002/api',
+  baseURL: INVOICE_V2_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import feedbackService from '../services/feedbackService';
 import customerService from '../services/customerService';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import PermissionGate from '../components/auth/PermissionGate';
+import { useMyPendingApprovals } from '../hooks/useMyPendingApprovals';
+import { can } from '../config/permissions';
 import toast from 'react-hot-toast';
 import {
   HiOutlinePlus,
@@ -11,10 +16,17 @@ import {
   HiOutlineTrash,
   HiOutlineSearch,
   HiOutlineChatAlt2,
+  HiOutlineClock,
 } from 'react-icons/hi';
 
 const Feedbacks = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const canUpdateStatus = can(user?.role, 'feedbacks', 'updateStatus');
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Deep-linked from elsewhere (e.g. the Live Chat cockpit's "this customer's
+  // tickets" link) — narrows the list to one customer until cleared.
+  const customerFilter = searchParams.get('customer') || '';
   const [feedbacks, setFeedbacks] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +45,10 @@ const Feedbacks = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  const { pending: pendingApprovals, refresh: refreshPending } = useMyPendingApprovals('feedbacks');
+  const pendingByTarget = new Map(pendingApprovals.filter((p) => p.targetId).map((p) => [p.targetId, p]));
+  const pendingCreates = pendingApprovals.filter((p) => p.action === 'create');
+
   const fetchFeedbacks = useCallback(async () => {
     try {
       const params = { limit: 100, sort: '-revenueImpact' };
@@ -40,6 +56,7 @@ const Feedbacks = () => {
       if (filters.status) params.status = filters.status;
       if (filters.priority) params.priority = filters.priority;
       if (search) params.search = search;
+      if (customerFilter) params.customer = customerFilter;
       const res = await feedbackService.getAll(params);
       setFeedbacks(res.data.data);
     } catch {
@@ -47,7 +64,7 @@ const Feedbacks = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters, search]);
+  }, [filters, search, customerFilter]);
 
   useEffect(() => {
     fetchFeedbacks();
@@ -85,20 +102,24 @@ const Feedbacks = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      if (editingId) {
-        await feedbackService.update(editingId, {
-          title: form.title,
-          description: form.description,
-          type: form.type,
-          status: form.status,
-        });
-        toast.success(t('common.update') + ' ✓');
+      const res = editingId
+        ? await feedbackService.update(editingId, {
+            title: form.title,
+            description: form.description,
+            type: form.type,
+            status: form.status,
+          })
+        : await feedbackService.create(form);
+
+      if (res.data.pending) {
+        toast.success(t('common.pendingApproval'));
+        setModalOpen(false);
+        refreshPending();
       } else {
-        await feedbackService.create(form);
-        toast.success(t('common.create') + ' ✓');
+        toast.success((editingId ? t('common.update') : t('common.create')) + ' ✓');
+        setModalOpen(false);
+        fetchFeedbacks();
       }
-      setModalOpen(false);
-      fetchFeedbacks();
     } catch (err) {
       toast.error(err.response?.data?.error || t('common.error'));
     } finally {
@@ -109,10 +130,15 @@ const Feedbacks = () => {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await feedbackService.delete(deleteId);
-      toast.success(t('common.delete') + ' ✓');
+      const res = await feedbackService.delete(deleteId);
+      if (res.data.pending) {
+        toast.success(t('common.pendingApproval'));
+        refreshPending();
+      } else {
+        toast.success(t('common.delete') + ' ✓');
+        fetchFeedbacks();
+      }
       setDeleteId(null);
-      fetchFeedbacks();
     } catch (err) {
       toast.error(err.response?.data?.error || t('common.error'));
     } finally {
@@ -122,8 +148,13 @@ const Feedbacks = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await feedbackService.update(id, { status: newStatus });
-      fetchFeedbacks();
+      const res = await feedbackService.update(id, { status: newStatus });
+      if (res.data.pending) {
+        toast.success(t('common.pendingApproval'));
+        refreshPending();
+      } else {
+        fetchFeedbacks();
+      }
     } catch {
       toast.error(t('common.error'));
     }
@@ -150,9 +181,11 @@ const Feedbacks = () => {
           <h1>{t('feedbacks.title')}</h1>
           <p>{t('feedbacks.subtitle')}</p>
         </div>
-        <button className="btn btn-primary" onClick={() => openCreateModal()}>
-          <HiOutlinePlus /> {t('feedbacks.addFeedback')}
-        </button>
+        <PermissionGate resource="feedbacks" action="write">
+          <button className="btn btn-primary" onClick={() => openCreateModal()}>
+            <HiOutlinePlus /> {t('feedbacks.addFeedback')}
+          </button>
+        </PermissionGate>
       </div>
 
       {/* Tabs */}
@@ -170,6 +203,17 @@ const Feedbacks = () => {
           {t('feedbacks.resolvedFeedbacks')}
         </button>
       </div>
+
+      {customerFilter && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-md)' }}>
+          <span className="filter-chip active">
+            {t('feedbacks.filteredByCustomer')}: {customers.find((c) => c._id === customerFilter)?.name || customerFilter}
+          </span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setSearchParams({})}>
+            {t('feedbacks.clearCustomerFilter')}
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="table-container">
@@ -239,74 +283,97 @@ const Feedbacks = () => {
             </tr>
           </thead>
           <tbody>
-            {displayedFeedbacks.map((fb) => (
-              <tr key={fb._id}>
+            {pendingCreates.map((p) => (
+              <tr key={p._id} className="pending-ghost-row">
                 <td>
-                  <div className="cell-name">{t('mockData', { returnObjects: true })?.[fb.title] || fb.title}</div>
-                  {fb.description && (
-                    <div className="cell-email" style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {t('mockData', { returnObjects: true })?.[fb.description] || fb.description}
-                    </div>
-                  )}
+                  <div className="cell-name">{p.payload?.title}</div>
                 </td>
-                <td>
-                  {fb.customer ? (
-                    <>
-                      <div className="cell-name">{fb.customer.name}</div>
-                      <span className={`badge badge-${fb.customer.plan}`} style={{ marginTop: '4px' }}>
-                        {t(`customers.plans.${fb.customer.plan}`).toUpperCase()}
-                      </span>
-                    </>
-                  ) : '—'}
-                </td>
-                <td>
-                  <span className={`badge badge-${fb.type}`}>
-                    {t(`feedbacks.types.${fb.type}`)}
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge badge-${fb.priority}`}>
-                    {t(`feedbacks.priorities.${fb.priority}`)}
-                  </span>
-                </td>
-                <td>
-                  <select
-                    className="form-select"
-                    value={fb.status}
-                    onChange={(e) => handleStatusChange(fb._id, e.target.value)}
-                    style={{ padding: '4px 28px 4px 8px', fontSize: 'var(--font-size-xs)', minWidth: '120px' }}
-                  >
-                    {['open', 'in-progress', 'resolved', 'closed'].map((s) => (
-                      <option key={s} value={s}>{t(`feedbacks.statuses.${s}`)}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <span className={`revenue-impact ${fb.revenueImpact >= 200 ? 'high' : fb.revenueImpact > 0 ? 'medium' : 'low'}`}>
-                    {formatCurrency(fb.revenueImpact)}{t('common.perMonth')}
-                  </span>
-                </td>
-                <td>
-                  <div className="cell-actions">
-                    {fb.customer && (
-                      <button
-                        className="btn-icon feedback-quick-btn"
-                        onClick={() => openCreateModal(fb.customer._id)}
-                        title={t('feedbacks.addFeedback')}
-                      >
-                        <HiOutlineChatAlt2 />
-                      </button>
-                    )}
-                    <button className="btn-icon" onClick={() => openEditModal(fb)} title={t('common.edit')}>
-                      <HiOutlinePencil />
-                    </button>
-                    <button className="btn-icon" onClick={() => setDeleteId(fb._id)} title={t('common.delete')} style={{ color: 'var(--color-danger)' }}>
-                      <HiOutlineTrash />
-                    </button>
-                  </div>
-                </td>
+                <td>{customers.find((c) => c._id === p.payload?.customer)?.name || '—'}</td>
+                <td>{p.payload?.type && <span className={`badge badge-${p.payload.type}`}>{t(`feedbacks.types.${p.payload.type}`)}</span>}</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td><span className="pending-badge"><HiOutlineClock /> {t('approvals.newRecordPending')}</span></td>
               </tr>
             ))}
+            {displayedFeedbacks.map((fb) => {
+              const pendingAction = pendingByTarget.get(fb._id);
+              return (
+                <tr key={fb._id}>
+                  <td>
+                    <div className="cell-name">{t('mockData', { returnObjects: true })?.[fb.title] || fb.title}</div>
+                    {fb.description && (
+                      <div className="cell-email" style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {t('mockData', { returnObjects: true })?.[fb.description] || fb.description}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {fb.customer ? (
+                      <>
+                        <div className="cell-name">{fb.customer.name}</div>
+                        <span className={`badge badge-${fb.customer.plan}`} style={{ marginTop: '4px' }}>
+                          {t(`customers.plans.${fb.customer.plan}`).toUpperCase()}
+                        </span>
+                      </>
+                    ) : '—'}
+                  </td>
+                  <td>
+                    <span className={`badge badge-${fb.type}`}>
+                      {t(`feedbacks.types.${fb.type}`)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge badge-${fb.priority}`}>
+                      {t(`feedbacks.priorities.${fb.priority}`)}
+                    </span>
+                  </td>
+                  <td>
+                    <select
+                      className="form-select"
+                      value={fb.status}
+                      onChange={(e) => handleStatusChange(fb._id, e.target.value)}
+                      disabled={!!pendingAction || !canUpdateStatus}
+                      style={{ padding: '4px 28px 4px 8px', fontSize: 'var(--font-size-xs)', minWidth: '120px' }}
+                    >
+                      {['open', 'in-progress', 'resolved', 'closed'].map((s) => (
+                        <option key={s} value={s}>{t(`feedbacks.statuses.${s}`)}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <span className={`revenue-impact ${fb.revenueImpact >= 200 ? 'high' : fb.revenueImpact > 0 ? 'medium' : 'low'}`}>
+                      {formatCurrency(fb.revenueImpact)}{t('common.perMonth')}
+                    </span>
+                  </td>
+                  <td>
+                    {pendingAction ? (
+                      <span className="pending-badge"><HiOutlineClock /> {t('common.pendingApproval')}</span>
+                    ) : (
+                      <PermissionGate resource="feedbacks" action="write">
+                        <div className="cell-actions">
+                          {fb.customer && (
+                            <button
+                              className="btn-icon feedback-quick-btn"
+                              onClick={() => openCreateModal(fb.customer._id)}
+                              title={t('feedbacks.addFeedback')}
+                            >
+                              <HiOutlineChatAlt2 />
+                            </button>
+                          )}
+                          <button className="btn-icon" onClick={() => openEditModal(fb)} title={t('common.edit')}>
+                            <HiOutlinePencil />
+                          </button>
+                          <button className="btn-icon" onClick={() => setDeleteId(fb._id)} title={t('common.delete')} style={{ color: 'var(--color-danger)' }}>
+                            <HiOutlineTrash />
+                          </button>
+                        </div>
+                      </PermissionGate>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
             {feedbacks.length === 0 && (
               <tr>
                 <td colSpan="7">

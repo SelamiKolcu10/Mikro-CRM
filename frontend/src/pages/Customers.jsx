@@ -5,8 +5,9 @@ import feedbackService from '../services/feedbackService';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import PermissionGate from '../components/auth/PermissionGate';
+import { useMyPendingApprovals } from '../hooks/useMyPendingApprovals';
 import toast from 'react-hot-toast';
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2, HiOutlineKey } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2, HiOutlineKey, HiOutlineClock } from 'react-icons/hi';
 
 const initialForm = {
   name: '', email: '', company: '', plan: 'free', mrr: 0, source: 'email', notes: '',
@@ -42,6 +43,15 @@ const Customers = () => {
   // Portal access grant result (temp password shown once)
   const [portalAccessResult, setPortalAccessResult] = useState(null);
   const [grantingPortalId, setGrantingPortalId] = useState(null);
+
+  // Actions taken under a Super Admin-granted override don't execute
+  // immediately — see hooks/useMyPendingApprovals.js. `pendingByTarget` maps
+  // an existing customer's id to its pending update/delete (if any);
+  // `pendingCreates` are queued new-customer requests, which don't have a
+  // real id yet and render as ghost rows instead.
+  const { pending: pendingApprovals, refresh: refreshPending } = useMyPendingApprovals('customers');
+  const pendingByTarget = new Map(pendingApprovals.filter((p) => p.targetId).map((p) => [p.targetId, p]));
+  const pendingCreates = pendingApprovals.filter((p) => p.action === 'create');
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -125,15 +135,19 @@ const Customers = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      if (editingId) {
-        await customerService.update(editingId, form);
-        toast.success(t('common.update') + ' ✓');
+      const res = editingId
+        ? await customerService.update(editingId, form)
+        : await customerService.create(form);
+
+      if (res.data.pending) {
+        toast.success(t('common.pendingApproval'));
+        setModalOpen(false);
+        refreshPending();
       } else {
-        await customerService.create(form);
-        toast.success(t('common.create') + ' ✓');
+        toast.success((editingId ? t('common.update') : t('common.create')) + ' ✓');
+        setModalOpen(false);
+        fetchCustomers();
       }
-      setModalOpen(false);
-      fetchCustomers();
     } catch (err) {
       toast.error(err.response?.data?.error || t('common.error'));
     } finally {
@@ -144,10 +158,15 @@ const Customers = () => {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await customerService.delete(deleteId);
-      toast.success(t('common.delete') + ' ✓');
+      const res = await customerService.delete(deleteId);
+      if (res.data.pending) {
+        toast.success(t('common.pendingApproval'));
+        refreshPending();
+      } else {
+        toast.success(t('common.delete') + ' ✓');
+        fetchCustomers();
+      }
       setDeleteId(null);
-      fetchCustomers();
     } catch (err) {
       toast.error(err.response?.data?.error || t('common.error'));
     } finally {
@@ -182,9 +201,11 @@ const Customers = () => {
           <h1>{t('customers.title')}</h1>
           <p>{t('customers.subtitle')}</p>
         </div>
-        <button className="btn btn-primary" onClick={openCreateModal}>
-          <HiOutlinePlus /> {t('customers.addCustomer')}
-        </button>
+        <PermissionGate resource="customers" action="write">
+          <button className="btn btn-primary" onClick={openCreateModal}>
+            <HiOutlinePlus /> {t('customers.addCustomer')}
+          </button>
+        </PermissionGate>
       </div>
 
       {/* Table */}
@@ -224,50 +245,74 @@ const Customers = () => {
             </tr>
           </thead>
           <tbody>
-            {customers.map((c) => (
-              <tr key={c._id}>
+            {pendingCreates.map((p) => (
+              <tr key={p._id} className="pending-ghost-row">
                 <td>
-                  <div className="cell-name">{c.name}</div>
-                  <div className="cell-email">{c.email}</div>
+                  <div className="cell-name">{p.payload?.name}</div>
+                  <div className="cell-email">{p.payload?.email}</div>
                 </td>
-                <td className="cell-company">{c.company || '—'}</td>
-                <td><span className={getPlanBadge(c.plan)}>{c.plan.toUpperCase()}</span></td>
-                <td>
-                  <span className={`revenue-impact ${c.mrr >= 200 ? 'high' : c.mrr > 0 ? 'medium' : 'low'}`}>
-                    {formatCurrency(c.mrr)}
-                  </span>
-                </td>
-                <td>{t(`customers.sources.${c.source}`)}</td>
-                <td>
-                  <div className="cell-actions">
-                    <button
-                      className="btn-icon feedback-quick-btn"
-                      onClick={() => openFeedbackModal(c)}
-                      title={t('feedbacks.addFeedback')}
-                    >
-                      <HiOutlineChatAlt2 />
-                    </button>
-                    <PermissionGate resource="customers" action="write">
-                      <button
-                        className="btn-icon"
-                        onClick={() => handleGrantPortalAccess(c)}
-                        disabled={grantingPortalId === c._id}
-                        title={t('customers.grantPortalAccess')}
-                      >
-                        <HiOutlineKey />
-                      </button>
-                    </PermissionGate>
-                    <button className="btn-icon" onClick={() => openEditModal(c)} title={t('common.edit')}>
-                      <HiOutlinePencil />
-                    </button>
-                    <button className="btn-icon" onClick={() => setDeleteId(c._id)} title={t('common.delete')} style={{ color: 'var(--color-danger)' }}>
-                      <HiOutlineTrash />
-                    </button>
-                  </div>
-                </td>
+                <td className="cell-company">{p.payload?.company || '—'}</td>
+                <td>{p.payload?.plan && <span className={getPlanBadge(p.payload.plan)}>{p.payload.plan.toUpperCase()}</span>}</td>
+                <td>{p.payload?.mrr !== undefined ? formatCurrency(p.payload.mrr) : '—'}</td>
+                <td>—</td>
+                <td><span className="pending-badge"><HiOutlineClock /> {t('approvals.newRecordPending')}</span></td>
               </tr>
             ))}
-            {customers.length === 0 && (
+            {customers.map((c) => {
+              const pendingAction = pendingByTarget.get(c._id);
+              return (
+                <tr key={c._id}>
+                  <td>
+                    <div className="cell-name">{c.name}</div>
+                    <div className="cell-email">{c.email}</div>
+                  </td>
+                  <td className="cell-company">{c.company || '—'}</td>
+                  <td><span className={getPlanBadge(c.plan)}>{c.plan.toUpperCase()}</span></td>
+                  <td>
+                    <span className={`revenue-impact ${c.mrr >= 200 ? 'high' : c.mrr > 0 ? 'medium' : 'low'}`}>
+                      {formatCurrency(c.mrr)}
+                    </span>
+                  </td>
+                  <td>{t(`customers.sources.${c.source}`)}</td>
+                  <td>
+                    {pendingAction ? (
+                      <span className="pending-badge" title={t(`approvals.action${pendingAction.action[0].toUpperCase()}${pendingAction.action.slice(1)}`)}>
+                        <HiOutlineClock /> {t('common.pendingApproval')}
+                      </span>
+                    ) : (
+                      <div className="cell-actions">
+                        <PermissionGate resource="feedbacks" action="write">
+                          <button
+                            className="btn-icon feedback-quick-btn"
+                            onClick={() => openFeedbackModal(c)}
+                            title={t('feedbacks.addFeedback')}
+                          >
+                            <HiOutlineChatAlt2 />
+                          </button>
+                        </PermissionGate>
+                        <PermissionGate resource="customers" action="write">
+                          <button
+                            className="btn-icon"
+                            onClick={() => handleGrantPortalAccess(c)}
+                            disabled={grantingPortalId === c._id}
+                            title={t('customers.grantPortalAccess')}
+                          >
+                            <HiOutlineKey />
+                          </button>
+                          <button className="btn-icon" onClick={() => openEditModal(c)} title={t('common.edit')}>
+                            <HiOutlinePencil />
+                          </button>
+                          <button className="btn-icon" onClick={() => setDeleteId(c._id)} title={t('common.delete')} style={{ color: 'var(--color-danger)' }}>
+                            <HiOutlineTrash />
+                          </button>
+                        </PermissionGate>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {customers.length === 0 && pendingCreates.length === 0 && (
               <tr>
                 <td colSpan="6">
                   <div className="table-empty">

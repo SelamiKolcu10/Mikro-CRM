@@ -166,7 +166,7 @@ const UserManagement = () => {
                         onChange={(e) => handleRoleChange(u._id, e.target.value)}
                       >
                         {ALL_ROLES.map((role) => (
-                          <option key={role} value={role}>{ROLE_LABELS[role]}</option>
+                          <option key={role} value={role}>{t(ROLE_LABELS[role])}</option>
                         ))}
                       </select>
                     </td>
@@ -277,7 +277,7 @@ const UserManagement = () => {
       >
         {createResult && (
           <div>
-            <p>{createResult.name} ({ROLE_LABELS[createResult.role]}) {t('users.userCreatedHint')}</p>
+            <p>{createResult.name} ({t(ROLE_LABELS[createResult.role])}) {t('users.userCreatedHint')}</p>
             <div className="form-group">
               <label className="form-label">{t('auth.email')}</label>
               <input type="text" className="form-input" value={createResult.email} readOnly />

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_URL } from '../config/apiUrls';
 
 // Same token storage key as the internal app's api.js — login is unified
 // (see AuthContext), so whichever account type the token belongs to, it
@@ -6,7 +7,7 @@ import axios from 'axios';
 // portal/internal boundary via the token's own `aud` claim, not by which
 // localStorage key it was read from.
 const portalApi = axios.create({
-  baseURL: 'http://localhost:5000/api/portal',
+  baseURL: `${API_URL}/portal`,
   headers: { 'Content-Type': 'application/json' },
 });
 

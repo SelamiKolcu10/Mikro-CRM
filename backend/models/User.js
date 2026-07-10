@@ -46,6 +46,34 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Account-level brute-force lockout — complements the IP-based rate
+    // limiter, which alone doesn't stop an attacker rotating IPs against one
+    // known email.
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+      default: null,
+    },
+    // Set true for accounts created by an admin with a temporary password —
+    // forces a change on first login before any other route becomes usable
+    // (enforced in middleware/authMiddleware.js). Customer portal accounts
+    // deliberately do not have this field (see FAZ 2 decision).
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    // Embedded in every issued JWT. Bumped whenever role/status changes (see
+    // userController.js) so already-issued tokens stop being trusted
+    // immediately — closes the "demoted user keeps old privileges until
+    // their 7-day token expires" gap, especially on invoice-ocr-service/v2
+    // which verify tokens without a live DB role lookup.
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -63,6 +91,37 @@ userSchema.pre('save', async function (next) {
 // Compare entered password with hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.isLocked = function () {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+};
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 dakika
+
+userSchema.methods.registerFailedLogin = async function () {
+  this.failedLoginAttempts += 1;
+  if (this.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+    this.lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
+    this.failedLoginAttempts = 0;
+  }
+  await this.save();
+};
+
+userSchema.methods.registerSuccessfulLogin = async function () {
+  if (this.failedLoginAttempts > 0 || this.lockUntil) {
+    this.failedLoginAttempts = 0;
+    this.lockUntil = null;
+    await this.save();
+  }
+};
+
+// Invalidates every token issued before this call — call whenever role or
+// status changes. Does not save(); callers already have other fields to
+// persist in the same write, see userController.js.
+userSchema.methods.bumpTokenVersion = function () {
+  this.tokenVersion = (this.tokenVersion || 0) + 1;
 };
 
 module.exports = mongoose.model('User', userSchema);

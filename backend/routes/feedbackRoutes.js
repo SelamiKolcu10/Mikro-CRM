@@ -9,6 +9,9 @@ const {
 } = require('../controllers/feedbackController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/authorize');
+const { authorizeOrQueue } = require('../middleware/authorizeOrQueue');
+const { handleValidationErrors } = require('../middleware/validate');
+const { createFeedbackValidators, updateFeedbackValidators } = require('../validators/feedbackValidators');
 const { ROLES } = require('../config/permissions');
 
 const router = express.Router();
@@ -27,11 +30,11 @@ router.get('/stats/summary', authorize(...READ_ROLES), getStats);
 
 router.route('/')
   .get(authorize(...READ_ROLES), getFeedbacks)
-  .post(authorize(...WRITE_ROLES), createFeedback);
+  .post(authorizeOrQueue('feedbacks', 'write', ...WRITE_ROLES), createFeedbackValidators, handleValidationErrors, createFeedback);
 
 router.route('/:id')
   .get(authorize(...READ_ROLES), getFeedback)
-  .put(authorize(...UPDATE_ROLES), updateFeedback)
-  .delete(authorize(...WRITE_ROLES), deleteFeedback);
+  .put(authorizeOrQueue('feedbacks', 'write', ...UPDATE_ROLES), updateFeedbackValidators, handleValidationErrors, updateFeedback)
+  .delete(authorizeOrQueue('feedbacks', 'delete', ...WRITE_ROLES), deleteFeedback);
 
 module.exports = router;

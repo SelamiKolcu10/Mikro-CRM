@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { SocketProvider } from './context/SocketContext';
 import { DEFAULT_ROUTE_BY_ROLE } from './config/permissions';
 import Layout from './components/layout/Layout';
 import PortalLayout from './components/layout/PortalLayout';
@@ -13,9 +14,14 @@ import Invoices from './pages/Invoices';
 import InvoicesV2 from './pages/InvoicesV2';
 import UserManagement from './pages/UserManagement';
 import SpendingDashboard from './pages/SpendingDashboard';
-import KnowledgeBase from './pages/KnowledgeBase';
+import AuditLog from './pages/AuditLog';
+import ForcePasswordChange from './pages/ForcePasswordChange';
+import ChatDashboard from './pages/ChatDashboard';
+import AccessControlMatrix from './pages/AccessControlMatrix';
+import PendingApprovals from './pages/PendingApprovals';
 import PortalTickets from './pages/portal/PortalTickets';
 import PortalProfile from './pages/portal/PortalProfile';
+import PortalChat from './pages/portal/PortalChat';
 import RoleGuard from './components/auth/RoleGuard';
 import { ROLES } from './config/permissions';
 
@@ -53,10 +59,25 @@ const CustomerOnlyRoute = ({ children }) => {
   return isInternal ? <Navigate to={DEFAULT_ROUTE_BY_ROLE[session.role] || '/'} replace /> : children;
 };
 
+// Blocks the staff app behind the forced password-change screen — mirrors
+// the backend's own `protect` check (middleware/authMiddleware.js) so a
+// stale UI state can never show a screen the API would reject anyway.
+const PasswordGate = ({ children }) => {
+  const { mustChangePassword } = useAuth();
+  return mustChangePassword ? <Navigate to="/force-password-change" replace /> : children;
+};
+
+// The gate page itself should bounce away once there's nothing left to force.
+const ForcePasswordChangeRoute = () => {
+  const { mustChangePassword, session } = useAuth();
+  return mustChangePassword ? <ForcePasswordChange /> : <Navigate to={DEFAULT_ROUTE_BY_ROLE[session?.role] || '/'} replace />;
+};
+
 const App = () => {
   return (
     <LanguageProvider>
       <AuthProvider>
+        <SocketProvider>
         <BrowserRouter>
           <Toaster
             position="top-right"
@@ -88,14 +109,29 @@ const App = () => {
             >
               <Route path="/portal" element={<PortalTickets />} />
               <Route path="/portal/profile" element={<PortalProfile />} />
+              <Route path="/portal/chat" element={<PortalChat />} />
             </Route>
+
+            {/* Forced first-login password change — full-screen, no sidebar */}
+            <Route
+              path="/force-password-change"
+              element={
+                <ProtectedRoute>
+                  <InternalOnlyRoute>
+                    <ForcePasswordChangeRoute />
+                  </InternalOnlyRoute>
+                </ProtectedRoute>
+              }
+            />
 
             {/* Staff app */}
             <Route
               element={
                 <ProtectedRoute>
                   <InternalOnlyRoute>
-                    <Layout />
+                    <PasswordGate>
+                      <Layout />
+                    </PasswordGate>
                   </InternalOnlyRoute>
                 </ProtectedRoute>
               }
@@ -118,9 +154,20 @@ const App = () => {
               <Route path="/reports/spending" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><SpendingDashboard /></RoleGuard>
               } />
-              <Route path="/knowledge-base" element={<KnowledgeBase />} />
               <Route path="/users" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN]}><UserManagement /></RoleGuard>
+              } />
+              <Route path="/audit-log" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><AuditLog /></RoleGuard>
+              } />
+              <Route path="/chat" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT]}><ChatDashboard /></RoleGuard>
+              } />
+              <Route path="/access-control" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><AccessControlMatrix /></RoleGuard>
+              } />
+              <Route path="/approvals" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><PendingApprovals /></RoleGuard>
               } />
             </Route>
 
@@ -128,6 +175,7 @@ const App = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+        </SocketProvider>
       </AuthProvider>
     </LanguageProvider>
   );

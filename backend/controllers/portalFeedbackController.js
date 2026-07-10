@@ -1,6 +1,7 @@
 const Feedback = require('../models/Feedback');
 const Customer = require('../models/Customer');
 const { calculatePriority } = require('../utils/revenueImpact');
+const auditService = require('../utils/auditService');
 
 /**
  * @route   GET /api/portal/feedbacks
@@ -56,6 +57,14 @@ const createMyFeedback = async (req, res, next) => {
       customer: customer._id,
       revenueImpact: customer.mrr,
       priority: calculatePriority(customer.mrr),
+    });
+
+    await auditService.record({
+      req,
+      collectionName: 'Feedback',
+      documentId: feedback._id,
+      action: 'create',
+      after: feedback.toObject(),
     });
 
     res.status(201).json({ success: true, data: feedback });

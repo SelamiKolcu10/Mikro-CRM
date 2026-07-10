@@ -30,6 +30,12 @@ const identify = async (req, res, next) => {
       if (!user || user.status !== 'approved') {
         return res.status(401).json({ success: false, error: 'Not authorized' });
       }
+      // Same staleness check as middleware/authMiddleware.js — /auth/me must
+      // never hand back a session for a token that's already been revoked
+      // (role change, password change), or the frontend caches a lie.
+      if ((decoded.tokenVersion || 0) !== (user.tokenVersion || 0)) {
+        return res.status(401).json({ success: false, error: 'Not authorized', code: 'TOKEN_REVOKED' });
+      }
       req.accountType = 'internal';
       req.user = user;
       return next();

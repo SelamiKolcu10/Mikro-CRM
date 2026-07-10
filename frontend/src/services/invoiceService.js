@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { INVOICE_API_URL } from '../config/apiUrls';
 
 // Dedicated API instance for Invoice OCR Service (port 5001)
 const invoiceApi = axios.create({
-  baseURL: 'http://localhost:5001/api',
+  baseURL: INVOICE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -10,11 +10,30 @@ const hpp = require('hpp');
  * Shared shape across backend, invoice-ocr-service, and invoice-ocr-v2.
  */
 function applySecurity(app, { frontendUrl }) {
-  app.use(helmet());
+  const origin = frontendUrl || 'http://localhost:5173';
+
+  app.use(
+    helmet({
+      // This is a JSON-only API (no HTML/inline scripts served), so a strict
+      // default-src is safe. connect-src explicitly allows ws/wss to the
+      // frontend origin for the Socket.io chat layer.
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: ["'self'", origin, origin.replace(/^http/, 'ws')],
+          imgSrc: ["'self'", 'data:'],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+    })
+  );
 
   app.use(
     cors({
-      origin: frontendUrl || 'http://localhost:5173',
+      origin,
       credentials: true,
     })
   );

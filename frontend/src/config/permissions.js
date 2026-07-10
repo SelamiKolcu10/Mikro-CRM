@@ -14,18 +14,22 @@ export const ROLES = {
 
 export const ALL_ROLES = Object.values(ROLES);
 
+// i18n keys, not literal strings — resolve with t(ROLE_LABELS[role]) wherever
+// a role label renders (see components/layout/Navbar.jsx for the reference
+// usage, the role badge).
 export const ROLE_LABELS = {
-  [ROLES.SUPER_ADMIN]: 'Süper Admin',
-  [ROLES.ACCOUNTANT]: 'Muhasebeci',
-  [ROLES.STAFF]: 'Çalışan',
-  [ROLES.SUPPORT]: 'Destek',
-  [ROLES.INTERN]: 'Stajer',
+  [ROLES.SUPER_ADMIN]: 'roles.superAdmin',
+  [ROLES.ACCOUNTANT]: 'roles.accountant',
+  [ROLES.STAFF]: 'roles.staff',
+  [ROLES.SUPPORT]: 'roles.support',
+  [ROLES.INTERN]: 'roles.intern',
 };
 
 export const PERMISSIONS = {
   users: {
     read: [ROLES.SUPER_ADMIN],
     write: [ROLES.SUPER_ADMIN],
+    approve: [ROLES.SUPER_ADMIN],
   },
   company: {
     read: ALL_ROLES,
@@ -47,11 +51,23 @@ export const PERMISSIONS = {
   spendingReport: {
     read: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT],
   },
-  knowledgeBase: {
-    read: ALL_ROLES,
-    write: [ROLES.SUPER_ADMIN, ROLES.SUPPORT],
+  auditLog: {
+    read: [ROLES.SUPER_ADMIN],
+  },
+  chat: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
+    assign: [ROLES.SUPER_ADMIN],
+  },
+  approvals: {
+    read: [ROLES.SUPER_ADMIN],
+    review: [ROLES.SUPER_ADMIN],
   },
 };
+
+// Resources a Super Admin can grant a runtime PermissionOverride for — kept
+// in sync with backend/config/permissions.js's OVERRIDABLE_RESOURCES.
+export const OVERRIDABLE_RESOURCES = ['customers', 'feedbacks'];
 
 /**
  * @param {string} role - user.role

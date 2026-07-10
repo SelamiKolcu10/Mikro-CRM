@@ -44,10 +44,31 @@ const PERMISSIONS = {
   spendingReport: {
     read: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT],
   },
-  knowledgeBase: {
-    read: ALL_ROLES,
-    write: [ROLES.SUPER_ADMIN, ROLES.SUPPORT],
+  auditLog: {
+    read: [ROLES.SUPER_ADMIN],
+  },
+  // Live customer chat — a separate channel from `feedbacks` (support
+  // tickets). Intern is deliberately excluded: unlike knowledge base/tickets
+  // (read-only for them), unsupervised live back-and-forth with a customer
+  // is a bigger blast radius for a trainee account.
+  chat: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
+    assign: [ROLES.SUPER_ADMIN],
+  },
+  // The dynamic override/approval workflow itself (Access Control Matrix +
+  // Pending Approvals queue) — always super_admin only, regardless of what
+  // overrides exist, otherwise a user could grant themselves more access.
+  approvals: {
+    read: [ROLES.SUPER_ADMIN],
+    review: [ROLES.SUPER_ADMIN],
   },
 };
 
-module.exports = { ROLES, ALL_ROLES, PERMISSIONS };
+// Resources a Super Admin can grant a runtime PermissionOverride for — kept
+// separate from PERMISSIONS' keys since not every resource makes sense to
+// override (e.g. `users`, `approvals` themselves stay super_admin-only, no
+// exceptions).
+const OVERRIDABLE_RESOURCES = ['customers', 'feedbacks'];
+
+module.exports = { ROLES, ALL_ROLES, PERMISSIONS, OVERRIDABLE_RESOURCES };

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const User = require('../models/User');
 const { ALL_ROLES, ROLES } = require('../config/permissions');
+const auditService = require('../utils/auditService');
 
 // createUser deliberately excludes super_admin: minting a brand-new highest-
 // privilege account in one shot is a bigger blast radius than promoting an
@@ -42,6 +43,15 @@ const createUser = async (req, res, next) => {
       status: 'approved',
       approvedBy: req.user._id,
       approvedAt: new Date(),
+      mustChangePassword: true,
+    });
+
+    await auditService.record({
+      req,
+      collectionName: 'User',
+      documentId: user._id,
+      action: 'create',
+      after: { name: user.name, email: user.email, role: user.role, status: user.status },
     });
 
     res.status(201).json({
@@ -115,6 +125,7 @@ const approveUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
     }
+    const before = { role: user.role, status: user.status };
 
     if (role) {
       if (!ALL_ROLES.includes(role)) {
@@ -127,7 +138,18 @@ const approveUser = async (req, res, next) => {
     user.approvedBy = req.user._id;
     user.approvedAt = new Date();
     user.rejectionReason = null;
+    user.bumpTokenVersion();
     await user.save();
+
+    await auditService.record({
+      req,
+      collectionName: 'User',
+      documentId: user._id,
+      action: 'update',
+      before,
+      after: { role: user.role, status: user.status },
+      watchedFields: ['role', 'status'],
+    });
 
     res.json({ success: true, data: user });
   } catch (error) {
@@ -146,12 +168,24 @@ const rejectUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
     }
+    const before = { status: user.status };
 
     user.status = 'rejected';
     user.rejectionReason = reason || null;
     user.approvedBy = req.user._id;
     user.approvedAt = new Date();
+    user.bumpTokenVersion();
     await user.save();
+
+    await auditService.record({
+      req,
+      collectionName: 'User',
+      documentId: user._id,
+      action: 'update',
+      before,
+      after: { status: user.status },
+      watchedFields: ['status'],
+    });
 
     res.json({ success: true, data: user });
   } catch (error) {
@@ -174,9 +208,21 @@ const updateUserRole = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
     }
+    const before = { role: user.role };
 
     user.role = role;
+    user.bumpTokenVersion();
     await user.save();
+
+    await auditService.record({
+      req,
+      collectionName: 'User',
+      documentId: user._id,
+      action: 'update',
+      before,
+      after: { role: user.role },
+      watchedFields: ['role'],
+    });
 
     res.json({ success: true, data: user });
   } catch (error) {
@@ -197,6 +243,14 @@ const deleteUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
     }
+
+    await auditService.record({
+      req,
+      collectionName: 'User',
+      documentId: user._id,
+      action: 'delete',
+      before: { name: user.name, email: user.email, role: user.role },
+    });
 
     res.json({ success: true, message: 'Kullanıcı silindi.' });
   } catch (error) {

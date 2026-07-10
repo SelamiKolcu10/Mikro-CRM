@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_URL } from '../config/apiUrls';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,7 +20,10 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle 401 (expired token)
+// Response interceptor — handle 401 (expired token) and the forced
+// password-change gate (belt-and-suspenders: the router's PasswordGate
+// already prevents these screens from mounting, this just covers any
+// in-flight request racing a stale mustChangePassword=false client state).
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -29,6 +33,11 @@ api.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
+    } else if (
+      error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED' &&
+      window.location.pathname !== '/force-password-change'
+    ) {
+      window.location.href = '/force-password-change';
     }
     return Promise.reject(error);
   }

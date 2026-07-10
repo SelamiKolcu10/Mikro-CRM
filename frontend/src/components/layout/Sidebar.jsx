@@ -1,28 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
-import { HiOutlineViewGrid, HiOutlineUsers, HiOutlineChatAlt2, HiOutlineDocumentText, HiOutlineBeaker, HiOutlineShieldCheck, HiOutlineChartBar, HiOutlineBookOpen, HiOutlineSun, HiOutlineMoon } from 'react-icons/hi';
+import { HiOutlineSun, HiOutlineMoon } from 'react-icons/hi';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ROLES, ALL_ROLES } from '../../config/permissions';
+import { INTERNAL_NAV, PORTAL_NAV } from '../../config/navigation';
+import { ROLES } from '../../config/permissions';
 import userService from '../../services/userService';
+import approvalService from '../../services/approvalService';
 
+/**
+ * One sidebar for the whole app — staff and customer portal alike. Which
+ * nav tree renders (INTERNAL_NAV vs PORTAL_NAV, see config/navigation.js) is
+ * the only thing that branches on account type; a new role or a new portal
+ * page never needs a change here, only in navigation.js.
+ */
 const Sidebar = () => {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, customerUser, isInternal, isCustomer } = useAuth();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
 
-  // Super admin sees a badge for accounts awaiting approval — refreshed
-  // periodically so it doesn't go stale during a long session.
+  // Super admin sees badges for accounts awaiting approval and for queued
+  // override actions awaiting review — both refreshed periodically so they
+  // don't go stale during a long session.
   useEffect(() => {
-    if (user?.role !== ROLES.SUPER_ADMIN) return;
+    if (!isInternal || user?.role !== ROLES.SUPER_ADMIN) return;
     const fetchPending = () => {
       userService.getPending().then((res) => setPendingCount(res.data.data.length)).catch(() => {});
+      approvalService.getAll({ status: 'pending' }).then((res) => setPendingApprovalsCount(res.data.data.length)).catch(() => {});
     };
     fetchPending();
     const interval = setInterval(fetchPending, 60000);
     return () => clearInterval(interval);
-  }, [user?.role]);
+  }, [isInternal, user?.role]);
 
   useEffect(() => {
     if (theme === 'light') {
@@ -37,75 +48,59 @@ const Sidebar = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const allMainItems = [
-    { path: '/', icon: <HiOutlineViewGrid />, label: t('nav.dashboard'), roles: [ROLES.SUPER_ADMIN, ROLES.STAFF] },
-    { path: '/customers', icon: <HiOutlineUsers />, label: t('nav.customers'), roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
-    { path: '/feedbacks', icon: <HiOutlineChatAlt2 />, label: t('nav.feedbacks'), roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
-    { path: '/knowledge-base', icon: <HiOutlineBookOpen />, label: t('nav.knowledgeBase'), roles: ALL_ROLES },
-  ];
+  const badges = { pendingUsers: pendingCount, pendingApprovals: pendingApprovalsCount };
 
-  const allFinanceItems = [
-    { path: '/invoices', icon: <HiOutlineDocumentText />, label: t('nav.invoices'), roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
-    { path: '/invoices-v2', icon: <HiOutlineBeaker />, label: t('nav.invoicesV2'), roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
-    { path: '/reports/spending', icon: <HiOutlineChartBar />, label: t('nav.spendingReport'), roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
-  ];
+  const navGroups = isInternal ? INTERNAL_NAV : PORTAL_NAV;
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.roles || (isInternal && item.roles.includes(user.role))),
+    }))
+    .filter((group) => group.items.length > 0);
 
-  const allAdminItems = [
-    { path: '/users', icon: <HiOutlineShieldCheck />, label: t('nav.users'), roles: [ROLES.SUPER_ADMIN], badge: pendingCount },
-  ];
+  const brandLabel = isCustomer
+    ? customerUser?.customer?.name || t('nav.portalBrandFallback')
+    : 'Micro CRM';
 
-  const visible = (items) => items.filter((item) => !user || item.roles.includes(user.role));
-  const mainItems = visible(allMainItems);
-  const financeItems = visible(allFinanceItems);
-  const adminItems = visible(allAdminItems);
-
-  const renderLink = (item) => (
-    <NavLink
-      key={item.path}
-      to={item.path}
-      end={item.path === '/'}
-      className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-    >
-      <span className="nav-icon">{item.icon}</span>
-      <span>{item.label}</span>
-      {!!item.badge && <span className="nav-badge">{item.badge}</span>}
-    </NavLink>
-  );
+  const renderLink = (item) => {
+    const Icon = item.icon;
+    const badgeValue = item.badgeKey ? badges[item.badgeKey] : 0;
+    return (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        end={item.end ?? item.path === '/'}
+        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+      >
+        <span className="nav-icon"><Icon /></span>
+        <span>{t(item.labelKey)}</span>
+        {!!badgeValue && <span className="nav-badge">{badgeValue}</span>}
+      </NavLink>
+    );
+  };
 
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
         <div className="logo-icon">μ</div>
-        <span>Micro CRM</span>
+        <span>{brandLabel}</span>
       </div>
 
       <nav className="sidebar-nav">
-        {mainItems.length > 0 && (
-          <>
-            <span className="sidebar-label">{t('nav.main')}</span>
-            {mainItems.map(renderLink)}
-          </>
-        )}
-
-        {financeItems.length > 0 && (
-          <>
-            <span className="sidebar-label" style={{ marginTop: 'var(--space-lg)' }}>{t('nav.finance')}</span>
-            {financeItems.map(renderLink)}
-          </>
-        )}
-
-        {adminItems.length > 0 && (
-          <>
-            <span className="sidebar-label" style={{ marginTop: 'var(--space-lg)' }}>{t('nav.admin')}</span>
-            {adminItems.map(renderLink)}
-          </>
-        )}
+        {visibleGroups.map((group, idx) => (
+          <Fragment key={group.section}>
+            <span className="sidebar-label" style={idx > 0 ? { marginTop: 'var(--space-lg)' } : undefined}>
+              {t(group.sectionLabelKey)}
+            </span>
+            {group.items.map(renderLink)}
+          </Fragment>
+        ))}
       </nav>
 
       {/* Theme Toggle Button */}
       <div className="sidebar-footer" style={{ marginTop: 'auto', padding: 'var(--space-md)' }}>
-        <button 
-          className="btn btn-secondary" 
+        <button
+          className="btn btn-secondary"
           onClick={toggleTheme}
           style={{ width: '100%', justifyContent: 'center' }}
         >
@@ -121,4 +116,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-

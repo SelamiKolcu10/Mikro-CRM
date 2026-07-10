@@ -1,10 +1,15 @@
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { ROLE_LABELS } from '../../config/permissions';
 import { HiOutlineLogout } from 'react-icons/hi';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, customerUser, isInternal, logout } = useAuth();
   const { lang, toggleLanguage, t } = useLanguage();
+
+  // Staff show their own name; customers show their company/contact name so
+  // the avatar still means something without a `name` field on CustomerUser.
+  const displayName = isInternal ? user?.name : customerUser?.customer?.name || customerUser?.email;
 
   const getInitials = (name) => {
     if (!name) return '?';
@@ -19,7 +24,13 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        {/* Can be used for breadcrumbs or page title later */}
+        {/* Explicit, always-visible role indicator — the active user's
+            permission level should never be a mystery. */}
+        {user?.role && (
+          <span className={`role-badge role-badge-${user.role}`}>
+            {t(ROLE_LABELS[user.role])}
+          </span>
+        )}
       </div>
 
       <div className="navbar-right">
@@ -40,9 +51,9 @@ const Navbar = () => {
         </div>
 
         {/* User Info */}
-        {user && (
+        {(user || customerUser) && (
           <>
-            <div className="user-avatar">{getInitials(user.name)}</div>
+            <div className="user-avatar">{getInitials(displayName)}</div>
             <button
               className="btn-icon"
               onClick={logout}

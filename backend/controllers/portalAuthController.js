@@ -1,5 +1,6 @@
 const CustomerUser = require('../models/CustomerUser');
 const Customer = require('../models/Customer');
+const auditService = require('../utils/auditService');
 
 // Login and "who am I" for the portal now live in the unified
 // authController.js (single POST /api/auth/login, GET /api/auth/me for both
@@ -20,6 +21,7 @@ const updateProfile = async (req, res, next) => {
     if (!customer) {
       return res.status(404).json({ success: false, error: 'Müşteri kaydı bulunamadı.' });
     }
+    const before = { name: customer.name, email: customer.email };
 
     if (name !== undefined) customer.name = name;
 
@@ -37,6 +39,16 @@ const updateProfile = async (req, res, next) => {
     if (email !== undefined) {
       await CustomerUser.findByIdAndUpdate(req.customerUser._id, { email: customer.email });
     }
+
+    await auditService.record({
+      req,
+      collectionName: 'Customer',
+      documentId: customer._id,
+      action: 'update',
+      before,
+      after: { name: customer.name, email: customer.email },
+      watchedFields: ['name', 'email'],
+    });
 
     res.json({ success: true, data: customer });
   } catch (error) {
@@ -69,6 +81,18 @@ const changePassword = async (req, res, next) => {
 
     customerUser.password = newPassword;
     await customerUser.save();
+
+    // Value is never logged (auditService masks any field literally named
+    // "password") — only the fact that it changed, and who did it.
+    await auditService.record({
+      req,
+      collectionName: 'CustomerUser',
+      documentId: customerUser._id,
+      action: 'update',
+      before: { password: 'old' },
+      after: { password: 'new' },
+      watchedFields: ['password'],
+    });
 
     res.json({ success: true, message: 'Şifreniz güncellendi.' });
   } catch (error) {

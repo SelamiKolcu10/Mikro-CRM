@@ -1,8 +1,10 @@
 const express = require('express');
+const http = require('http');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const { applySecurity } = require('./middleware/security');
+const { initSocket } = require('./socket');
 
 // Load environment variables
 dotenv.config();
@@ -29,7 +31,10 @@ app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/feedbacks', require('./routes/feedbackRoutes'));
 app.use('/api/portal', require('./routes/portalRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/knowledge-base', require('./routes/knowledgeBaseRoutes'));
+app.use('/api/audit-logs', require('./routes/auditRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/approvals', require('./routes/approvalRoutes'));
+app.use('/api/permission-overrides', require('./routes/permissionOverrideRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -41,7 +46,13 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Chat needs a raw HTTP server so Socket.io can share the same port as the
+// REST API instead of running a second listener.
+const httpServer = http.createServer(app);
+initSocket(httpServer, { frontendUrl: process.env.FRONTEND_URL });
+
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 API available at http://localhost:${PORT}/api`);
+  console.log(`💬 Socket.io chat ready`);
 });

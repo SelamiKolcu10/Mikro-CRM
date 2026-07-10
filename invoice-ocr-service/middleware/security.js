@@ -10,11 +10,27 @@ const hpp = require('hpp');
  * Shared shape across backend, invoice-ocr-service, and invoice-ocr-v2.
  */
 function applySecurity(app, { frontendUrl }) {
-  app.use(helmet());
+  const origin = frontendUrl || 'http://localhost:5173';
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: ["'self'", origin],
+          imgSrc: ["'self'", 'data:'],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+    })
+  );
 
   app.use(
     cors({
-      origin: frontendUrl || 'http://localhost:5173',
+      origin,
       credentials: true,
     })
   );
