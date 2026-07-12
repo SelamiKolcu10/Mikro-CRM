@@ -13,7 +13,10 @@ const { ROLES } = require('../config/permissions');
  * kendi departmanıyla eşleşmek zorunda — bkz. taskController.createTask).
  */
 function taskScope(user) {
-  if (user.role === ROLES.SUPER_ADMIN) return {};
+  // Intern: tüm departmanları OKUYABİLİR (super_admin gibi), ama
+  // canApproveTask/canActOnTask hiç değişmedi — sadece kendine atanan
+  // görevde işlem yapabilir, lider olmadığı için onaylayamaz.
+  if (user.role === ROLES.SUPER_ADMIN || user.role === ROLES.INTERN) return {};
 
   if (user.isDepartmentLead && user.department) {
     return { department: user.department };
