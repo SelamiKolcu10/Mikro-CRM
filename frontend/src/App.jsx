@@ -19,6 +19,7 @@ import ForcePasswordChange from './pages/ForcePasswordChange';
 import ChatDashboard from './pages/ChatDashboard';
 import AccessControlMatrix from './pages/AccessControlMatrix';
 import PendingApprovals from './pages/PendingApprovals';
+import Tasks from './pages/Tasks';
 import PortalTickets from './pages/portal/PortalTickets';
 import PortalProfile from './pages/portal/PortalProfile';
 import PortalChat from './pages/portal/PortalChat';
@@ -144,6 +145,9 @@ const App = () => {
               } />
               <Route path="/feedbacks" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN]}><Feedbacks /></RoleGuard>
+              } />
+              <Route path="/tasks" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF]}><Tasks /></RoleGuard>
               } />
               <Route path="/invoices" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><Invoices /></RoleGuard>

@@ -12,6 +12,7 @@ import {
   HiOutlineChat,
   HiOutlineKey,
   HiOutlineClipboardCheck,
+  HiOutlineViewBoards,
 } from 'react-icons/hi';
 import { ROLES } from './permissions';
 
@@ -32,6 +33,7 @@ export const INTERNAL_NAV = [
       { path: '/', icon: HiOutlineViewGrid, labelKey: 'nav.dashboard', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF] },
       { path: '/customers', icon: HiOutlineUsers, labelKey: 'nav.customers', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
       { path: '/feedbacks', icon: HiOutlineChatAlt2, labelKey: 'nav.feedbacks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
+      { path: '/tasks', icon: HiOutlineViewBoards, labelKey: 'nav.tasks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF] },
       { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT] },
     ],
   },
