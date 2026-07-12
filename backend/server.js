@@ -33,6 +33,7 @@ app.use('/api/portal', require('./routes/portalRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/audit-logs', require('./routes/auditRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/approvals', require('./routes/approvalRoutes'));
 app.use('/api/permission-overrides', require('./routes/permissionOverrideRoutes'));
 
