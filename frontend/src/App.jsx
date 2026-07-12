@@ -147,7 +147,7 @@ const App = () => {
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN]}><Feedbacks /></RoleGuard>
               } />
               <Route path="/tasks" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF]}><Tasks /></RoleGuard>
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN]}><Tasks /></RoleGuard>
               } />
               <Route path="/invoices" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><Invoices /></RoleGuard>
@@ -156,22 +156,22 @@ const App = () => {
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><InvoicesV2 /></RoleGuard>
               } />
               <Route path="/reports/spending" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><SpendingDashboard /></RoleGuard>
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.INTERN]}><SpendingDashboard /></RoleGuard>
               } />
               <Route path="/users" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><UserManagement /></RoleGuard>
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.INTERN]}><UserManagement /></RoleGuard>
               } />
               <Route path="/audit-log" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><AuditLog /></RoleGuard>
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.INTERN]}><AuditLog /></RoleGuard>
               } />
               <Route path="/chat" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT]}><ChatDashboard /></RoleGuard>
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN]}><ChatDashboard /></RoleGuard>
               } />
               <Route path="/access-control" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><AccessControlMatrix /></RoleGuard>
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.INTERN]}><AccessControlMatrix /></RoleGuard>
               } />
               <Route path="/approvals" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><PendingApprovals /></RoleGuard>
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.INTERN]}><PendingApprovals /></RoleGuard>
               } />
             </Route>
 

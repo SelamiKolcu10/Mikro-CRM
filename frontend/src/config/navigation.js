@@ -33,8 +33,8 @@ export const INTERNAL_NAV = [
       { path: '/', icon: HiOutlineViewGrid, labelKey: 'nav.dashboard', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF] },
       { path: '/customers', icon: HiOutlineUsers, labelKey: 'nav.customers', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
       { path: '/feedbacks', icon: HiOutlineChatAlt2, labelKey: 'nav.feedbacks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
-      { path: '/tasks', icon: HiOutlineViewBoards, labelKey: 'nav.tasks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF] },
-      { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT] },
+      { path: '/tasks', icon: HiOutlineViewBoards, labelKey: 'nav.tasks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN] },
+      { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
     ],
   },
   {
@@ -43,17 +43,17 @@ export const INTERNAL_NAV = [
     items: [
       { path: '/invoices', icon: HiOutlineDocumentText, labelKey: 'nav.invoices', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
       { path: '/invoices-v2', icon: HiOutlineBeaker, labelKey: 'nav.invoicesV2', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
-      { path: '/reports/spending', icon: HiOutlineChartBar, labelKey: 'nav.spendingReport', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
+      { path: '/reports/spending', icon: HiOutlineChartBar, labelKey: 'nav.spendingReport', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.INTERN] },
     ],
   },
   {
     section: 'admin',
     sectionLabelKey: 'nav.admin',
     items: [
-      { path: '/users', icon: HiOutlineShieldCheck, labelKey: 'nav.users', roles: [ROLES.SUPER_ADMIN], badgeKey: 'pendingUsers' },
-      { path: '/access-control', icon: HiOutlineKey, labelKey: 'nav.accessControl', roles: [ROLES.SUPER_ADMIN] },
-      { path: '/approvals', icon: HiOutlineClipboardCheck, labelKey: 'nav.approvals', roles: [ROLES.SUPER_ADMIN], badgeKey: 'pendingApprovals' },
-      { path: '/audit-log', icon: HiOutlineClipboardList, labelKey: 'nav.auditLog', roles: [ROLES.SUPER_ADMIN] },
+      { path: '/users', icon: HiOutlineShieldCheck, labelKey: 'nav.users', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN], badgeKey: 'pendingUsers' },
+      { path: '/access-control', icon: HiOutlineKey, labelKey: 'nav.accessControl', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN] },
+      { path: '/approvals', icon: HiOutlineClipboardCheck, labelKey: 'nav.approvals', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN], badgeKey: 'pendingApprovals' },
+      { path: '/audit-log', icon: HiOutlineClipboardList, labelKey: 'nav.auditLog', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN] },
     ],
   },
 ];
