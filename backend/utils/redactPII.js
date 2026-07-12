@@ -8,6 +8,8 @@ const EMAIL_KEYS = new Set(['email', 'actorEmail']);
  * için. Sadece intern rolü için çağrılır (bkz. middleware/redactForIntern.js).
  */
 function redactEmails(data) {
+  if (data === undefined || data === null) return data;
+
   const plain = JSON.parse(JSON.stringify(data));
 
   const walk = (node) => {
