@@ -7,6 +7,7 @@ const userService = {
   approve: (id, role) => api.patch(`/users/${id}/approve`, role ? { role } : {}),
   reject: (id, reason) => api.patch(`/users/${id}/reject`, { reason }),
   updateRole: (id, role) => api.patch(`/users/${id}/role`, { role }),
+  updateDepartment: (id, data) => api.patch(`/users/${id}/department`, data),
   delete: (id) => api.delete(`/users/${id}`),
 };
 

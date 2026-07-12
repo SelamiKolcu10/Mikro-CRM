@@ -25,6 +25,15 @@ export const ROLE_LABELS = {
   [ROLES.INTERN]: 'roles.intern',
 };
 
+export const DEPARTMENTS = ['development', 'design', 'hr', 'marketing'];
+
+export const DEPARTMENT_LABELS = {
+  development: 'departments.development',
+  design: 'departments.design',
+  hr: 'departments.hr',
+  marketing: 'departments.marketing',
+};
+
 export const PERMISSIONS = {
   users: {
     read: [ROLES.SUPER_ADMIN],
@@ -58,6 +67,12 @@ export const PERMISSIONS = {
     read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
     write: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
     assign: [ROLES.SUPER_ADMIN],
+  },
+  tasks: {
+    read: ALL_ROLES,
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+    assign: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+    approve: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
   approvals: {
     read: [ROLES.SUPER_ADMIN],

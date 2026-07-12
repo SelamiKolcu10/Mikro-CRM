@@ -32,6 +32,13 @@
     "support": "Destek",
     "intern": "Stajer"
   },
+  "departments": {
+    "none": "Departman yok",
+    "development": "Geliştirme",
+    "design": "Tasarım",
+    "hr": "İnsan Kaynakları",
+    "marketing": "Pazarlama"
+  },
   "auth": {
     "login": "Giriş Yap",
     "email": "E-posta",
@@ -82,6 +89,8 @@
     "userCreated": "Kullanıcı Oluşturuldu",
     "userCreatedHint": "için hesap oluşturuldu. Bu bilgileri güvenli bir kanaldan ilgili kişiye iletin.",
     "role": "Rol",
+    "department": "Departman",
+    "isDepartmentLead": "Departman Lideri",
     "status": "Durum",
     "allStatuses": "Tüm Durumlar",
     "approve": "Onayla",

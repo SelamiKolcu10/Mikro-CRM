@@ -6,7 +6,7 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
 import { HiOutlineCheck, HiOutlineX, HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi';
-import { ALL_ROLES, ROLE_LABELS } from '../config/permissions';
+import { ALL_ROLES, ROLE_LABELS, DEPARTMENTS, DEPARTMENT_LABELS } from '../config/permissions';
 
 const STATUS_COLORS = {
   pending: 'var(--color-info)',
@@ -79,6 +79,26 @@ const UserManagement = () => {
     }
   };
 
+  const handleDepartmentChange = async (id, department) => {
+    try {
+      await userService.updateDepartment(id, { department: department || null });
+      toast.success(t('common.update') + ' ✅');
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.error || t('common.error'));
+    }
+  };
+
+  const handleLeadToggle = async (id, isDepartmentLead) => {
+    try {
+      await userService.updateDepartment(id, { isDepartmentLead });
+      toast.success(t('common.update') + ' ✅');
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.error || t('common.error'));
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
@@ -144,15 +164,17 @@ const UserManagement = () => {
                 <th>{t('auth.name')}</th>
                 <th>{t('auth.email')}</th>
                 <th>{t('users.role')}</th>
+                <th>{t('users.department')}</th>
+                <th>{t('users.isDepartmentLead')}</th>
                 <th>{t('users.status')}</th>
                 <th className="text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5}>{t('common.loading')}</td></tr>
+                <tr><td colSpan={7}>{t('common.loading')}</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={5}>{t('common.noData')}</td></tr>
+                <tr><td colSpan={7}>{t('common.noData')}</td></tr>
               ) : (
                 users.map((u) => (
                   <tr key={u._id}>
@@ -169,6 +191,25 @@ const UserManagement = () => {
                           <option key={role} value={role}>{t(ROLE_LABELS[role])}</option>
                         ))}
                       </select>
+                    </td>
+                    <td>
+                      <select
+                        className="form-select compact"
+                        value={u.department || ''}
+                        onChange={(e) => handleDepartmentChange(u._id, e.target.value)}
+                      >
+                        <option value="">{t('departments.none')}</option>
+                        {DEPARTMENTS.map((dept) => (
+                          <option key={dept} value={dept}>{t(DEPARTMENT_LABELS[dept])}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={!!u.isDepartmentLead}
+                        onChange={(e) => handleLeadToggle(u._id, e.target.checked)}
+                      />
                     </td>
                     <td>
                       <span className="status-badge" style={{ color: STATUS_COLORS[u.status] }}>

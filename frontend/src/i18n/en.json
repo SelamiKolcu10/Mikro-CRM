@@ -32,6 +32,13 @@
     "support": "Support",
     "intern": "Intern"
   },
+  "departments": {
+    "none": "No department",
+    "development": "Development",
+    "design": "Design",
+    "hr": "HR",
+    "marketing": "Marketing"
+  },
   "auth": {
     "login": "Sign In",
     "email": "Email",
@@ -82,6 +89,8 @@
     "userCreated": "User Created",
     "userCreatedHint": "account has been created. Share these credentials with them over a secure channel.",
     "role": "Role",
+    "department": "Department",
+    "isDepartmentLead": "Department Lead",
     "status": "Status",
     "allStatuses": "All Statuses",
     "approve": "Approve",
