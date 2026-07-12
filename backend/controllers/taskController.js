@@ -68,8 +68,8 @@ const createTask = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'Bu departmana görev atama yetkiniz yok.' });
     }
 
-    const assignee = await User.findById(assignedTo).select('department');
-    if (!assignee || assignee.department !== department) {
+    const assignee = await User.findById(assignedTo).select('department status');
+    if (!assignee || assignee.department !== department || assignee.status !== 'approved') {
       return res.status(400).json({ success: false, error: 'Atanan kullanıcı bu departmanda değil.' });
     }
 
