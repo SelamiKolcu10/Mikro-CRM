@@ -6,7 +6,8 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
 import { HiOutlineCheck, HiOutlineX, HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi';
-import { ALL_ROLES, ROLE_LABELS, DEPARTMENTS, DEPARTMENT_LABELS } from '../config/permissions';
+import { ALL_ROLES, ROLE_LABELS, DEPARTMENTS, DEPARTMENT_LABELS, can } from '../config/permissions';
+import PermissionGate from '../components/auth/PermissionGate';
 
 const STATUS_COLORS = {
   pending: 'var(--color-info)',
@@ -136,9 +137,11 @@ const UserManagement = () => {
           <h1>🛡️ {t('users.title')}</h1>
           <p>{t('users.subtitle')}</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setCreateModalOpen(true)}>
-          <HiOutlinePlus /> {t('users.createUser')}
-        </button>
+        <PermissionGate resource="users" action="write">
+          <button className="btn btn-primary" onClick={() => setCreateModalOpen(true)}>
+            <HiOutlinePlus /> {t('users.createUser')}
+          </button>
+        </PermissionGate>
       </div>
 
       <div className="table-container">
@@ -181,35 +184,47 @@ const UserManagement = () => {
                     <td>{u.name}</td>
                     <td>{u.email}</td>
                     <td>
-                      <select
-                        className="form-select compact"
-                        value={u.role}
-                        disabled={u._id === currentUser._id}
-                        onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                      >
-                        {ALL_ROLES.map((role) => (
-                          <option key={role} value={role}>{t(ROLE_LABELS[role])}</option>
-                        ))}
-                      </select>
+                      {can(currentUser.role, 'users', 'write') ? (
+                        <select
+                          className="form-select compact"
+                          value={u.role}
+                          disabled={u._id === currentUser._id}
+                          onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                        >
+                          {ALL_ROLES.map((role) => (
+                            <option key={role} value={role}>{t(ROLE_LABELS[role])}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{t(ROLE_LABELS[u.role])}</span>
+                      )}
                     </td>
                     <td>
-                      <select
-                        className="form-select compact"
-                        value={u.department || ''}
-                        onChange={(e) => handleDepartmentChange(u._id, e.target.value)}
-                      >
-                        <option value="">{t('departments.none')}</option>
-                        {DEPARTMENTS.map((dept) => (
-                          <option key={dept} value={dept}>{t(DEPARTMENT_LABELS[dept])}</option>
-                        ))}
-                      </select>
+                      {can(currentUser.role, 'users', 'write') ? (
+                        <select
+                          className="form-select compact"
+                          value={u.department || ''}
+                          onChange={(e) => handleDepartmentChange(u._id, e.target.value)}
+                        >
+                          <option value="">{t('departments.none')}</option>
+                          {DEPARTMENTS.map((dept) => (
+                            <option key={dept} value={dept}>{t(DEPARTMENT_LABELS[dept])}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{u.department ? t(DEPARTMENT_LABELS[u.department]) : t('departments.none')}</span>
+                      )}
                     </td>
                     <td>
-                      <input
-                        type="checkbox"
-                        checked={!!u.isDepartmentLead}
-                        onChange={(e) => handleLeadToggle(u._id, e.target.checked)}
-                      />
+                      {can(currentUser.role, 'users', 'write') ? (
+                        <input
+                          type="checkbox"
+                          checked={!!u.isDepartmentLead}
+                          onChange={(e) => handleLeadToggle(u._id, e.target.checked)}
+                        />
+                      ) : (
+                        <span>{u.isDepartmentLead ? '✓' : '—'}</span>
+                      )}
                     </td>
                     <td>
                       <span className="status-badge" style={{ color: STATUS_COLORS[u.status] }}>
@@ -219,19 +234,21 @@ const UserManagement = () => {
                     <td className="text-right">
                       <div className="action-buttons">
                         {u.status === 'pending' && (
-                          <>
+                          <PermissionGate resource="users" action="approve">
                             <button className="btn-icon" title={t('users.approve')} onClick={() => handleApprove(u._id)}>
                               <HiOutlineCheck style={{ color: 'var(--color-success)' }} />
                             </button>
                             <button className="btn-icon" title={t('users.reject')} onClick={() => handleReject(u._id)}>
                               <HiOutlineX style={{ color: 'var(--color-danger)' }} />
                             </button>
-                          </>
+                          </PermissionGate>
                         )}
                         {u._id !== currentUser._id && (
-                          <button className="btn-icon" title={t('common.delete')} onClick={() => setDeleteId(u._id)}>
-                            <HiOutlineTrash />
-                          </button>
+                          <PermissionGate resource="users" action="write">
+                            <button className="btn-icon" title={t('common.delete')} onClick={() => setDeleteId(u._id)}>
+                              <HiOutlineTrash />
+                            </button>
+                          </PermissionGate>
                         )}
                       </div>
                     </td>
