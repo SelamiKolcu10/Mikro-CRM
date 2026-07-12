@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 const Tasks = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { tasks, loading, error, createTask, updateTaskStatus } = useTasks();
+  const { tasks, loading, error, createTask, updateTaskStatus, getAssignableUsers } = useTasks();
   const [modalOpen, setModalOpen] = useState(false);
 
   const canCreate = user?.role === ROLES.SUPER_ADMIN || user?.isDepartmentLead;
@@ -38,7 +38,12 @@ const Tasks = () => {
         )}
       </div>
       <TaskBoard tasks={tasks} onStatusChange={handleStatusChange} />
-      <CreateTaskModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onCreate={createTask} />
+      <CreateTaskModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreate={createTask}
+        getAssignableUsers={getAssignableUsers}
+      />
     </div>
   );
 };

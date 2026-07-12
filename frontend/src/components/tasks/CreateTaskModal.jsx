@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Modal from '../common/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { DEPARTMENTS, DEPARTMENT_LABELS, ROLES } from '../../config/permissions';
-import taskService from '../../services/taskService';
 import toast from 'react-hot-toast';
 
 const initialForm = { title: '', description: '', department: '', priority: 'medium', deadline: '', assignedTo: '' };
 
-const CreateTaskModal = ({ isOpen, onClose, onCreate }) => {
+const CreateTaskModal = ({ isOpen, onClose, onCreate, getAssignableUsers }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
@@ -17,22 +16,44 @@ const CreateTaskModal = ({ isOpen, onClose, onCreate }) => {
   const [assignableUsers, setAssignableUsers] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // Lider için departman zaten sabit — kendi departmanı. super_admin
-  // formdan seçer.
-  useEffect(() => {
-    if (!isOpen) return;
-    setForm({ ...initialForm, department: isSuperAdmin ? '' : user?.department || '' });
-    setAssignableUsers([]);
-  }, [isOpen, isSuperAdmin, user?.department]);
-
-  useEffect(() => {
-    if (!form.department) {
+  const loadAssignableUsers = useCallback((department) => {
+    if (!department) {
       setAssignableUsers([]);
       return;
     }
-    taskService.getAssignableUsers(form.department)
-      .then((res) => setAssignableUsers(res.data.data))
-      .catch(() => setAssignableUsers([]));
+    getAssignableUsers(department)
+      .then(setAssignableUsers)
+      .catch(() => {
+        setAssignableUsers([]);
+        toast.error(t('common.error'));
+      });
+  }, [getAssignableUsers, t]);
+
+  // Modal (Modal.jsx içinde !isOpen olduğunda sadece null dönüyor,
+  // component hiç unmount olmuyor) her açıldığında formu sıfırlar ve
+  // ilgili departmanın üyelerini BURADA doğrudan çeker. Bu fetch'i
+  // aşağıdaki [form.department]'a bağlı effect'e bırakmıyoruz çünkü
+  // departman lideri için department her açılışta AYNI string —
+  // dependency değişmediği için o effect ikinci açılıştan itibaren hiç
+  // çalışmaz ve assignableUsers boş kalırdı (kritik bug).
+  useEffect(() => {
+    if (!isOpen) return;
+    const department = isSuperAdmin ? '' : user?.department || '';
+    setForm({ ...initialForm, department });
+    loadAssignableUsers(department);
+  }, [isOpen, isSuperAdmin, user?.department, loadAssignableUsers]);
+
+  // super_admin modal açıkken departmanı formdan değiştirdiğinde de
+  // yeniden çekilsin. Bilerek isOpen dependency'sine dahil edilmedi:
+  // reset effect'i zaten kendi fetch'ini yukarıda yapıyor; isOpen'ı
+  // buraya eklemek modal her açıldığında (department değeri aynı kalsa
+  // bile) stale/eski değerle gereksiz bir fetch'in tetiklenmesine yol
+  // açar. Bu effect sadece form.department GERÇEKTEN değiştiğinde
+  // (kullanıcı dropdown'dan seçim yaptığında) çalışmalı.
+  useEffect(() => {
+    if (!isOpen || !isSuperAdmin) return;
+    loadAssignableUsers(form.department);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.department]);
 
   const handleSubmit = async (e) => {

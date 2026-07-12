@@ -41,5 +41,10 @@ export function useTasks() {
     return res.data.data;
   }, []);
 
-  return { tasks, loading, error, createTask, updateTaskStatus, refresh };
+  const getAssignableUsers = useCallback(async (department) => {
+    const res = await taskService.getAssignableUsers(department);
+    return res.data.data;
+  }, []);
+
+  return { tasks, loading, error, createTask, updateTaskStatus, refresh, getAssignableUsers };
 }
