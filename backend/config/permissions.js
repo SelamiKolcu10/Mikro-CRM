@@ -14,6 +14,10 @@ const ROLES = {
 
 const ALL_ROLES = Object.values(ROLES);
 
+const DEPARTMENTS = ['development', 'design', 'hr', 'marketing'];
+const TASK_PRIORITIES = ['critical', 'high', 'medium', 'low'];
+const TASK_STATUSES = ['todo', 'in_progress', 'in_review', 'done'];
+
 // Kaynak → { read: [roller], write: [roller] }
 const PERMISSIONS = {
   users: {
@@ -56,6 +60,18 @@ const PERMISSIONS = {
     write: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
     assign: [ROLES.SUPER_ADMIN],
   },
+  // Task modülü — rol seviyesinde sadece kaba bir filtredir (kimi endpoint'e
+  // hiç sokmaz). Asıl kural: departman görünürlüğü backend/utils/taskScope.js
+  // içinde, "kim oluşturabilir/onaylayabilir" kontrolü ise controller'da
+  // isDepartmentLead + department eşleşmesine bakılarak yapılır — bkz.
+  // taskController.js. accountant/support/intern departman taşımadığı için
+  // pratikte board'ları hep boş görünür, reddedilmezler.
+  tasks: {
+    read: ALL_ROLES,
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+    assign: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+    approve: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
   // The dynamic override/approval workflow itself (Access Control Matrix +
   // Pending Approvals queue) — always super_admin only, regardless of what
   // overrides exist, otherwise a user could grant themselves more access.
@@ -71,4 +87,4 @@ const PERMISSIONS = {
 // exceptions).
 const OVERRIDABLE_RESOURCES = ['customers', 'feedbacks'];
 
-module.exports = { ROLES, ALL_ROLES, PERMISSIONS, OVERRIDABLE_RESOURCES };
+module.exports = { ROLES, ALL_ROLES, PERMISSIONS, OVERRIDABLE_RESOURCES, DEPARTMENTS, TASK_PRIORITIES, TASK_STATUSES };

@@ -74,6 +74,19 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Task modülü için — role'den bağımsız, opsiyonel. Rol "ne yapabilirsin"
+    // sorusuna cevap verir, department/isDepartmentLead "hangi ekipte ve ne
+    // yetkiyle" sorusuna. Bir kullanıcı aynı anda role:'staff' VE
+    // isDepartmentLead:true olabilir.
+    department: {
+      type: String,
+      enum: ['development', 'design', 'hr', 'marketing'],
+      default: null,
+    },
+    isDepartmentLead: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -85,6 +98,15 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// Lider olmak departman gerektirir — department:null + isDepartmentLead:true
+// geçersiz bir durumdur (taskScope bu durumda ne yapacağını bilemez).
+userSchema.pre('validate', function (next) {
+  if (this.isDepartmentLead && !this.department) {
+    this.invalidate('department', 'Departman lideri olabilmek için bir departman seçilmelidir.');
+  }
   next();
 });
 
