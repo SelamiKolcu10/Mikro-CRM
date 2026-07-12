@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import userService from '../services/userService';
 import permissionOverrideService from '../services/permissionOverrideService';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
-import { ROLES, ROLE_LABELS, OVERRIDABLE_RESOURCES } from '../config/permissions';
+import { ROLES, ROLE_LABELS, OVERRIDABLE_RESOURCES, can } from '../config/permissions';
 
 const RESOURCE_LABEL_KEYS = {
   customers: 'accessControl.resourceCustomers',
@@ -30,6 +31,7 @@ const STATIC_GRANT = {
 
 const AccessControlMatrix = () => {
   const { t } = useLanguage();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [overrides, setOverrides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,7 +158,7 @@ const AccessControlMatrix = () => {
                           <input
                             type="checkbox"
                             checked={!!(staticGrant || override)}
-                            disabled={staticGrant}
+                            disabled={staticGrant || !can(currentUser.role, 'permissionOverrides', 'write')}
                             title={staticGrant ? t('accessControl.grantedByRole') : (override?.rationale || '')}
                             onChange={() => handleToggle(u, resource, action)}
                           />
