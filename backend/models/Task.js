@@ -18,13 +18,13 @@ const taskSchema = new mongoose.Schema(
     // (bkz. docs/superpowers/specs/2026-07-12-task-management-design.md).
     department: {
       type: String,
-      enum: ['development', 'design', 'hr', 'marketing'],
-      required: true,
+      enum: { values: ['development', 'design', 'hr', 'marketing'], message: 'Geçersiz departman.' },
+      required: [true, 'Departman zorunludur.'],
       immutable: true,
     },
     priority: {
       type: String,
-      enum: ['critical', 'high', 'medium', 'low'],
+      enum: { values: ['critical', 'high', 'medium', 'low'], message: 'Geçersiz öncelik.' },
       default: 'medium',
     },
     deadline: {
@@ -33,13 +33,13 @@ const taskSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['todo', 'in_progress', 'in_review', 'done'],
+      enum: { values: ['todo', 'in_progress', 'in_review', 'done'], message: 'Geçersiz durum.' },
       default: 'todo',
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: [true, 'Atanan kullanıcı zorunludur.'],
     },
     // Audit/metadata amaçlı — hiçbir yetkilendirme kararında kullanılmaz
     // (bkz. spec Bölüm 2). Onay yetkisi her zaman task.department'ın GÜNCEL
@@ -47,7 +47,7 @@ const taskSchema = new mongoose.Schema(
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: [true, 'Atayan kullanıcı zorunludur.'],
     },
   },
   {
