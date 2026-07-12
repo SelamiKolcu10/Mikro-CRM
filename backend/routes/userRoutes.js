@@ -8,6 +8,7 @@ const {
   approveUserValidators,
   updateUserRoleValidators,
   rejectUserValidators,
+  updateUserDepartmentValidators,
 } = require('../validators/userValidators');
 const {
   createUser,
@@ -17,6 +18,7 @@ const {
   approveUser,
   rejectUser,
   updateUserRole,
+  updateUserDepartment,
   deleteUser,
 } = require('../controllers/userController');
 
@@ -30,6 +32,7 @@ router.get('/:id', getUserById);
 router.patch('/:id/approve', approveUserValidators, handleValidationErrors, approveUser);
 router.patch('/:id/reject', rejectUserValidators, handleValidationErrors, rejectUser);
 router.patch('/:id/role', updateUserRoleValidators, handleValidationErrors, updateUserRole);
+router.patch('/:id/department', updateUserDepartmentValidators, handleValidationErrors, updateUserDepartment);
 router.delete('/:id', deleteUser);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const { body } = require('express-validator');
-const { ALL_ROLES, ROLES } = require('../config/permissions');
+const { ALL_ROLES, ROLES, DEPARTMENTS } = require('../config/permissions');
 
 // createUser deliberately excludes super_admin — mirrors the same guard
 // already enforced in userController.createUser (defense in depth).
@@ -29,4 +29,9 @@ const rejectUserValidators = [
   body('reason').optional().trim().isLength({ max: 500 }).withMessage('Sebep en fazla 500 karakter olabilir.').escape(),
 ];
 
-module.exports = { createUserValidators, approveUserValidators, updateUserRoleValidators, rejectUserValidators };
+const updateUserDepartmentValidators = [
+  body('department').optional({ nullable: true }).isIn(DEPARTMENTS).withMessage('Geçersiz departman.'),
+  body('isDepartmentLead').optional().isBoolean().withMessage('isDepartmentLead boolean olmalıdır.'),
+];
+
+module.exports = { createUserValidators, approveUserValidators, updateUserRoleValidators, rejectUserValidators, updateUserDepartmentValidators };

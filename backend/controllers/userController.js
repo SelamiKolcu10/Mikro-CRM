@@ -231,6 +231,42 @@ const updateUserRole = async (req, res, next) => {
 };
 
 /**
+ * @route   PATCH /api/users/:id/department
+ * @desc    Departman ataması ve/veya lider bayrağını değiştirir. Rol
+ *          alanına dokunmaz — department/isDepartmentLead role'den bağımsız.
+ */
+const updateUserDepartment = async (req, res, next) => {
+  try {
+    const { department, isDepartmentLead } = req.body;
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
+    }
+    const before = { department: user.department, isDepartmentLead: user.isDepartmentLead };
+
+    if (department !== undefined) user.department = department;
+    if (isDepartmentLead !== undefined) user.isDepartmentLead = isDepartmentLead;
+    user.bumpTokenVersion();
+    await user.save();
+
+    await auditService.record({
+      req,
+      collectionName: 'User',
+      documentId: user._id,
+      action: 'update',
+      before,
+      after: { department: user.department, isDepartmentLead: user.isDepartmentLead },
+      watchedFields: ['department', 'isDepartmentLead'],
+    });
+
+    res.json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @route   DELETE /api/users/:id
  */
 const deleteUser = async (req, res, next) => {
@@ -266,5 +302,6 @@ module.exports = {
   approveUser,
   rejectUser,
   updateUserRole,
+  updateUserDepartment,
   deleteUser,
 };
