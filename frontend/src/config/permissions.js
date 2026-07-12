@@ -36,7 +36,7 @@ export const DEPARTMENT_LABELS = {
 
 export const PERMISSIONS = {
   users: {
-    read: [ROLES.SUPER_ADMIN],
+    read: [ROLES.SUPER_ADMIN, ROLES.INTERN],
     write: [ROLES.SUPER_ADMIN],
     approve: [ROLES.SUPER_ADMIN],
   },
@@ -58,13 +58,16 @@ export const PERMISSIONS = {
     write: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT],
   },
   spendingReport: {
-    read: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT],
+    read: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.INTERN],
   },
   auditLog: {
-    read: [ROLES.SUPER_ADMIN],
+    read: [ROLES.SUPER_ADMIN, ROLES.INTERN],
   },
+  // Live customer chat — a separate channel from `feedbacks` (support
+  // tickets). Intern can read (see conversations) but never write — sending
+  // messages to a customer stays limited to staff/support/super_admin.
   chat: {
-    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN],
     write: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT],
     assign: [ROLES.SUPER_ADMIN],
   },
@@ -74,9 +77,20 @@ export const PERMISSIONS = {
     assign: [ROLES.SUPER_ADMIN, ROLES.STAFF],
     approve: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
+  // The Pending Approvals queue itself — reviewing/deciding stays
+  // super_admin only, regardless of what overrides exist, otherwise a user
+  // could grant themselves more access. Reading the queue (who requested
+  // what) is opened to intern as part of the read-only visibility rollout.
   approvals: {
-    read: [ROLES.SUPER_ADMIN],
+    read: [ROLES.SUPER_ADMIN, ROLES.INTERN],
     review: [ROLES.SUPER_ADMIN],
+  },
+  // Access Control Matrix — granting/revoking a PermissionOverride is always
+  // super_admin only (same "no exceptions" rule as before). Reading the
+  // matrix (who has what override) is opened to intern.
+  permissionOverrides: {
+    read: [ROLES.SUPER_ADMIN, ROLES.INTERN],
+    write: [ROLES.SUPER_ADMIN],
   },
 };
 
