@@ -383,6 +383,34 @@
     "next": "Next",
     "pageInfo": "Page {page} / {pages}"
   },
+  "tasks": {
+    "title": "Tasks",
+    "subtitle": "Track tasks belonging to your department",
+    "createTitle": "Create Task",
+    "createSuccess": "Task created.",
+    "status": {
+      "todo": "To Do",
+      "in_progress": "In Progress",
+      "in_review": "In Review",
+      "done": "Done"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "department": "Department",
+      "selectDepartment": "Select department",
+      "assignedTo": "Assignee",
+      "selectAssignee": "Select assignee",
+      "priority": "Priority",
+      "deadline": "Deadline"
+    }
+  },
   "mockData": {
     "Giriş sayfası mobilde çöküyor": "Login page crashes on mobile",
     "Giriş sayfası iOS Safari'de beyaz ekran hatası veriyor. Kullanıcılar hesaplarına erişemiyor. Bu tüm ekibimizin işini engelliyor.": "The login page throws a white screen error on iOS Safari. Users cannot access their accounts. This is blocking our entire team.",

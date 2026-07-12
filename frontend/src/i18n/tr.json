@@ -383,6 +383,34 @@
     "next": "Sonraki",
     "pageInfo": "Sayfa {page} / {pages}"
   },
+  "tasks": {
+    "title": "Görevler",
+    "subtitle": "Departmanınıza ait görevleri takip edin",
+    "createTitle": "Görev Oluştur",
+    "createSuccess": "Görev oluşturuldu.",
+    "status": {
+      "todo": "Yapılacak",
+      "in_progress": "Yapılıyor",
+      "in_review": "İncelemede",
+      "done": "Tamamlandı"
+    },
+    "priority": {
+      "critical": "Kritik",
+      "high": "Yüksek",
+      "medium": "Orta",
+      "low": "Düşük"
+    },
+    "form": {
+      "title": "Başlık",
+      "description": "Açıklama",
+      "department": "Departman",
+      "selectDepartment": "Departman seçin",
+      "assignedTo": "Atanan Kişi",
+      "selectAssignee": "Kişi seçin",
+      "priority": "Öncelik",
+      "deadline": "Bitiş Tarihi"
+    }
+  },
   "mockData": {
     "Giriş sayfası mobilde çöküyor": "Giriş sayfası mobilde çöküyor",
     "Giriş sayfası iOS Safari'de beyaz ekran hatası veriyor. Kullanıcılar hesaplarına erişemiyor. Bu tüm ekibimizin işini engelliyor.": "Giriş sayfası iOS Safari'de beyaz ekran hatası veriyor. Kullanıcılar hesaplarına erişemiyor. Bu tüm ekibimizin işini engelliyor.",
