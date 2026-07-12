@@ -345,7 +345,9 @@ const ChatDashboard = () => {
                   <MessageBubble key={m._id} message={m} isMine={m.senderType === 'internal'} onRetry={retry} />
                 ))}
               </div>
-              <MessageInput onSend={send} disabled={!selectedId} />
+              <PermissionGate resource="chat" action="write">
+                <MessageInput onSend={send} disabled={!selectedId} />
+              </PermissionGate>
             </>
           )}
         </div>
