@@ -4,6 +4,7 @@ import approvalService from '../services/approvalService';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
 import { HiOutlineCheck, HiOutlineX, HiOutlineExclamation } from 'react-icons/hi';
+import PermissionGate from '../components/auth/PermissionGate';
 
 const STATUS_BADGE = {
   pending: 'badge-open',
@@ -149,26 +150,28 @@ const PendingApprovals = () => {
                 </td>
                 <td>
                   {a.status === 'pending' && (
-                    <div className="cell-actions">
-                      <button
-                        className="btn-icon"
-                        onClick={() => handleApprove(a._id)}
-                        disabled={busyId === a._id}
-                        title={t('approvals.approve')}
-                        style={{ color: 'var(--color-success)' }}
-                      >
-                        <HiOutlineCheck />
-                      </button>
-                      <button
-                        className="btn-icon"
-                        onClick={() => openReject(a._id)}
-                        disabled={busyId === a._id}
-                        title={t('approvals.reject')}
-                        style={{ color: 'var(--color-danger)' }}
-                      >
-                        <HiOutlineX />
-                      </button>
-                    </div>
+                    <PermissionGate resource="approvals" action="review">
+                      <div className="cell-actions">
+                        <button
+                          className="btn-icon"
+                          onClick={() => handleApprove(a._id)}
+                          disabled={busyId === a._id}
+                          title={t('approvals.approve')}
+                          style={{ color: 'var(--color-success)' }}
+                        >
+                          <HiOutlineCheck />
+                        </button>
+                        <button
+                          className="btn-icon"
+                          onClick={() => openReject(a._id)}
+                          disabled={busyId === a._id}
+                          title={t('approvals.reject')}
+                          style={{ color: 'var(--color-danger)' }}
+                        >
+                          <HiOutlineX />
+                        </button>
+                      </div>
+                    </PermissionGate>
                   )}
                 </td>
               </tr>
