@@ -424,6 +424,11 @@
     },
     "heatmap": {
       "title": "Aktivite Isı Haritası"
+    },
+    "tabs": {
+      "board": "Aktif Pano",
+      "history": "Görev Geçmişi",
+      "heatmap": "Aktivite Isı Haritası"
     }
   },
   "mockData": {

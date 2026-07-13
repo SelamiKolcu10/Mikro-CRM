@@ -424,6 +424,11 @@
     },
     "heatmap": {
       "title": "Activity Heatmap"
+    },
+    "tabs": {
+      "board": "Active Board",
+      "history": "Task History",
+      "heatmap": "Activity Heatmap"
     }
   },
   "mockData": {

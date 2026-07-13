@@ -2112,6 +2112,12 @@ tbody td {
   }
 }
 
+.task-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
 /* ---- Task Filter Bar ---- */
 .task-filter-bar {
   display: flex;
