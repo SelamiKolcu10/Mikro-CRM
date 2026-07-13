@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/authorize');
+const { redactForIntern } = require('../middleware/redactForIntern');
 const { handleValidationErrors } = require('../middleware/validate');
 const {
   createTaskValidators,
@@ -16,7 +17,7 @@ const { getTasks, getAssignableUsers, createTask, updateTaskStatus } = require('
 // departman/lider kontrolü taskController + taskScope içinde yapılır)
 router.use(protect, authorize(...PERMISSIONS.tasks.read));
 
-router.get('/', getTasks);
+router.get('/', redactForIntern, getTasks);
 router.get('/assignable-users', assignableUsersValidators, handleValidationErrors, getAssignableUsers);
 router.post('/', authorize(...PERMISSIONS.tasks.write), createTaskValidators, handleValidationErrors, createTask);
 router.patch(
