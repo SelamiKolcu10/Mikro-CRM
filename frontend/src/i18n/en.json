@@ -388,6 +388,9 @@
     "title": "Tasks",
     "subtitle": "Track tasks belonging to your department",
     "createTitle": "Create Task",
+    "detail": {
+      "moveTo": "Move to:"
+    },
     "createSuccess": "Task created.",
     "status": {
       "todo": "To Do",

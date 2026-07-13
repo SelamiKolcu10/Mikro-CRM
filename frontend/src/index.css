@@ -2053,6 +2053,7 @@ tbody td {
   border-radius: var(--radius-md);
   padding: var(--space-md);
   transition: all var(--transition-base);
+  cursor: pointer;
 }
 
 .task-card:hover {
@@ -2104,6 +2105,32 @@ tbody td {
 .badge-role {
   background: var(--bg-elevated);
   color: var(--text-secondary);
+}
+
+.task-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.task-detail-description {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-md);
+}
+
+.task-detail-deadline {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-md);
+}
+
+.task-detail-status-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
 }
 
 @media (max-width: 768px) {

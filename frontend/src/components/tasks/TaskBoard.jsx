@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { DndContext } from '@dnd-kit/core';
 import TaskColumn from './TaskColumn';
+import TaskDetailModal from './TaskDetailModal';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { canActOnTask, canApproveTask } from '../../utils/taskScope';
@@ -16,38 +16,25 @@ function isVisibleOnBoard(task) {
 }
 
 /**
- * Sürükle-bırak sadece burada yaşar — veri/iş mantığı (useTasks) bu
- * bileşenden tamamen ayrı, DOM'a bağımlı değil (mobil port hedefi).
+ * Karta tıklayınca detay/durum-değiştirme penceresi açılır — veri/iş
+ * mantığı (useTasks) bu bileşenden tamamen ayrı, DOM'a bağımlı değil
+ * (mobil port hedefi).
  */
 const TaskBoard = ({ tasks, onStatusChange }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [mobileColumn, setMobileColumn] = useState('todo');
+  const [selectedTask, setSelectedTask] = useState(null);
 
   const visibleTasks = tasks.filter(isVisibleOnBoard);
 
   const tasksByStatus = STATUSES.reduce((acc, status) => {
-    acc[status] = visibleTasks
-      .filter((t) => t.status === status)
-      .map((t) => ({ ...t, _canAct: canActOnTask(user, t) }));
+    acc[status] = visibleTasks.filter((t) => t.status === status);
     return acc;
   }, {});
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (!over) return;
-    const task = tasks.find((t) => t._id === active.id);
-    const targetStatus = over.id;
-    if (!task || task.status === targetStatus) return;
-
-    const allowed = targetStatus === 'done' ? canApproveTask(user, task) : canActOnTask(user, task);
-    if (!allowed) return;
-
-    onStatusChange(task._id, targetStatus);
-  };
-
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <>
       <div className="task-board-mobile-tabs">
         {STATUSES.map((status) => (
           <button
@@ -66,12 +53,20 @@ const TaskBoard = ({ tasks, onStatusChange }) => {
             key={status}
             status={status}
             tasks={tasksByStatus[status]}
-            canDropHere={status !== 'done' || canApproveTask(user, { department: user?.department })}
             mobileActive={status === mobileColumn}
+            onCardClick={setSelectedTask}
           />
         ))}
       </div>
-    </DndContext>
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onStatusChange={onStatusChange}
+        canAct={selectedTask ? canActOnTask(user, selectedTask) : false}
+        canApprove={selectedTask ? canApproveTask(user, selectedTask) : false}
+      />
+    </>
   );
 };
 

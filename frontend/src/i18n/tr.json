@@ -388,6 +388,9 @@
     "title": "Görevler",
     "subtitle": "Departmanınıza ait görevleri takip edin",
     "createTitle": "Görev Oluştur",
+    "detail": {
+      "moveTo": "Şu duruma taşı:"
+    },
     "createSuccess": "Görev oluşturuldu.",
     "status": {
       "todo": "Yapılacak",
