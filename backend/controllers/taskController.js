@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 const User = require('../models/User');
+const TaskActivity = require('../models/TaskActivity');
 const { ROLES, DEPARTMENTS } = require('../config/permissions');
 const { taskScope, canApproveTask, canActOnTask } = require('../utils/taskScope');
 
@@ -110,8 +111,16 @@ const updateTaskStatus = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'Bu görevi güncelleme yetkiniz yok.' });
     }
 
+    const previousStatus = task.status;
     task.status = status;
     await task.save();
+    await TaskActivity.create({
+      task: task._id,
+      changedBy: req.user._id,
+      department: task.department,
+      fromStatus: previousStatus,
+      toStatus: status,
+    });
     await task.populate(TASK_POPULATE);
 
     res.json({ success: true, data: task });
