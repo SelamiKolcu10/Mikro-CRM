@@ -29,4 +29,15 @@ const assignableUsersValidators = [
   query('department').optional().isIn(DEPARTMENTS).withMessage('Geçersiz departman.'),
 ];
 
-module.exports = { createTaskValidators, taskIdValidators, updateTaskStatusValidators, assignableUsersValidators };
+const activityHeatmapValidators = [
+  query('department').optional().isIn(DEPARTMENTS).withMessage('Geçersiz departman.'),
+  query('userId').optional().isMongoId().withMessage('Geçersiz kullanıcı kimliği.'),
+];
+
+module.exports = {
+  createTaskValidators,
+  taskIdValidators,
+  updateTaskStatusValidators,
+  assignableUsersValidators,
+  activityHeatmapValidators,
+};

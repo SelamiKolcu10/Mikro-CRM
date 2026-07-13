@@ -9,9 +9,16 @@ const {
   taskIdValidators,
   updateTaskStatusValidators,
   assignableUsersValidators,
+  activityHeatmapValidators,
 } = require('../validators/taskValidators');
 const { PERMISSIONS } = require('../config/permissions');
-const { getTasks, getAssignableUsers, createTask, updateTaskStatus } = require('../controllers/taskController');
+const {
+  getTasks,
+  getAssignableUsers,
+  createTask,
+  updateTaskStatus,
+  getActivityHeatmap,
+} = require('../controllers/taskController');
 
 // Görev modülü — super_admin, staff (bkz. config/permissions.js — asıl
 // departman/lider kontrolü taskController + taskScope içinde yapılır)
@@ -19,6 +26,7 @@ router.use(protect, authorize(...PERMISSIONS.tasks.read));
 
 router.get('/', redactForIntern, getTasks);
 router.get('/assignable-users', assignableUsersValidators, handleValidationErrors, getAssignableUsers);
+router.get('/activity-heatmap', activityHeatmapValidators, handleValidationErrors, getActivityHeatmap);
 router.post('/', authorize(...PERMISSIONS.tasks.write), createTaskValidators, handleValidationErrors, createTask);
 router.patch(
   '/:id/status',

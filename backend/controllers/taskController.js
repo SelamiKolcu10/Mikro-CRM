@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Task = require('../models/Task');
 const User = require('../models/User');
 const TaskActivity = require('../models/TaskActivity');
@@ -129,4 +130,55 @@ const updateTaskStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { getTasks, getAssignableUsers, createTask, updateTaskStatus };
+/**
+ * @route   GET /api/tasks/activity-heatmap?department=&userId=
+ * @desc    Son 365 günü günlük gruplar. Görünürlük taskScope ile aynı
+ *          kural, ama TaskActivity'nin kendi department/changedBy
+ *          alanları üzerinden (Task'a join yok).
+ */
+const getActivityHeatmap = async (req, res, next) => {
+  try {
+    const { department, userId } = req.query;
+    const since = new Date();
+    since.setDate(since.getDate() - 365);
+
+    const match = { createdAt: { $gte: since } };
+
+    const isSuperAdmin = req.user.role === ROLES.SUPER_ADMIN;
+    const isIntern = req.user.role === ROLES.INTERN;
+    if (!isSuperAdmin && !isIntern) {
+      if (req.user.isDepartmentLead && req.user.department) {
+        match.department = req.user.department;
+      } else {
+        match.changedBy = req.user._id;
+      }
+    }
+
+    if (department) match.department = department;
+    if (userId) match.changedBy = new mongoose.Types.ObjectId(userId);
+
+    const rows = await TaskActivity.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, status: '$toStatus' },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const byDate = {};
+    for (const row of rows) {
+      const { date, status } = row._id;
+      if (!byDate[date]) byDate[date] = { date, total: 0, byStatus: {} };
+      byDate[date].byStatus[status] = row.count;
+      byDate[date].total += row.count;
+    }
+
+    res.json({ success: true, data: Object.values(byDate) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getTasks, getAssignableUsers, createTask, updateTaskStatus, getActivityHeatmap };
