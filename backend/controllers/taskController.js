@@ -146,7 +146,15 @@ const getActivityHeatmap = async (req, res, next) => {
 
     const isSuperAdmin = req.user.role === ROLES.SUPER_ADMIN;
     const isIntern = req.user.role === ROLES.INTERN;
-    if (!isSuperAdmin && !isIntern) {
+    const hasFullAccess = isSuperAdmin || isIntern;
+
+    if (!hasFullAccess) {
+      if (department && department !== req.user.department) {
+        return res.status(403).json({ success: false, error: 'Bu departmanın verilerini görüntüleme yetkiniz yok.' });
+      }
+      if (!req.user.department && userId && userId !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, error: 'Bu kullanıcının verilerini görüntüleme yetkiniz yok.' });
+      }
       if (req.user.department) {
         // Lider veya normal üye — departmanı varsa taskScope ile aynı şekilde
         // tüm departmanın aktivitesini görür, sadece kendi işlemlerini değil.
