@@ -415,6 +415,12 @@
       "allDepartments": "All Departments",
       "allAssignees": "All Assignees",
       "onlyMine": "Only My Tasks"
+    },
+    "history": {
+      "id": "ID",
+      "assignedBy": "Assigned By",
+      "completedDate": "Completed Date",
+      "empty": "No completed tasks."
     }
   },
   "mockData": {
