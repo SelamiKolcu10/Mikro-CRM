@@ -45,6 +45,9 @@ const TaskHeatmap = ({ getActivityHeatmap, department, assigneeId }) => {
       const map = {};
       rows.forEach((row) => { map[row.date] = row; });
       setByDate(map);
+    }).catch(() => {
+      if (cancelled) return;
+      setByDate({});
     });
     return () => { cancelled = true; };
   }, [getActivityHeatmap, department, assigneeId]);
@@ -61,7 +64,8 @@ const TaskHeatmap = ({ getActivityHeatmap, department, assigneeId }) => {
           const breakdown = entry
             ? Object.entries(entry.byStatus).map(([status, count]) => `${count} ${t(STATUS_LABEL_KEY[status])}`).join(', ')
             : '';
-          const title = TOOLTIP_TEXT[lang](date, total) + (breakdown ? ` (${breakdown})` : '');
+          const tooltipFn = TOOLTIP_TEXT[lang] || TOOLTIP_TEXT.en;
+          const title = tooltipFn(date, total) + (breakdown ? ` (${breakdown})` : '');
           return <div key={date} className={`heatmap-cell ${intensityClass(total)}`} title={title} />;
         })}
       </div>
