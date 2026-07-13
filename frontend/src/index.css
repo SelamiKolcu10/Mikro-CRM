@@ -2140,3 +2140,28 @@ body.light-theme {
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
+.task-board-mobile-tabs {
+  display: none;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .task-board-mobile-tabs {
+    display: flex;
+  }
+
+  .task-board {
+    display: block;
+  }
+
+  .task-column {
+    display: none;
+  }
+
+  .task-column.task-column-mobile-active {
+    display: block;
+  }
+}
+
