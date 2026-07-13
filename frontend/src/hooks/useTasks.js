@@ -46,5 +46,25 @@ export function useTasks() {
     return res.data.data;
   }, []);
 
-  return { tasks, loading, error, createTask, updateTaskStatus, refresh, getAssignableUsers };
+  const getActivityHeatmap = useCallback(async (params) => {
+    const res = await taskService.getActivityHeatmap(params);
+    return res.data.data;
+  }, []);
+
+  return { tasks, loading, error, createTask, updateTaskStatus, refresh, getAssignableUsers, getActivityHeatmap };
+}
+
+/**
+ * Saf filtre fonksiyonu — DOM'dan bağımsız, mobil port hedefiyle tutarlı.
+ * assignedTo hem populate edilmiş ({_id,...}) hem ham ObjectId string
+ * olabilir (bkz. frontend/src/utils/taskScope.js'in aynı deseni).
+ */
+export function applyTaskFilters(tasks, filters, currentUserId) {
+  return tasks.filter((task) => {
+    const assigneeId = task.assignedTo?._id || task.assignedTo;
+    if (filters.onlyMine && assigneeId !== currentUserId) return false;
+    if (filters.department && task.department !== filters.department) return false;
+    if (filters.assigneeId && assigneeId !== filters.assigneeId) return false;
+    return true;
+  });
 }
