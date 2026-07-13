@@ -10,7 +10,7 @@ import TaskFilterBar from '../components/tasks/TaskFilterBar';
 import CreateTaskModal from '../components/tasks/CreateTaskModal';
 import toast from 'react-hot-toast';
 
-const TABS = ['board', 'history', 'heatmap'];
+const TABS = ['board', 'history'];
 const INITIAL_FILTERS = { department: '', assigneeId: '', onlyMine: false };
 
 const Tasks = () => {
@@ -74,9 +74,9 @@ const Tasks = () => {
 
       {activeTab === 'board' && <TaskBoard tasks={filteredTasks} onStatusChange={handleStatusChange} />}
       {activeTab === 'history' && <TaskHistory tasks={filteredTasks} />}
-      {activeTab === 'heatmap' && (
-        <TaskHeatmap getActivityHeatmap={getActivityHeatmap} department={filters.department} assigneeId={filters.assigneeId} />
-      )}
+
+      {/* Always visible — listens to the same page-level department/member filters */}
+      <TaskHeatmap getActivityHeatmap={getActivityHeatmap} department={filters.department} assigneeId={filters.assigneeId} />
 
       <CreateTaskModal
         isOpen={modalOpen}

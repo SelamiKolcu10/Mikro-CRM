@@ -2217,22 +2217,318 @@ body.light-theme {
   }
 }
 
-.task-heatmap-grid {
-  display: grid;
-  grid-template-columns: repeat(53, 1fr);
+/* ---- Contribution Heatmap (GitHub-style) ---- */
+
+.task-heatmap {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.task-heatmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.task-heatmap-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.task-heatmap-grid-wrapper {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: var(--space-xs);
+}
+
+/* ── Month labels row ── */
+.task-heatmap-months {
+  display: flex;
+  gap: 0;
+  margin-bottom: 4px;
+  padding-left: 0;
+}
+
+.heatmap-day-label-spacer {
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.heatmap-month-cell {
+  min-width: 16px;
+  max-width: 16px;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* ── Grid body (day labels + cells) ── */
+.task-heatmap-body {
+  display: flex;
+  gap: 0;
+}
+
+.task-heatmap-day-labels {
+  display: flex;
+  flex-direction: column;
   gap: 3px;
-  margin-top: var(--space-md);
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.heatmap-day-label {
+  height: 13px;
+  display: flex;
+  align-items: center;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+/* ── The actual contribution grid ── */
+.task-heatmap-grid {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+
+.heatmap-week-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .heatmap-cell {
-  width: 100%;
-  aspect-ratio: 1;
+  width: 13px;
+  height: 13px;
   border-radius: 2px;
   background: var(--bg-elevated);
+  cursor: pointer;
+  transition: transform 0.1s ease, outline 0.1s ease;
+  outline: 1px solid transparent;
 }
 
-.heatmap-cell-1 { background: rgba(124, 92, 252, 0.25); }
-.heatmap-cell-2 { background: rgba(124, 92, 252, 0.5); }
-.heatmap-cell-3 { background: rgba(124, 92, 252, 0.75); }
-.heatmap-cell-4 { background: var(--accent-primary); }
+.heatmap-cell:hover {
+  transform: scale(1.5);
+  outline: 1px solid var(--text-secondary);
+  z-index: 2;
+  position: relative;
+}
+
+.heatmap-cell-empty {
+  background: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Green gradient — GitHub-style, adapted for dark theme */
+.heatmap-cell-0 { background: var(--bg-elevated); }
+.heatmap-cell-1 { background: #0e4429; }
+.heatmap-cell-2 { background: #006d32; }
+.heatmap-cell-3 { background: #26a641; }
+.heatmap-cell-4 { background: #39d353; }
+
+/* ── Tooltip ── */
+.heatmap-tooltip {
+  position: fixed;
+  z-index: 100;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  min-width: 260px;
+  max-width: 380px;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(22, 22, 36, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color-hover);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  animation: heatmap-tooltip-in 0.15s ease;
+}
+
+@keyframes heatmap-tooltip-in {
+  from { opacity: 0; transform: translate(-50%, -100%) translateY(4px); }
+  to   { opacity: 1; transform: translate(-50%, -100%) translateY(0); }
+}
+
+.heatmap-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: rgba(22, 22, 36, 0.96);
+  border-right: 1px solid var(--border-color-hover);
+  border-bottom: 1px solid var(--border-color-hover);
+}
+
+.heatmap-tooltip-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.heatmap-tooltip-header strong {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.heatmap-tooltip-date {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.heatmap-tooltip-empty {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 2px 0;
+}
+
+.heatmap-tooltip-details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.heatmap-tooltip-details li {
+  display: flex;
+  gap: var(--space-sm);
+  padding: 3px 0;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.heatmap-tooltip-details li:last-child {
+  border-bottom: none;
+}
+
+.heatmap-tooltip-time {
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  min-width: 38px;
+}
+
+.heatmap-tooltip-text strong {
+  color: var(--accent-secondary);
+}
+
+.heatmap-tooltip-text em {
+  color: var(--text-primary);
+  font-style: normal;
+}
+
+.heatmap-tooltip-status {
+  display: inline-block;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.heatmap-status-todo          { background: var(--priority-low-soft);    color: var(--priority-low);    }
+.heatmap-status-in_progress   { background: var(--color-info-soft);      color: var(--color-info);      }
+.heatmap-status-in_review     { background: var(--color-warning-soft);   color: var(--color-warning);   }
+.heatmap-status-done          { background: var(--color-success-soft);   color: var(--color-success);   }
+
+.heatmap-tooltip-more {
+  font-style: italic;
+  color: var(--text-tertiary);
+  padding-top: 4px;
+}
+
+/* ── Legend ── */
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.heatmap-legend .heatmap-cell {
+  width: 11px;
+  height: 11px;
+  cursor: default;
+}
+
+.heatmap-legend .heatmap-cell:hover {
+  transform: none;
+  outline: none;
+}
+
+.heatmap-legend-label {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin: 0 2px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .task-heatmap {
+    padding: var(--space-md);
+  }
+
+  .heatmap-cell {
+    width: 10px;
+    height: 10px;
+  }
+
+  .heatmap-month-cell {
+    min-width: 12px;
+    max-width: 12px;
+    font-size: 0.55rem;
+  }
+
+  .task-heatmap-day-labels {
+    min-width: 24px;
+  }
+
+  .heatmap-day-label {
+    height: 10px;
+    font-size: 0.55rem;
+  }
+
+  .heatmap-day-label-spacer {
+    min-width: 24px;
+  }
+
+  .heatmap-week-column {
+    gap: 2px;
+  }
+
+  .task-heatmap-grid {
+    gap: 2px;
+  }
+
+  .task-heatmap-day-labels {
+    gap: 2px;
+  }
+
+  .task-heatmap-months {
+    gap: 0;
+  }
+}
 

@@ -11,6 +11,8 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const User = require('../models/User');
 const Customer = require('../models/Customer');
 const Feedback = require('../models/Feedback');
+const Task = require('../models/Task');
+const TaskActivity = require('../models/TaskActivity');
 const { calculatePriority } = require('../utils/revenueImpact');
 
 const seedUsers = [
@@ -18,7 +20,53 @@ const seedUsers = [
     name: 'Admin User',
     email: 'admin@microcrm.com',
     password: 'admin123',
-    role: 'admin',
+    role: 'super_admin',
+    status: 'approved',
+  },
+  // Department leads
+  {
+    name: 'Apo Yılmaz',
+    email: 'apo@microcrm.com',
+    password: 'staff123',
+    role: 'staff',
+    status: 'approved',
+    department: 'development',
+    isDepartmentLead: true,
+  },
+  {
+    name: 'Elif Kara',
+    email: 'elif@microcrm.com',
+    password: 'staff123',
+    role: 'staff',
+    status: 'approved',
+    department: 'design',
+    isDepartmentLead: true,
+  },
+  {
+    name: 'Selami Kolcu',
+    email: 'selami@microcrm.com',
+    password: 'staff123',
+    role: 'staff',
+    status: 'approved',
+    department: 'marketing',
+    isDepartmentLead: true,
+  },
+  // Regular staff
+  {
+    name: 'Berk Demir',
+    email: 'berk@microcrm.com',
+    password: 'staff123',
+    role: 'staff',
+    status: 'approved',
+    department: 'development',
+  },
+  {
+    name: 'Zeynep Arslan',
+    email: 'zeynep.staff@microcrm.com',
+    password: 'staff123',
+    role: 'staff',
+    status: 'approved',
+    department: 'design',
   },
 ];
 
@@ -84,6 +132,8 @@ const seedDatabase = async () => {
       User.deleteMany({}),
       Customer.deleteMany({}),
       Feedback.deleteMany({}),
+      Task.deleteMany({}),
+      TaskActivity.deleteMany({}),
     ]);
     console.log('🗑️  Cleared existing data');
 
@@ -113,8 +163,108 @@ const seedDatabase = async () => {
     await Feedback.create(feedbacks);
     console.log(`📋 Created ${feedbacks.length} feedbacks`);
 
+    // ── Task & TaskActivity seed (heatmap demo data) ──────────────────
+    const DEPARTMENTS_LIST = ['development', 'design', 'marketing'];
+    const STATUSES = ['todo', 'in_progress', 'in_review', 'done'];
+    const TASK_TITLES = [
+      'API rate-limit ayarı', 'Login page fix', 'Dashboard redesign',
+      'Mobile responsive', 'Dark mode bug', 'Onboarding flow',
+      'Performance tuning', 'Export CSV fix', 'Webhook integration',
+      'Search refactor', 'Notification system', 'Cache layer',
+      'Unit test coverage', 'CI/CD pipeline', 'Landing page update',
+      'Email template', 'Analytics dashboard', 'User settings page',
+      'Payment flow', 'Error handling', 'SEO optimization',
+      'Accessibility audit', 'Image upload', 'Bulk import',
+    ];
+
+    // Map department → users in that department
+    const deptUserMap = {};
+    for (const u of users) {
+      if (u.department) {
+        if (!deptUserMap[u.department]) deptUserMap[u.department] = [];
+        deptUserMap[u.department].push(u);
+      }
+    }
+
+    // Create tasks spread across departments
+    const taskDocs = [];
+    for (let i = 0; i < TASK_TITLES.length; i++) {
+      const dept = DEPARTMENTS_LIST[i % DEPARTMENTS_LIST.length];
+      const deptUsers = deptUserMap[dept] || [users[0]];
+      const assignee = deptUsers[i % deptUsers.length];
+      const lead = deptUsers.find((u) => u.isDepartmentLead) || users[0];
+      taskDocs.push({
+        title: TASK_TITLES[i],
+        description: `Demo görev açıklaması: ${TASK_TITLES[i]}`,
+        department: dept,
+        priority: ['low', 'medium', 'high', 'critical'][i % 4],
+        status: STATUSES[i % STATUSES.length],
+        assignedTo: assignee._id,
+        assignedBy: lead._id,
+      });
+    }
+    const tasks = await Task.create(taskDocs);
+    console.log(`✅ Created ${tasks.length} tasks`);
+
+    // Generate ~180 days of realistic TaskActivity records
+    const activities = [];
+    const now = new Date();
+    const seededRandom = (seed) => {
+      // Simple seeded PRNG for reproducible density
+      let x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+
+    for (let daysAgo = 180; daysAgo >= 0; daysAgo--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - daysAgo);
+      const dayOfWeek = date.getDay(); // 0=Sun, 6=Sat
+
+      // Natural density: weekdays heavier, weekends lighter, recent weeks denser
+      const recencyBoost = Math.max(0, 1 - daysAgo / 200);
+      const weekdayBoost = (dayOfWeek >= 1 && dayOfWeek <= 5) ? 1.5 : 0.4;
+      const maxActivities = Math.floor(seededRandom(daysAgo * 7 + 3) * 6 * weekdayBoost * (0.5 + recencyBoost));
+
+      for (let j = 0; j < maxActivities; j++) {
+        const taskIdx = Math.floor(seededRandom(daysAgo * 100 + j * 13) * tasks.length);
+        const task = tasks[taskIdx];
+        const dept = task.department;
+        const deptUsers = deptUserMap[dept] || [users[0]];
+        const actor = deptUsers[Math.floor(seededRandom(daysAgo * 50 + j * 7) * deptUsers.length)];
+
+        const isCreation = seededRandom(daysAgo * 31 + j * 17) < 0.2;
+        const fromIdx = Math.floor(seededRandom(daysAgo * 41 + j * 23) * 3);
+        const toIdx = fromIdx + 1;
+
+        const activityDate = new Date(date);
+        activityDate.setHours(
+          8 + Math.floor(seededRandom(daysAgo * 61 + j * 29) * 10),
+          Math.floor(seededRandom(daysAgo * 71 + j * 37) * 60),
+          0, 0
+        );
+
+        activities.push({
+          task: task._id,
+          changedBy: actor._id,
+          changedByName: actor.name,
+          taskTitle: task.title,
+          department: dept,
+          action: isCreation ? 'created' : 'status_changed',
+          fromStatus: isCreation ? null : STATUSES[fromIdx],
+          toStatus: isCreation ? 'todo' : STATUSES[toIdx],
+          createdAt: activityDate,
+        });
+      }
+    }
+
+    if (activities.length > 0) {
+      await TaskActivity.insertMany(activities);
+    }
+    console.log(`📊 Created ${activities.length} task activities (heatmap data)`);
+
     console.log('\n✅ Database seeded successfully!');
     console.log('📧 Admin login: admin@microcrm.com / admin123');
+    console.log('📧 Staff login: apo@microcrm.com / staff123');
 
     process.exit(0);
   } catch (error) {

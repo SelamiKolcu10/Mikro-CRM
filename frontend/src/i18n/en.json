@@ -426,12 +426,31 @@
       "empty": "No completed tasks."
     },
     "heatmap": {
-      "title": "Activity Heatmap"
+      "title": "Contribution Activity",
+      "less": "Less",
+      "more": "More",
+      "noActivity": "No activity on this day",
+      "contributions": "contributions",
+      "contribution": "contribution",
+      "andMore": "and more...",
+      "actions": {
+        "created": "created",
+        "status_changed": "moved to"
+      },
+      "months": {
+        "0": "Jan", "1": "Feb", "2": "Mar", "3": "Apr",
+        "4": "May", "5": "Jun", "6": "Jul", "7": "Aug",
+        "8": "Sep", "9": "Oct", "10": "Nov", "11": "Dec"
+      },
+      "days": {
+        "1": "Mon",
+        "3": "Wed",
+        "5": "Fri"
+      }
     },
     "tabs": {
       "board": "Active Board",
-      "history": "Task History",
-      "heatmap": "Activity Heatmap"
+      "history": "Task History"
     }
   },
   "mockData": {

@@ -172,6 +172,19 @@ Aynı endpoint seti, `invoice-ocr-v2/` üzerinden `http://localhost:5002/api` ad
 
 Projeye eklenen yeni özellikler, güncellemeler ve hata düzeltmeleri burada listelenecektir.
 
+- **2026-07-13** — 📊 **GitHub-Style Contribution Heatmap** eklendi
+  - Görev sayfasının altına 365 günlük GitHub tarzı katkı ısı haritası (contribution calendar) eklendi
+  - 7×53 hafta/gün grid düzeni, ay etiketleri, haftanın günü etiketleri (Mon/Wed/Fri)
+  - Yeşil renk gradyanı (`#0e4429` → `#39d353`) ile karanlık tema uyumu
+  - Hover tooltip: Glassmorphism efektli, zaman damgalı aksiyon detayları (kim, ne yaptı, hangi görev)
+  - Çok seviyeli filtreleme: Tüm Departmanlar (global), Departman bazlı, Kişi bazlı görünüm
+  - Sayfa filtrelerini (departman/üye) dinleyerek anlık güncelleme
+  - TaskActivity modeli zenginleştirildi: `changedByName`, `taskTitle`, `action` alanları eklendi
+  - Backend API: `$facet` ile tek sorgu, sözlük (dictionary) formatında ön-toplanmış veri
+  - Görev oluşturma artık TaskActivity kaydı oluşturuyor (sadece durum değişikliği değil)
+  - Seed data: ~180 günlük demo TaskActivity verisi
+  - Türkçe/İngilizce i18n desteği (ay adları, gün etiketleri, tooltip metinleri)
+  - Responsive tasarım: Dar ekranlarda yatay kaydırma
 - **2026-07-08** — 🧾 **Fatura v2 — Yerli OCR Mikroservisi** eklendi (v1.3.0)
   - Bağımsız `invoice-ocr-v2/` mikroservisi oluşturuldu (port 5002), v1'e dokunulmadı
   - Tesseract.js ile tamamen yerel OCR — dış API bağımlılığı ve maliyet sıfır

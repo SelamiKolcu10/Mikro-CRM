@@ -84,6 +84,18 @@ const createTask = async (req, res, next) => {
       assignedTo,
       assignedBy: req.user._id,
     });
+
+    // Record task creation as an activity for the contribution heatmap
+    await TaskActivity.create({
+      task: task._id,
+      changedBy: req.user._id,
+      changedByName: req.user.name,
+      taskTitle: task.title,
+      department: task.department,
+      action: 'created',
+      toStatus: 'todo',
+    });
+
     await task.populate(TASK_POPULATE);
 
     res.status(201).json({ success: true, data: task });
@@ -118,7 +130,10 @@ const updateTaskStatus = async (req, res, next) => {
     await TaskActivity.create({
       task: task._id,
       changedBy: req.user._id,
+      changedByName: req.user.name,
+      taskTitle: task.title,
       department: task.department,
+      action: 'status_changed',
       fromStatus: previousStatus,
       toStatus: status,
     });
@@ -132,9 +147,11 @@ const updateTaskStatus = async (req, res, next) => {
 
 /**
  * @route   GET /api/tasks/activity-heatmap?department=&userId=
- * @desc    Son 365 günü günlük gruplar. Görünürlük taskScope ile aynı
- *          kural, ama TaskActivity'nin kendi department/changedBy
- *          alanları üzerinden (Task'a join yok).
+ * @desc    Son 365 günü günlük gruplar. Returns a pre-aggregated dictionary
+ *          keyed by date with both summary counts and a capped detail array
+ *          for rich heatmap tooltips. Görünürlük taskScope ile aynı kural,
+ *          ama TaskActivity'nin kendi department/changedBy alanları
+ *          üzerinden (Task'a join yok).
  */
 const getActivityHeatmap = async (req, res, next) => {
   try {
@@ -167,25 +184,70 @@ const getActivityHeatmap = async (req, res, next) => {
     if (department) match.department = department;
     if (userId) match.changedBy = new mongoose.Types.ObjectId(userId);
 
-    const rows = await TaskActivity.aggregate([
+    // Single aggregation with $facet: one branch for daily summary counts,
+    // another for per-day detail rows (capped at 10 per day to limit payload).
+    const pipeline = [
       { $match: match },
       {
-        $group: {
-          _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, status: '$toStatus' },
-          count: { $sum: 1 },
+        $facet: {
+          summary: [
+            {
+              $group: {
+                _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, status: '$toStatus' },
+                count: { $sum: 1 },
+              },
+            },
+          ],
+          details: [
+            { $sort: { createdAt: -1 } },
+            {
+              $group: {
+                _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                total: { $sum: 1 },
+                items: {
+                  $push: {
+                    user: '$changedByName',
+                    action: '$action',
+                    task: '$taskTitle',
+                    from: '$fromStatus',
+                    to: '$toStatus',
+                    time: { $dateToString: { format: '%H:%M', date: '$createdAt' } },
+                  },
+                },
+              },
+            },
+            // Cap details to 10 per day
+            { $project: { total: 1, items: { $slice: ['$items', 10] } } },
+          ],
         },
       },
-    ]);
+    ];
 
+    const [result] = await TaskActivity.aggregate(pipeline);
+
+    // Build the dictionary response
     const byDate = {};
-    for (const row of rows) {
-      const { date, status } = row._id;
-      if (!byDate[date]) byDate[date] = { date, total: 0, byStatus: {} };
-      byDate[date].byStatus[status] = row.count;
-      byDate[date].total += row.count;
+
+    // Process details first (creates the date entries with detail arrays)
+    for (const row of result.details) {
+      byDate[row._id] = {
+        date: row._id,
+        total: row.total,
+        byStatus: {},
+        details: row.items,
+      };
     }
 
-    res.json({ success: true, data: Object.values(byDate) });
+    // Merge summary counts into the same entries
+    for (const row of result.summary) {
+      const { date, status } = row._id;
+      if (!byDate[date]) {
+        byDate[date] = { date, total: 0, byStatus: {}, details: [] };
+      }
+      byDate[date].byStatus[status] = row.count;
+    }
+
+    res.json({ success: true, data: byDate });
   } catch (error) {
     next(error);
   }

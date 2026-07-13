@@ -426,12 +426,31 @@
       "empty": "Tamamlanmış görev yok."
     },
     "heatmap": {
-      "title": "Aktivite Isı Haritası"
+      "title": "Katkı Aktivitesi",
+      "less": "Az",
+      "more": "Çok",
+      "noActivity": "Bu gün aktivite yok",
+      "contributions": "katkı",
+      "contribution": "katkı",
+      "andMore": "ve daha fazlası...",
+      "actions": {
+        "created": "oluşturdu",
+        "status_changed": "taşıdı →"
+      },
+      "months": {
+        "0": "Oca", "1": "Şub", "2": "Mar", "3": "Nis",
+        "4": "May", "5": "Haz", "6": "Tem", "7": "Ağu",
+        "8": "Eyl", "9": "Eki", "10": "Kas", "11": "Ara"
+      },
+      "days": {
+        "1": "Pzt",
+        "3": "Çar",
+        "5": "Cum"
+      }
     },
     "tabs": {
       "board": "Aktif Pano",
-      "history": "Görev Geçmişi",
-      "heatmap": "Aktivite Isı Haritası"
+      "history": "Görev Geçmişi"
     }
   },
   "mockData": {
