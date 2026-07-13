@@ -147,7 +147,9 @@ const getActivityHeatmap = async (req, res, next) => {
     const isSuperAdmin = req.user.role === ROLES.SUPER_ADMIN;
     const isIntern = req.user.role === ROLES.INTERN;
     if (!isSuperAdmin && !isIntern) {
-      if (req.user.isDepartmentLead && req.user.department) {
+      if (req.user.department) {
+        // Lider veya normal üye — departmanı varsa taskScope ile aynı şekilde
+        // tüm departmanın aktivitesini görür, sadece kendi işlemlerini değil.
         match.department = req.user.department;
       } else {
         match.changedBy = req.user._id;
