@@ -22,6 +22,11 @@ const Tasks = () => {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
 
   const canCreate = user?.role === ROLES.SUPER_ADMIN || user?.isDepartmentLead;
+  // Sadece super_admin ve intern gerçekten tüm departmanları görebilir
+  // (taskScope her ikisine de {} döner). Departman lideri/üyesi zaten
+  // backend'den sadece kendi departmanının verisini alıyor, o yüzden onlara
+  // "başka departman seç" seçeneği sunmak yanıltıcı — boş bir pano gösterir.
+  const hasFullDepartmentAccess = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.INTERN;
   const filteredTasks = applyTaskFilters(tasks, filters, user?._id);
 
   const handleStatusChange = async (id, status) => {
@@ -60,7 +65,12 @@ const Tasks = () => {
         ))}
       </div>
 
-      <TaskFilterBar tasks={tasks} filters={filters} onChange={setFilters} />
+      <TaskFilterBar
+        tasks={tasks}
+        filters={filters}
+        onChange={setFilters}
+        showDepartmentFilter={hasFullDepartmentAccess}
+      />
 
       {activeTab === 'board' && <TaskBoard tasks={filteredTasks} onStatusChange={handleStatusChange} />}
       {activeTab === 'history' && <TaskHistory tasks={filteredTasks} />}
