@@ -421,6 +421,9 @@
       "assignedBy": "Assigned By",
       "completedDate": "Completed Date",
       "empty": "No completed tasks."
+    },
+    "heatmap": {
+      "title": "Activity Heatmap"
     }
   },
   "mockData": {

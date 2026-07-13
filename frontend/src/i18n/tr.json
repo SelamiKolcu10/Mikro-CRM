@@ -421,6 +421,9 @@
       "assignedBy": "Atayan",
       "completedDate": "Tamamlanma Tarihi",
       "empty": "Tamamlanmış görev yok."
+    },
+    "heatmap": {
+      "title": "Aktivite Isı Haritası"
     }
   },
   "mockData": {

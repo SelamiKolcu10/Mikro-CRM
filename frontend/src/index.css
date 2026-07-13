@@ -2183,3 +2183,22 @@ body.light-theme {
   }
 }
 
+.task-heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(53, 1fr);
+  gap: 3px;
+  margin-top: var(--space-md);
+}
+
+.heatmap-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--bg-elevated);
+}
+
+.heatmap-cell-1 { background: rgba(124, 92, 252, 0.25); }
+.heatmap-cell-2 { background: rgba(124, 92, 252, 0.5); }
+.heatmap-cell-3 { background: rgba(124, 92, 252, 0.75); }
+.heatmap-cell-4 { background: var(--accent-primary); }
+
