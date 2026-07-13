@@ -1,6 +1,8 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { useLanguage } from '../../context/LanguageContext';
+import { ROLE_LABELS } from '../../config/permissions';
+import TaskAvatar from './TaskAvatar';
 
 const PRIORITY_CLASS = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
 
@@ -25,7 +27,13 @@ const TaskCard = ({ task, draggable }) => {
       <h4>{task.title}</h4>
       {task.description && <p className="task-card-description">{task.description}</p>}
       <div className="task-card-footer">
-        <span>{task.assignedTo?.name}</span>
+        <span className="task-card-assignee">
+          <TaskAvatar user={task.assignedTo} />
+          {task.assignedTo?.name}
+          {task.assignedTo?.role && (
+            <span className="badge badge-role">{t(ROLE_LABELS[task.assignedTo.role])}</span>
+          )}
+        </span>
         {task.deadline && <span>{new Date(task.deadline).toLocaleDateString()}</span>}
       </div>
     </div>

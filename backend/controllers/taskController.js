@@ -6,7 +6,7 @@ const { ROLES, DEPARTMENTS } = require('../config/permissions');
 const { taskScope, canApproveTask, canActOnTask } = require('../utils/taskScope');
 
 const TASK_POPULATE = [
-  { path: 'assignedTo', select: 'name email department' },
+  { path: 'assignedTo', select: 'name email department role' },
   { path: 'assignedBy', select: 'name email' },
 ];
 
