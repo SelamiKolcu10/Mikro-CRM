@@ -37,25 +37,30 @@ const TaskDetailModal = ({ task, isOpen, onClose, onStatusChange, canAct, canApp
       {task.description && <p className="task-detail-description">{task.description}</p>}
       {task.deadline && <p className="task-detail-deadline">{new Date(task.deadline).toLocaleDateString()}</p>}
 
-      <div>
-        <span className="form-label">{t('tasks.detail.moveTo')}</span>
-        <div className="task-detail-status-buttons">
-          {STATUSES.filter((status) => status !== task.status).map((status) => {
-            const allowed = status === 'done' ? canApprove : canAct;
-            return (
-              <button
-                key={status}
-                type="button"
-                className="btn btn-secondary"
-                disabled={!allowed}
-                onClick={() => handleSelect(status)}
-              >
-                {t(`tasks.status.${status}`)}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {(() => {
+        const availableStatuses = STATUSES.filter((status) => {
+          if (status === task.status) return false;
+          return status === 'done' ? canApprove : canAct;
+        });
+        if (availableStatuses.length === 0) return null;
+        return (
+          <div>
+            <span className="form-label">{t('tasks.detail.moveTo')}</span>
+            <div className="task-detail-status-buttons">
+              {availableStatuses.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => handleSelect(status)}
+                >
+                  {t(`tasks.status.${status}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </Modal>
   );
 };
