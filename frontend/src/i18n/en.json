@@ -410,6 +410,11 @@
       "selectAssignee": "Select assignee",
       "priority": "Priority",
       "deadline": "Deadline"
+    },
+    "filters": {
+      "allDepartments": "All Departments",
+      "allAssignees": "All Assignees",
+      "onlyMine": "Only My Tasks"
     }
   },
   "mockData": {

@@ -2112,6 +2112,24 @@ tbody td {
   }
 }
 
+/* ---- Task Filter Bar ---- */
+.task-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.task-filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
 body.light-theme {
   --bg-navbar: rgba(248, 250, 252, 0.8);
   --bg-primary: #f8fafc;

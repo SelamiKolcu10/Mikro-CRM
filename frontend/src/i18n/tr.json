@@ -410,6 +410,11 @@
       "selectAssignee": "Kişi seçin",
       "priority": "Öncelik",
       "deadline": "Bitiş Tarihi"
+    },
+    "filters": {
+      "allDepartments": "Tüm Departmanlar",
+      "allAssignees": "Tüm Kişiler",
+      "onlyMine": "Sadece Benim Görevlerim"
     }
   },
   "mockData": {
