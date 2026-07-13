@@ -1,8 +1,9 @@
 import { useState, useEffect, Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
-import { HiOutlineSun, HiOutlineMoon } from 'react-icons/hi';
+import { HiOutlineSun, HiOutlineMoon, HiOutlineX } from 'react-icons/hi';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { INTERNAL_NAV, PORTAL_NAV } from '../../config/navigation';
 import { ROLES } from '../../config/permissions';
 import userService from '../../services/userService';
@@ -17,6 +18,7 @@ import approvalService from '../../services/approvalService';
 const Sidebar = () => {
   const { t } = useLanguage();
   const { user, customerUser, isInternal, isCustomer } = useAuth();
+  const { isOpen, close } = useSidebar();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
@@ -80,38 +82,50 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-icon">μ</div>
-        <span>{brandLabel}</span>
-      </div>
+    <>
+      {isOpen && <div className="sidebar-backdrop" onClick={close} />}
+      <aside className={`sidebar ${isOpen ? 'mobile-open' : ''}`}>
+        <div className="sidebar-logo">
+          <div className="logo-icon">μ</div>
+          <span>{brandLabel}</span>
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            onClick={close}
+            aria-label={t('nav.closeSidebar')}
+            style={{ marginLeft: 'auto' }}
+          >
+            <HiOutlineX />
+          </button>
+        </div>
 
-      <nav className="sidebar-nav">
-        {visibleGroups.map((group, idx) => (
-          <Fragment key={group.section}>
-            <span className="sidebar-label" style={idx > 0 ? { marginTop: 'var(--space-lg)' } : undefined}>
-              {t(group.sectionLabelKey)}
-            </span>
-            {group.items.map(renderLink)}
-          </Fragment>
-        ))}
-      </nav>
+        <nav className="sidebar-nav">
+          {visibleGroups.map((group, idx) => (
+            <Fragment key={group.section}>
+              <span className="sidebar-label" style={idx > 0 ? { marginTop: 'var(--space-lg)' } : undefined}>
+                {t(group.sectionLabelKey)}
+              </span>
+              {group.items.map(renderLink)}
+            </Fragment>
+          ))}
+        </nav>
 
-      {/* Theme Toggle Button */}
-      <div className="sidebar-footer" style={{ marginTop: 'auto', padding: 'var(--space-md)' }}>
-        <button
-          className="btn btn-secondary"
-          onClick={toggleTheme}
-          style={{ width: '100%', justifyContent: 'center' }}
-        >
-          {theme === 'dark' ? (
-            <><HiOutlineSun className="icon" /> <span>{t('nav.lightMode')}</span></>
-          ) : (
-            <><HiOutlineMoon className="icon" /> <span>{t('nav.darkMode')}</span></>
-          )}
-        </button>
-      </div>
-    </aside>
+        {/* Theme Toggle Button */}
+        <div className="sidebar-footer" style={{ marginTop: 'auto', padding: 'var(--space-md)' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={toggleTheme}
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            {theme === 'dark' ? (
+              <><HiOutlineSun className="icon" /> <span>{t('nav.lightMode')}</span></>
+            ) : (
+              <><HiOutlineMoon className="icon" /> <span>{t('nav.darkMode')}</span></>
+            )}
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 

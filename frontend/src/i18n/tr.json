@@ -80,7 +80,9 @@
     "finance": "Finans",
     "admin": "Yönetim",
     "lightMode": "Aydınlık Mod",
-    "darkMode": "Karanlık Mod"
+    "darkMode": "Karanlık Mod",
+    "openMenu": "Menüyü Aç",
+    "closeSidebar": "Menüyü Kapat"
   },
   "users": {
     "title": "Kullanıcı Yönetimi",
@@ -300,6 +302,9 @@
     "noThreadYet": "Henüz mesaj yok — başlatmak için tıklayın",
     "avgResponseTime": "Ort. Yanıt Süresi",
     "noResponseData": "Henüz veri yok",
+    "backToList": "Sohbet listesine dön",
+    "backToChat": "Sohbete dön",
+    "viewProfile": "Müşteri profilini görüntüle",
     "customerAnalytics": "Müşteri Analitiği",
     "financialProfile": "Finansal Profil",
     "slaPriority": "Öncelikli Destek",
@@ -382,7 +387,41 @@
     "noLogs": "Kayıt bulunamadı",
     "prev": "Önceki",
     "next": "Sonraki",
-    "pageInfo": "Sayfa {page} / {pages}"
+    "pageInfo": "Sayfa {page} / {pages}",
+    "summaryCreate": "{actor}, yeni bir {collection} kaydı oluşturdu{identifier}",
+    "summaryDelete": "{actor}, bir {collection} kaydını sildi{identifier}",
+    "summaryUpdateGeneric": "{actor}, bir {collection} kaydını güncelledi",
+    "summaryUpdateSingle": "{actor}, {field} alanını '{value}' olarak güncelledi",
+    "summaryUpdateMultiple": "{actor}, {collection} kaydında şu alanları güncelledi: {fields}",
+    "valueMasked": "••••••",
+    "valueEmpty": "—",
+    "collections": {
+      "user": "Kullanıcı",
+      "customer": "Müşteri",
+      "customerUser": "Müşteri Portalı Hesabı",
+      "feedback": "Geri Bildirim",
+      "permissionOverride": "Yetki İstisnası"
+    },
+    "fields": {
+      "name": "Ad",
+      "email": "E-posta",
+      "company": "Şirket",
+      "plan": "Plan",
+      "mrr": "Aylık Gelir",
+      "source": "Kaynak",
+      "notes": "Notlar",
+      "role": "Rol",
+      "status": "Durum",
+      "department": "Departman",
+      "isDepartmentLead": "Departman Lideri",
+      "password": "Şifre",
+      "mustChangePassword": "Şifre Değişimi Zorunlu",
+      "active": "Aktif",
+      "title": "Başlık",
+      "description": "Açıklama",
+      "type": "Tür",
+      "assignedTo": "Atanan Kişi"
+    }
   },
   "tasks": {
     "title": "Görevler",

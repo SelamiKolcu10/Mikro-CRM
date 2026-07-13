@@ -21,6 +21,7 @@ import {
   HiOutlineCode,
   HiOutlineLightningBolt,
   HiOutlineMail,
+  HiOutlineArrowLeft,
 } from 'react-icons/hi';
 
 const formatCurrency = (value) => `₺${Number(value || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 })}`;
@@ -114,6 +115,12 @@ const ChatDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('');
   const [convertingBug, setConvertingBug] = useState(false);
+  // Mobile-only WhatsApp-style screen stack ('list' | 'chat' | 'profile').
+  // Deliberately kept separate from selectedCustomerId — that way resizing
+  // back to desktop just reverts to the classic split-pane view without
+  // losing the open conversation, and desktop never reads this at all (the
+  // CSS that switches on it only exists inside the <768px media query).
+  const [mobileView, setMobileView] = useState('list');
   const scrollRef = useRef(null);
 
   const selected = conversations.find((c) => c.customer?._id === selectedCustomerId) || null;
@@ -189,13 +196,21 @@ const ChatDashboard = () => {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, mobileView]);
+
+  // Defensive: if the mobile view ever ends up on 'chat'/'profile' without a
+  // selected conversation (e.g. the conversation list changes out from under
+  // it), fall back to the list instead of showing an empty pane.
+  useEffect(() => {
+    if (!selected && mobileView !== 'list') setMobileView('list');
+  }, [selected, mobileView]);
 
   // Clicking a customer with no conversation yet lazily creates one (staff
   // equivalent of the portal's own lazy-create-on-open behavior), so the
   // thread exists as soon as there's something to assign/reply to.
   const handleSelectCustomer = async (row) => {
     setSelectedCustomerId(row.customer._id);
+    setMobileView('chat');
     if (row._id) return;
     try {
       const res = await chatService.startConversation(row.customer._id);
@@ -249,9 +264,9 @@ const ChatDashboard = () => {
         <ConnectionStatus />
       </div>
 
-      <div className="table-container" style={{ display: 'grid', gridTemplateColumns: '300px minmax(0, 1fr) 320px', height: '70vh', overflow: 'hidden' }}>
+      <div className={`table-container chat-layout chat-layout-mobile-${mobileView}`}>
         {/* Column 1 — Customer queue */}
-        <div style={{ borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div className="chat-pane chat-pane-list" style={{ borderRight: '1px solid var(--border-color)' }}>
           <div style={{ padding: 'var(--space-md)', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
             <div className="search-bar">
               <HiOutlineSearch className="search-icon" />
@@ -315,7 +330,7 @@ const ChatDashboard = () => {
         </div>
 
         {/* Column 2 — Real-time chat feed */}
-        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-color)', minHeight: 0 }}>
+        <div className="chat-pane chat-pane-chat" style={{ borderRight: '1px solid var(--border-color)' }}>
           {!selected ? (
             <div className="table-empty" style={{ margin: 'auto' }}>
               <div className="table-empty-icon"><HiOutlineChatAlt2 /></div>
@@ -325,8 +340,20 @@ const ChatDashboard = () => {
             <>
               <div style={{ padding: 'var(--space-md)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    type="button"
+                    className="chat-pane-back-btn"
+                    onClick={() => setMobileView('list')}
+                    aria-label={t('chat.backToList')}
+                  >
+                    <HiOutlineArrowLeft />
+                  </button>
                   <span className={`status-pulse-dot ${connected ? 'is-online' : 'is-offline'}`} title={connected ? t('chat.connected') : t('chat.disconnected')} />
-                  <div>
+                  <div
+                    onClick={() => setMobileView('profile')}
+                    style={{ cursor: 'pointer' }}
+                    title={t('chat.viewProfile')}
+                  >
                     <div style={{ fontWeight: 700, fontSize: '14px' }}>{selected.customer?.name}</div>
                     <span className={`badge badge-${selected.customer?.plan}`}>{t(`customers.plans.${selected.customer?.plan}`)}</span>
                   </div>
@@ -354,7 +381,18 @@ const ChatDashboard = () => {
 
         {/* Column 3 — Customer analytics cockpit */}
         {selected ? (
-          <div style={{ padding: 'var(--space-md)', overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+          <div className="chat-pane chat-pane-profile" style={{ padding: 'var(--space-md)', overflowY: 'auto', gap: 'var(--space-lg)' }}>
+            <div className="chat-pane-profile-header">
+              <button
+                type="button"
+                className="chat-pane-back-btn"
+                onClick={() => setMobileView('chat')}
+                aria-label={t('chat.backToChat')}
+              >
+                <HiOutlineArrowLeft />
+              </button>
+              <span>{selected.customer?.name}</span>
+            </div>
             <div>
               <h3 style={{ marginBottom: 'var(--space-sm)' }}>{t('chat.customerAnalytics')}</h3>
               <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -456,7 +494,7 @@ const ChatDashboard = () => {
             </div>
           </div>
         ) : (
-          <div />
+          <div className="chat-pane chat-pane-profile" />
         )}
       </div>
     </>

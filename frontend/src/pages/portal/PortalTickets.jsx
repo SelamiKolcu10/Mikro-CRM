@@ -91,14 +91,14 @@ const PortalTickets = () => {
               ) : (
                 tickets.map((ticket) => (
                   <tr key={ticket._id}>
-                    <td>{ticket.title}</td>
-                    <td>{TYPE_LABELS[ticket.type] || ticket.type}</td>
-                    <td>
+                    <td data-label="Başlık">{ticket.title}</td>
+                    <td data-label="Tür">{TYPE_LABELS[ticket.type] || ticket.type}</td>
+                    <td data-label="Durum">
                       <span className="status-badge" style={{ color: STATUS_COLORS[ticket.status] }}>
                         ● {STATUS_LABELS[ticket.status] || ticket.status}
                       </span>
                     </td>
-                    <td>{new Date(ticket.createdAt).toLocaleDateString('tr-TR')}</td>
+                    <td data-label="Oluşturulma">{new Date(ticket.createdAt).toLocaleDateString('tr-TR')}</td>
                   </tr>
                 ))
               )}

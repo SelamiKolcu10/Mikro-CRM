@@ -28,12 +28,12 @@ const TaskHistory = ({ tasks }) => {
           ) : (
             completed.map((task) => (
               <tr key={task._id}>
-                <td>{task._id.slice(-6)}</td>
-                <td>{task.title}</td>
-                <td>{t(DEPARTMENT_LABELS[task.department])}</td>
-                <td>{task.assignedTo?.name}</td>
-                <td>{new Date(task.updatedAt).toLocaleDateString()}</td>
-                <td>{task.assignedBy?.name}</td>
+                <td data-label={t('tasks.history.id')}>{task._id.slice(-6)}</td>
+                <td data-label={t('tasks.form.title')}>{task.title}</td>
+                <td data-label={t('tasks.form.department')}>{t(DEPARTMENT_LABELS[task.department])}</td>
+                <td data-label={t('tasks.form.assignedTo')}>{task.assignedTo?.name}</td>
+                <td data-label={t('tasks.history.completedDate')}>{new Date(task.updatedAt).toLocaleDateString()}</td>
+                <td data-label={t('tasks.history.assignedBy')}>{task.assignedBy?.name}</td>
               </tr>
             ))
           )}

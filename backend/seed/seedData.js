@@ -1,6 +1,13 @@
 /**
  * Seed script — populates the database with realistic demo data.
  * Run with: npm run seed (from server directory)
+ *
+ * DESTRUCTIVE: wipes User/Customer/Feedback/Task/TaskActivity before
+ * inserting the demo set. If the database already has more data than this
+ * script's own fixed demo rows (e.g. real users added through the app), it
+ * refuses to run unless you pass --force — a prior reseed silently wiped
+ * manually-added users/departments, so this exists to make that a conscious
+ * choice instead of an accident.
  */
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -122,10 +129,30 @@ const feedbackTemplates = [
   { title: 'Türkçe dil desteği', description: 'Uygulama Türkçe dilini desteklemeli. Türkiye\'deki birçok kullanıcı bunu takdir eder.', type: 'feature', customerIndex: 14 },
 ];
 
+const FORCE = process.argv.includes('--force') || process.env.SEED_FORCE === '1';
+
 const seedDatabase = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('📦 Connected to MongoDB for seeding...');
+
+    const [userCount, customerCount, feedbackCount, taskCount, activityCount] = await Promise.all([
+      User.countDocuments(),
+      Customer.countDocuments(),
+      Feedback.countDocuments(),
+      Task.countDocuments(),
+      TaskActivity.countDocuments(),
+    ]);
+    const existingTotal = userCount + customerCount + feedbackCount + taskCount + activityCount;
+
+    if (existingTotal > 0 && !FORCE) {
+      console.error('\n⚠️  Refusing to seed: the database is not empty.');
+      console.error(`   Found ${userCount} users, ${customerCount} customers, ${feedbackCount} feedbacks, ${taskCount} tasks, ${activityCount} task activities.`);
+      console.error('   Running this script WILL DELETE all of them and replace them with fixed demo data.');
+      console.error('   If that\'s really what you want, run again with --force (e.g. "npm run seed -- --force").\n');
+      await mongoose.disconnect();
+      process.exit(1);
+    }
 
     // Clear existing data
     await Promise.all([

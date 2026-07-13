@@ -177,7 +177,7 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
             <tbody>
               {(editing ? editForm.lineItems : invoice.lineItems)?.map((item, idx) => (
                 <tr key={idx}>
-                  <td>
+                  <td data-label={t('invoices.description')}>
                     {editing ? (
                       <input
                         type="text"
@@ -189,7 +189,7 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
                       item.description || `Kalem ${idx + 1}`
                     )}
                   </td>
-                  <td className="text-right">
+                  <td className="text-right" data-label={t('invoices.baseAmount')}>
                     {editing ? (
                       <input
                         type="number"
@@ -201,7 +201,7 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
                       formatCurrency(item.baseAmount)
                     )}
                   </td>
-                  <td className="text-center">
+                  <td className="text-center" data-label={t('invoices.vatRate')}>
                     {editing ? (
                       <select
                         className="form-select compact"
@@ -216,8 +216,8 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
                       `%${item.vatRate}`
                     )}
                   </td>
-                  <td className="text-right">{formatCurrency(item.vatAmount)}</td>
-                  <td className="text-right font-semibold">{formatCurrency(item.totalAmount)}</td>
+                  <td className="text-right" data-label={t('invoices.vatAmount')}>{formatCurrency(item.vatAmount)}</td>
+                  <td className="text-right font-semibold" data-label={t('invoices.totalAmount')}>{formatCurrency(item.totalAmount)}</td>
                 </tr>
               ))}
             </tbody>

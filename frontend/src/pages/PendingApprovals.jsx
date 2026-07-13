@@ -124,13 +124,13 @@ const PendingApprovals = () => {
           <tbody>
             {approvals.map((a) => (
               <tr key={a._id}>
-                <td>{t(RESOURCE_LABEL_KEYS[a.resource]) || a.resource}</td>
-                <td>{t(ACTION_LABEL_KEYS[a.action]) || a.action}</td>
-                <td>
+                <td data-label={t('approvals.resource')}>{t(RESOURCE_LABEL_KEYS[a.resource]) || a.resource}</td>
+                <td data-label={t('approvals.action')}>{t(ACTION_LABEL_KEYS[a.action]) || a.action}</td>
+                <td data-label={t('approvals.requestedBy')}>
                   <div className="cell-name">{a.requestedBy?.name}</div>
                   <div className="cell-email">{a.requestedBy?.email}</div>
                 </td>
-                <td style={{ maxWidth: 260 }}>
+                <td data-label={t('approvals.payload')} style={{ maxWidth: 260 }}>
                   <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: '11px', margin: 0, color: 'var(--text-secondary)' }}>
                     {JSON.stringify(a.payload, null, 0)}
                   </pre>
@@ -145,10 +145,10 @@ const PendingApprovals = () => {
                     </div>
                   )}
                 </td>
-                <td>
+                <td data-label={t('approvals.status')}>
                   <span className={`badge ${STATUS_BADGE[a.status]}`}>{t(`approvals.status${a.status[0].toUpperCase()}${a.status.slice(1)}`)}</span>
                 </td>
-                <td>
+                <td data-label={t('common.actions')}>
                   {a.status === 'pending' && (
                     <PermissionGate resource="approvals" action="review">
                       <div className="cell-actions">

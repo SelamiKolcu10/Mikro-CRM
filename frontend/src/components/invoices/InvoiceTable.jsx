@@ -63,7 +63,7 @@ const InvoiceTable = ({ invoices, onView, onDelete, loading }) => {
         <tbody>
           {invoices.map((inv) => (
             <tr key={inv._id} className={inv.validationStatus === 'mismatch' ? 'row-warning' : ''}>
-              <td>
+              <td data-label={t('invoices.vendor')}>
                 <div className="vendor-cell">
                   <span className="vendor-name">{inv.vendorName || '—'}</span>
                   {inv.vendorTaxNumber && (
@@ -71,17 +71,17 @@ const InvoiceTable = ({ invoices, onView, onDelete, loading }) => {
                   )}
                 </div>
               </td>
-              <td>{inv.invoiceNumber || '—'}</td>
-              <td>{formatDate(inv.invoiceDate)}</td>
-              <td className="text-right">{formatCurrency(inv.totalBase)}</td>
-              <td className="text-right">{formatCurrency(inv.totalVat)}</td>
-              <td className="text-right font-semibold">{formatCurrency(inv.grandTotal)}</td>
-              <td>
+              <td data-label={t('invoices.invoiceNo')}>{inv.invoiceNumber || '—'}</td>
+              <td data-label={t('invoices.invoiceDate')}>{formatDate(inv.invoiceDate)}</td>
+              <td className="text-right" data-label={t('invoices.totalBase')}>{formatCurrency(inv.totalBase)}</td>
+              <td className="text-right" data-label={t('invoices.totalVat')}>{formatCurrency(inv.totalVat)}</td>
+              <td className="text-right font-semibold" data-label={t('invoices.grandTotal')}>{formatCurrency(inv.grandTotal)}</td>
+              <td data-label={t('invoices.status')}>
                 <span className={getStatusBadge(inv.validationStatus)}>
                   {t(`invoices.statuses.${inv.validationStatus}`)}
                 </span>
               </td>
-              <td>
+              <td data-label={t('invoices.confidence')}>
                 <div className="confidence-bar">
                   <div
                     className="confidence-fill"
@@ -90,7 +90,7 @@ const InvoiceTable = ({ invoices, onView, onDelete, loading }) => {
                   <span className="confidence-value">{inv.confidenceScore || 0}%</span>
                 </div>
               </td>
-              <td>
+              <td data-label={t('common.actions')}>
                 <div className="action-buttons">
                   <button
                     className="btn-icon"

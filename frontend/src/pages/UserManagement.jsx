@@ -181,9 +181,9 @@ const UserManagement = () => {
               ) : (
                 users.map((u) => (
                   <tr key={u._id}>
-                    <td>{u.name}</td>
-                    <td>{u.email}</td>
-                    <td>
+                    <td data-label={t('auth.name')}>{u.name}</td>
+                    <td data-label={t('auth.email')}>{u.email}</td>
+                    <td data-label={t('users.role')}>
                       {can(currentUser.role, 'users', 'write') ? (
                         <select
                           className="form-select compact"
@@ -199,7 +199,7 @@ const UserManagement = () => {
                         <span>{t(ROLE_LABELS[u.role])}</span>
                       )}
                     </td>
-                    <td>
+                    <td data-label={t('users.department')}>
                       {can(currentUser.role, 'users', 'write') ? (
                         <select
                           className="form-select compact"
@@ -215,7 +215,7 @@ const UserManagement = () => {
                         <span>{u.department ? t(DEPARTMENT_LABELS[u.department]) : t('departments.none')}</span>
                       )}
                     </td>
-                    <td>
+                    <td data-label={t('users.isDepartmentLead')}>
                       {can(currentUser.role, 'users', 'write') ? (
                         <input
                           type="checkbox"
@@ -226,12 +226,12 @@ const UserManagement = () => {
                         <span>{u.isDepartmentLead ? '✓' : '—'}</span>
                       )}
                     </td>
-                    <td>
+                    <td data-label={t('users.status')}>
                       <span className="status-badge" style={{ color: STATUS_COLORS[u.status] }}>
                         ● {t(`users.statuses.${u.status}`)}
                       </span>
                     </td>
-                    <td className="text-right">
+                    <td className="text-right" data-label={t('common.actions')}>
                       <div className="action-buttons">
                         {u.status === 'pending' && (
                           <PermissionGate resource="users" action="approve">

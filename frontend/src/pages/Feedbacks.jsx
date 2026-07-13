@@ -285,22 +285,22 @@ const Feedbacks = () => {
           <tbody>
             {pendingCreates.map((p) => (
               <tr key={p._id} className="pending-ghost-row">
-                <td>
+                <td data-label={t('feedbacks.feedbackTitle')}>
                   <div className="cell-name">{p.payload?.title}</div>
                 </td>
-                <td>{customers.find((c) => c._id === p.payload?.customer)?.name || '—'}</td>
-                <td>{p.payload?.type && <span className={`badge badge-${p.payload.type}`}>{t(`feedbacks.types.${p.payload.type}`)}</span>}</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td><span className="pending-badge"><HiOutlineClock /> {t('approvals.newRecordPending')}</span></td>
+                <td data-label={t('feedbacks.customer')}>{customers.find((c) => c._id === p.payload?.customer)?.name || '—'}</td>
+                <td data-label={t('feedbacks.type')}>{p.payload?.type && <span className={`badge badge-${p.payload.type}`}>{t(`feedbacks.types.${p.payload.type}`)}</span>}</td>
+                <td data-label={t('feedbacks.priority')}>—</td>
+                <td data-label={t('feedbacks.status')}>—</td>
+                <td data-label={t('feedbacks.revenueImpact')}>—</td>
+                <td data-label={t('common.actions')}><span className="pending-badge"><HiOutlineClock /> {t('approvals.newRecordPending')}</span></td>
               </tr>
             ))}
             {displayedFeedbacks.map((fb) => {
               const pendingAction = pendingByTarget.get(fb._id);
               return (
                 <tr key={fb._id}>
-                  <td>
+                  <td data-label={t('feedbacks.feedbackTitle')}>
                     <div className="cell-name">{t('mockData', { returnObjects: true })?.[fb.title] || fb.title}</div>
                     {fb.description && (
                       <div className="cell-email" style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -308,7 +308,7 @@ const Feedbacks = () => {
                       </div>
                     )}
                   </td>
-                  <td>
+                  <td data-label={t('feedbacks.customer')}>
                     {fb.customer ? (
                       <>
                         <div className="cell-name">{fb.customer.name}</div>
@@ -318,17 +318,17 @@ const Feedbacks = () => {
                       </>
                     ) : '—'}
                   </td>
-                  <td>
+                  <td data-label={t('feedbacks.type')}>
                     <span className={`badge badge-${fb.type}`}>
                       {t(`feedbacks.types.${fb.type}`)}
                     </span>
                   </td>
-                  <td>
+                  <td data-label={t('feedbacks.priority')}>
                     <span className={`badge badge-${fb.priority}`}>
                       {t(`feedbacks.priorities.${fb.priority}`)}
                     </span>
                   </td>
-                  <td>
+                  <td data-label={t('feedbacks.status')}>
                     <select
                       className="form-select"
                       value={fb.status}
@@ -341,12 +341,12 @@ const Feedbacks = () => {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td data-label={t('feedbacks.revenueImpact')}>
                     <span className={`revenue-impact ${fb.revenueImpact >= 200 ? 'high' : fb.revenueImpact > 0 ? 'medium' : 'low'}`}>
                       {formatCurrency(fb.revenueImpact)}{t('common.perMonth')}
                     </span>
                   </td>
-                  <td>
+                  <td data-label={t('common.actions')}>
                     {pendingAction ? (
                       <span className="pending-badge"><HiOutlineClock /> {t('common.pendingApproval')}</span>
                     ) : (

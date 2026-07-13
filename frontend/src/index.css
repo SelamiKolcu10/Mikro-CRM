@@ -316,8 +316,37 @@ a:hover {
   display: flex;
   flex-direction: column;
   z-index: 200;
-  transition: width var(--transition-base);
+  transition: width var(--transition-base), transform 300ms ease;
   overflow: hidden;
+}
+
+.sidebar-close-btn,
+.mobile-menu-btn {
+  display: none;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.sidebar-close-btn:hover,
+.mobile-menu-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 150;
+  animation: fadeIn 0.2s ease;
 }
 
 .sidebar-logo {
@@ -536,6 +565,7 @@ a:hover {
 
 .stat-info {
   flex: 1;
+  min-width: 0;
 }
 
 .stat-label {
@@ -548,6 +578,7 @@ a:hover {
   font-size: var(--font-size-2xl);
   font-weight: 800;
   line-height: 1.2;
+  overflow-wrap: break-word;
 }
 
 .stat-sub {
@@ -716,7 +747,12 @@ a:hover {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
 }
 
 .table-header {
@@ -1068,6 +1104,15 @@ tbody td {
   color: var(--text-tertiary);
 }
 
+/* ---- Access Control Matrix ---- */
+.access-control-granted-label {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
 /* ---- Dashboard Charts ---- */
 .dashboard-grid {
   display: grid;
@@ -1140,11 +1185,13 @@ tbody td {
 .bar-fill.gray { background: linear-gradient(90deg, #64748b, #94a3b8); }
 
 .bar-value {
-  width: 40px;
+  min-width: 40px;
+  text-align: right;
   font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--text-secondary);
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ---- Top Feedbacks List ---- */
@@ -1415,6 +1462,61 @@ tbody td {
   to { transform: rotate(360deg); }
 }
 
+/* ---- Audit Log ---- */
+.audit-summary-cell {
+  max-width: 320px;
+}
+
+.audit-detail-summary {
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.audit-change-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.audit-change-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.audit-change-list li:last-child {
+  border-bottom: none;
+}
+
+.audit-change-field {
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 120px;
+}
+
+.audit-change-before {
+  color: var(--color-danger);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.audit-change-arrow {
+  color: var(--text-tertiary);
+}
+
+.audit-change-after {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
 /* ---- Cell helpers ---- */
 .cell-name {
   font-weight: 600;
@@ -1449,6 +1551,17 @@ tbody td {
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
+    width: min(80vw, 300px);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-close-btn,
+  .mobile-menu-btn {
+    display: flex;
   }
 
   .main-content {
@@ -1470,6 +1583,68 @@ tbody td {
   .page-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  /* Card view for data tables — avoids horizontal scrolling on mobile.
+     Each <tr> becomes a card; each <td> shows its column header (from
+     data-label) above the value instead of relying on <thead>. */
+  .table-container table,
+  .table-responsive table {
+    display: block;
+    width: 100%;
+  }
+
+  .table-container thead,
+  .table-responsive thead {
+    display: none;
+  }
+
+  .table-container tbody,
+  .table-responsive tbody {
+    display: block;
+  }
+
+  .table-container tr,
+  .table-responsive tr {
+    display: block;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table-container tr:last-child,
+  .table-responsive tr:last-child {
+    border-bottom: none;
+  }
+
+  .table-container td,
+  .table-responsive td {
+    display: block;
+    padding: 6px 0;
+    text-align: left;
+    border: none;
+  }
+
+  .table-container td::before,
+  .table-responsive td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+
+  /* Full-width cells (empty states, loading rows) opt out of the label */
+  .table-container td[colspan],
+  .table-responsive td[colspan] {
+    padding: 0;
+  }
+
+  .table-container td[colspan]::before,
+  .table-responsive td[colspan]::before {
+    content: none;
   }
 }
 
@@ -2191,12 +2366,22 @@ body.light-theme {
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
+body.light-theme .heatmap-cell-0 {
+  background: #d8dee4;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
 .task-board-mobile-tabs {
   display: none;
   gap: var(--space-sm);
   margin-bottom: var(--space-md);
   overflow-x: auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.task-board-mobile-tabs .filter-chip {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -2314,6 +2499,7 @@ body.light-theme {
   height: 13px;
   border-radius: 2px;
   background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   transition: transform 0.1s ease, outline 0.1s ease;
   outline: 1px solid transparent;
@@ -2328,6 +2514,7 @@ body.light-theme {
 
 .heatmap-cell-empty {
   background: transparent;
+  border-color: transparent;
   cursor: default;
   pointer-events: none;
 }
@@ -2529,6 +2716,90 @@ body.light-theme {
 
   .task-heatmap-months {
     gap: 0;
+  }
+}
+
+/* ---- Chat Dashboard (3-pane layout) ---- */
+.chat-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 320px;
+  height: 70vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.chat-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chat-pane-back-btn {
+  display: none;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.chat-pane-back-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.chat-pane-profile-header {
+  display: none;
+  align-items: center;
+  gap: var(--space-sm);
+  font-weight: 700;
+  font-size: var(--font-size-md);
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Mobile: each pane becomes a full-screen slide-in panel (WhatsApp-style
+   navigation stack) driven by a `chat-layout-mobile-{list|chat|profile}`
+   modifier class on the container. Desktop keeps the classic 3-column
+   split-pane grid above untouched. */
+@media (max-width: 768px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-pane {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: var(--bg-card);
+    transition: transform 300ms ease;
+  }
+
+  .chat-pane-list { transform: translateX(0); }
+  .chat-pane-chat { transform: translateX(100%); }
+  .chat-pane-profile { transform: translateX(100%); }
+
+  .chat-layout-mobile-chat .chat-pane-list { transform: translateX(-100%); }
+  .chat-layout-mobile-chat .chat-pane-chat { transform: translateX(0); }
+  .chat-layout-mobile-chat .chat-pane-profile { transform: translateX(100%); }
+
+  .chat-layout-mobile-profile .chat-pane-list { transform: translateX(-100%); }
+  .chat-layout-mobile-profile .chat-pane-chat { transform: translateX(-100%); }
+  .chat-layout-mobile-profile .chat-pane-profile { transform: translateX(0); }
+
+  .chat-pane-back-btn {
+    display: flex;
+  }
+
+  .chat-pane-profile-header {
+    display: flex;
   }
 }
 

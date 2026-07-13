@@ -247,34 +247,34 @@ const Customers = () => {
           <tbody>
             {pendingCreates.map((p) => (
               <tr key={p._id} className="pending-ghost-row">
-                <td>
+                <td data-label={t('customers.name')}>
                   <div className="cell-name">{p.payload?.name}</div>
                   <div className="cell-email">{p.payload?.email}</div>
                 </td>
-                <td className="cell-company">{p.payload?.company || '—'}</td>
-                <td>{p.payload?.plan && <span className={getPlanBadge(p.payload.plan)}>{p.payload.plan.toUpperCase()}</span>}</td>
-                <td>{p.payload?.mrr !== undefined ? formatCurrency(p.payload.mrr) : '—'}</td>
-                <td>—</td>
-                <td><span className="pending-badge"><HiOutlineClock /> {t('approvals.newRecordPending')}</span></td>
+                <td className="cell-company" data-label={t('customers.company')}>{p.payload?.company || '—'}</td>
+                <td data-label={t('customers.plan')}>{p.payload?.plan && <span className={getPlanBadge(p.payload.plan)}>{p.payload.plan.toUpperCase()}</span>}</td>
+                <td data-label={t('customers.mrrShort')}>{p.payload?.mrr !== undefined ? formatCurrency(p.payload.mrr) : '—'}</td>
+                <td data-label={t('customers.source')}>—</td>
+                <td data-label={t('common.actions')}><span className="pending-badge"><HiOutlineClock /> {t('approvals.newRecordPending')}</span></td>
               </tr>
             ))}
             {customers.map((c) => {
               const pendingAction = pendingByTarget.get(c._id);
               return (
                 <tr key={c._id}>
-                  <td>
+                  <td data-label={t('customers.name')}>
                     <div className="cell-name">{c.name}</div>
                     <div className="cell-email">{c.email}</div>
                   </td>
-                  <td className="cell-company">{c.company || '—'}</td>
-                  <td><span className={getPlanBadge(c.plan)}>{c.plan.toUpperCase()}</span></td>
-                  <td>
+                  <td className="cell-company" data-label={t('customers.company')}>{c.company || '—'}</td>
+                  <td data-label={t('customers.plan')}><span className={getPlanBadge(c.plan)}>{c.plan.toUpperCase()}</span></td>
+                  <td data-label={t('customers.mrrShort')}>
                     <span className={`revenue-impact ${c.mrr >= 200 ? 'high' : c.mrr > 0 ? 'medium' : 'low'}`}>
                       {formatCurrency(c.mrr)}
                     </span>
                   </td>
-                  <td>{t(`customers.sources.${c.source}`)}</td>
-                  <td>
+                  <td data-label={t('customers.source')}>{t(`customers.sources.${c.source}`)}</td>
+                  <td data-label={t('common.actions')}>
                     {pendingAction ? (
                       <span className="pending-badge" title={t(`approvals.action${pendingAction.action[0].toUpperCase()}${pendingAction.action.slice(1)}`)}>
                         <HiOutlineClock /> {t('common.pendingApproval')}

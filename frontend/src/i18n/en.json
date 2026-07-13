@@ -80,7 +80,9 @@
     "finance": "Finance",
     "admin": "Administration",
     "lightMode": "Light Mode",
-    "darkMode": "Dark Mode"
+    "darkMode": "Dark Mode",
+    "openMenu": "Open Menu",
+    "closeSidebar": "Close Menu"
   },
   "users": {
     "title": "User Management",
@@ -300,6 +302,9 @@
     "noThreadYet": "No messages yet — click to start",
     "avgResponseTime": "Avg. Response Time",
     "noResponseData": "No data yet",
+    "backToList": "Back to chat list",
+    "backToChat": "Back to chat",
+    "viewProfile": "View customer profile",
     "customerAnalytics": "Customer Analytics",
     "financialProfile": "Financial Profile",
     "slaPriority": "Priority Support",
@@ -382,7 +387,41 @@
     "noLogs": "No records found",
     "prev": "Previous",
     "next": "Next",
-    "pageInfo": "Page {page} / {pages}"
+    "pageInfo": "Page {page} / {pages}",
+    "summaryCreate": "{actor} created a new {collection} record{identifier}",
+    "summaryDelete": "{actor} deleted a {collection} record{identifier}",
+    "summaryUpdateGeneric": "{actor} updated a {collection} record",
+    "summaryUpdateSingle": "{actor} updated {field} to '{value}'",
+    "summaryUpdateMultiple": "{actor} updated these fields on {collection}: {fields}",
+    "valueMasked": "••••••",
+    "valueEmpty": "—",
+    "collections": {
+      "user": "User",
+      "customer": "Customer",
+      "customerUser": "Customer Portal Account",
+      "feedback": "Feedback",
+      "permissionOverride": "Permission Override"
+    },
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "company": "Company",
+      "plan": "Plan",
+      "mrr": "Monthly Revenue",
+      "source": "Source",
+      "notes": "Notes",
+      "role": "Role",
+      "status": "Status",
+      "department": "Department",
+      "isDepartmentLead": "Department Lead",
+      "password": "Password",
+      "mustChangePassword": "Password Change Required",
+      "active": "Active",
+      "title": "Title",
+      "description": "Description",
+      "type": "Type",
+      "assignedTo": "Assigned To"
+    }
   },
   "tasks": {
     "title": "Tasks",

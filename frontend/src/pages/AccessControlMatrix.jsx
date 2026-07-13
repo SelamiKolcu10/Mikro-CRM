@@ -145,7 +145,7 @@ const AccessControlMatrix = () => {
             ) : (
               users.map((u) => (
                 <tr key={u._id}>
-                  <td>
+                  <td data-label={t('accessControl.user')}>
                     <div className="cell-name">{u.name}</div>
                     <div className="cell-email">{u.email} — {t(ROLE_LABELS[u.role])}</div>
                   </td>
@@ -153,8 +153,9 @@ const AccessControlMatrix = () => {
                     ACTIONS.map((action) => {
                       const staticGrant = hasStaticGrant(u.role, resource, action);
                       const override = findOverride(u._id, resource, action);
+                      const columnLabel = `${t(RESOURCE_LABEL_KEYS[resource])} — ${t(`accessControl.action${action === 'write' ? 'Write' : 'Delete'}`)}`;
                       return (
-                        <td key={`${resource}-${action}`} style={{ textAlign: 'center' }}>
+                        <td key={`${resource}-${action}`} style={{ textAlign: 'center' }} data-label={columnLabel}>
                           <input
                             type="checkbox"
                             checked={!!(staticGrant || override)}
@@ -162,6 +163,9 @@ const AccessControlMatrix = () => {
                             title={staticGrant ? t('accessControl.grantedByRole') : (override?.rationale || '')}
                             onChange={() => handleToggle(u, resource, action)}
                           />
+                          {staticGrant && (
+                            <span className="access-control-granted-label">{t('accessControl.grantedByRole')}</span>
+                          )}
                         </td>
                       );
                     })

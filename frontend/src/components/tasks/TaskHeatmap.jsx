@@ -3,14 +3,31 @@ import { useLanguage } from '../../context/LanguageContext';
 
 // ────────────────────── Helpers ──────────────────────
 
-/** Generate the last 365 days as ISO date strings, oldest first. */
-function last365Days() {
+/** Format a Date using its local calendar fields (avoids UTC day-shift from toISOString). */
+function toLocalISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Generate ISO date strings from 364 days ago through December 31 of the
+ * current year, oldest first. Days after today have no activity yet and
+ * simply render as empty cells — this keeps the grid spanning the full
+ * year (through December) instead of stopping at today's month.
+ */
+function buildDateRange() {
   const days = [];
   const today = new Date();
-  for (let i = 364; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+  const start = new Date(today);
+  start.setDate(start.getDate() - 364);
+  const end = new Date(today.getFullYear(), 11, 31);
+
+  const d = new Date(start);
+  while (d <= end) {
+    days.push(toLocalISODate(d));
+    d.setDate(d.getDate() + 1);
   }
   return days;
 }
@@ -175,7 +192,7 @@ const TaskHeatmap = ({ getActivityHeatmap, department, assigneeId }) => {
     return () => { cancelled = true; };
   }, [getActivityHeatmap, department, assigneeId]);
 
-  const days = last365Days();
+  const days = buildDateRange();
   const { weeks, monthLabels } = buildWeekGrid(days);
 
   // Day-of-week labels (row labels) — only Mon(1), Wed(3), Fri(5)

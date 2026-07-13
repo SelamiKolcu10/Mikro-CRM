@@ -1,11 +1,13 @@
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { ROLE_LABELS } from '../../config/permissions';
-import { HiOutlineLogout } from 'react-icons/hi';
+import { HiOutlineLogout, HiOutlineMenu } from 'react-icons/hi';
 
 const Navbar = () => {
   const { user, customerUser, isInternal, logout } = useAuth();
   const { lang, toggleLanguage, t } = useLanguage();
+  const { toggle } = useSidebar();
 
   // Staff show their own name; customers show their company/contact name so
   // the avatar still means something without a `name` field on CustomerUser.
@@ -24,6 +26,14 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-left">
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={toggle}
+          aria-label={t('nav.openMenu')}
+        >
+          <HiOutlineMenu />
+        </button>
         {/* Explicit, always-visible role indicator — the active user's
             permission level should never be a mystery. */}
         {user?.role && (
