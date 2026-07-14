@@ -4,6 +4,9 @@
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Proje Portföyü — sadece tech-stack pill'leri ve progress ring yüzdesi için
+   (bkz. design-direction dokümanı, Bölüm 2: "sızarsa fikir ucuzlar"). */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ---- CSS Reset ---- */
 *,
@@ -100,6 +103,7 @@
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
   --font-size-xs: 0.7rem;
   --font-size-sm: 0.8rem;
   --font-size-base: 0.9rem;
@@ -961,7 +965,9 @@ tbody td {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* project-drawer (z-index 1001) üstünde kalmalı — proje odasındaki bir
+     görevi açan TaskDetailModal, drawer'ın arkasında görünmez kalmasın. */
+  z-index: 1100;
   padding: var(--space-md);
   animation: fadeIn 0.2s ease;
 }
@@ -2800,6 +2806,627 @@ body.light-theme .heatmap-cell-0 {
 
   .chat-pane-profile-header {
     display: flex;
+  }
+}
+
+/* ============================================================
+   Proje Portföyü & Görev Yorumları
+   "Kapsül & Halka": statü bildiren her şey kapsül (.pill), nicel her şey
+   halka (ProgressRing). Bkz. docs/superpowers/specs/2026-07-14-project-
+   portfolio-design-direction.md
+   ============================================================ */
+
+/* ---- Kapsül (pill) ---- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.pill-tech {
+  font-family: var(--font-mono);
+}
+
+.pill-overflow {
+  background: var(--bg-elevated);
+  color: var(--text-tertiary);
+}
+
+.pill-status {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.pill-project {
+  background: var(--accent-primary-glow);
+  color: var(--accent-secondary);
+}
+
+.pill-lead {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.pill-department {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+/* ---- Progress Ring ---- */
+.progress-ring {
+  flex-shrink: 0;
+}
+
+.progress-ring-track {
+  stroke: var(--border-color-hover);
+}
+
+.progress-ring--empty .progress-ring-track {
+  stroke-dasharray: 3 4;
+}
+
+.progress-ring-fill {
+  transition: stroke-dashoffset var(--transition-slow);
+}
+
+.progress-ring--complete .progress-ring-fill {
+  stroke: var(--color-success);
+}
+
+.progress-ring-label {
+  fill: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ---- Proje Kartları Grid ---- */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-lg);
+}
+
+.project-grid-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-tertiary);
+}
+
+.project-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  cursor: pointer;
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+
+.project-card:hover {
+  border-color: var(--border-color-hover);
+  transform: translateY(-2px);
+}
+
+.project-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.project-card-name {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.project-card-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.project-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-lg);
+}
+
+.project-card-task-count {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.task-avatar-stack {
+  display: flex;
+}
+
+.task-avatar-stack .task-avatar {
+  margin-left: -8px;
+  border: 2px solid var(--bg-card);
+}
+
+.task-avatar-stack .task-avatar:first-child {
+  margin-left: 0;
+}
+
+.task-avatar-overflow {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+
+/* ---- Slide-Over Drawer ---- */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  animation: fadeIn var(--transition-fast);
+}
+
+.project-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlideIn var(--transition-base);
+  outline: none;
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.project-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.project-drawer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.project-drawer-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg) 0;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.project-drawer-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-sm) var(--space-sm);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.project-drawer-tab:hover {
+  color: var(--text-primary);
+}
+
+.project-drawer-tab.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+.project-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.project-drawer-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.project-drawer-markdown {
+  max-width: 70ch;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.project-drawer-markdown :is(h1, h2, h3) {
+  color: var(--text-primary);
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+.project-drawer-markdown p {
+  margin-bottom: var(--space-sm);
+}
+
+.project-drawer-markdown code {
+  font-family: var(--font-mono);
+  background: var(--bg-input);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+}
+
+.project-drawer-markdown pre {
+  background: var(--bg-input);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin-bottom: var(--space-sm);
+}
+
+.project-drawer-markdown ul,
+.project-drawer-markdown ol {
+  padding-left: var(--space-lg);
+  margin-bottom: var(--space-sm);
+}
+
+.project-drawer-notes-editor {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.project-drawer-notes-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.project-drawer-task-group {
+  margin-top: var(--space-md);
+}
+
+.project-drawer-task-list {
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.project-drawer-task-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.project-drawer-task-row.is-clickable {
+  cursor: pointer;
+  padding: 6px var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.project-drawer-task-row.is-clickable:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ---- Proje Drawer: Ekip Sekmesi ---- */
+.project-team-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.project-team-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.project-team-row-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-team-row-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.project-team-row-dept {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* ---- Proje Drawer: Proje Odası (chat) ---- */
+.project-chat-room {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  height: 100%;
+}
+
+.project-chat-room-header {
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.project-chat-room-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.project-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.project-chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-sm);
+}
+
+.project-chat-row.is-mine {
+  justify-content: flex-end;
+}
+
+.project-chat-bubble {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.project-chat-row.is-mine .project-chat-bubble {
+  background: var(--accent-primary);
+  border: none;
+  color: #fff;
+}
+
+.project-chat-sender {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--accent-primary-hover);
+  margin-bottom: 2px;
+}
+
+.project-chat-text {
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.project-chat-time {
+  margin-top: 4px;
+  font-size: 10px;
+  text-align: right;
+  color: var(--text-tertiary);
+}
+
+.project-chat-row.is-mine .project-chat-time {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---- Proje Formu: Ekip Üyesi Seçimi ---- */
+.project-form-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+}
+
+.project-form-member-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.project-form-member-dept {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* ---- Görev Yorumları (Task Detail Modal) ---- */
+.task-comments-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-color);
+}
+
+.task-comment-empty {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  margin: var(--space-sm) 0;
+}
+
+.task-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+.task-comment-item {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.task-comment-item .task-avatar {
+  margin-top: 2px;
+}
+
+.task-comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-comment-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.task-comment-author {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.task-comment-time {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.task-comment-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.task-comment-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 6px 6px var(--space-md);
+}
+
+.task-comment-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  outline: none;
+}
+
+.task-comment-send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--accent-primary);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.task-comment-send-btn:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+
+.task-comment-send-btn:disabled {
+  background: var(--bg-elevated);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+/* ---- Hareket kısıtlaması ---- */
+@media (prefers-reduced-motion: reduce) {
+  .project-drawer,
+  .drawer-backdrop,
+  .project-card,
+  .progress-ring-fill {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---- Mobil: drawer alttan açılan tam ekran sheet ---- */
+@media (max-width: 768px) {
+  .project-drawer {
+    top: auto;
+    max-width: 100%;
+    height: 90vh;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    animation: sheetSlideUp var(--transition-base);
+  }
+
+  .project-drawer::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: var(--border-color-hover);
+    margin: var(--space-sm) auto 0;
+  }
+
+  @keyframes sheetSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -14,10 +14,16 @@ const createTaskValidators = [
   body('priority').optional().isIn(TASK_PRIORITIES).withMessage('Geçersiz öncelik.'),
   body('deadline').optional({ nullable: true }).isISO8601().withMessage('Geçersiz tarih.'),
   body('assignedTo').isMongoId().withMessage('Geçersiz kullanıcı kimliği.'),
+  body('projectId').optional({ nullable: true }).isMongoId().withMessage('Geçersiz proje kimliği.'),
 ];
 
 const taskIdValidators = [
   param('id').isMongoId().withMessage('Geçersiz görev kimliği.'),
+];
+
+const addCommentValidators = [
+  param('id').isMongoId().withMessage('Geçersiz görev kimliği.'),
+  body('text').trim().isLength({ min: 1, max: 1000 }).withMessage('Yorum 1-1000 karakter olmalıdır.'),
 ];
 
 const updateTaskStatusValidators = [
@@ -40,4 +46,5 @@ module.exports = {
   updateTaskStatusValidators,
   assignableUsersValidators,
   activityHeatmapValidators,
+  addCommentValidators,
 };

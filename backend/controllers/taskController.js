@@ -1,13 +1,17 @@
 const mongoose = require('mongoose');
 const Task = require('../models/Task');
 const User = require('../models/User');
+const Project = require('../models/Project');
 const TaskActivity = require('../models/TaskActivity');
 const { ROLES, DEPARTMENTS } = require('../config/permissions');
 const { taskScope, canApproveTask, canActOnTask } = require('../utils/taskScope');
 
+const COMMENT_USER_POPULATE = { path: 'comments.user', select: 'name email role' };
+
 const TASK_POPULATE = [
   { path: 'assignedTo', select: 'name email department role' },
   { path: 'assignedBy', select: 'name email' },
+  { path: 'projectId', select: 'name' },
 ];
 
 /**
@@ -62,7 +66,7 @@ const getAssignableUsers = async (req, res, next) => {
  */
 const createTask = async (req, res, next) => {
   try {
-    const { title, description, department, priority, deadline, assignedTo } = req.body;
+    const { title, description, department, priority, deadline, assignedTo, projectId } = req.body;
 
     const isSuperAdmin = req.user.role === ROLES.SUPER_ADMIN;
     const isLeadOfThisDepartment = req.user.isDepartmentLead && req.user.department === department;
@@ -75,6 +79,13 @@ const createTask = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Atanan kullanıcı bu departmanda değil.' });
     }
 
+    if (projectId) {
+      const project = await Project.findById(projectId).select('_id');
+      if (!project) {
+        return res.status(400).json({ success: false, error: 'Proje bulunamadı.' });
+      }
+    }
+
     const task = await Task.create({
       title,
       description,
@@ -83,6 +94,7 @@ const createTask = async (req, res, next) => {
       deadline,
       assignedTo,
       assignedBy: req.user._id,
+      projectId: projectId || null,
     });
 
     // Record task creation as an activity for the contribution heatmap
@@ -253,4 +265,56 @@ const getActivityHeatmap = async (req, res, next) => {
   }
 };
 
-module.exports = { getTasks, getAssignableUsers, createTask, updateTaskStatus, getActivityHeatmap };
+/**
+ * @route   GET /api/tasks/:id/comments
+ * @desc    Görevi taskScope ile görebilen herkes yorumları okuyabilir.
+ */
+const getTaskComments = async (req, res, next) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.id, ...taskScope(req.user) })
+      .select('comments')
+      .populate(COMMENT_USER_POPULATE);
+    if (!task) {
+      return res.status(404).json({ success: false, error: 'Görev bulunamadı.' });
+    }
+    res.json({ success: true, data: task.comments });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   POST /api/tasks/:id/comments
+ * @desc    Yorum yazma intern'e kapalı (uygulama genelindeki read-only intern
+ *          kuralıyla tutarlı, bkz. design doc Bölüm 4). Düzenleme/silme yok.
+ */
+const addTaskComment = async (req, res, next) => {
+  try {
+    if (req.user.role === ROLES.INTERN) {
+      return res.status(403).json({ success: false, error: 'Yorum yazma yetkiniz yok.' });
+    }
+
+    const task = await Task.findOne({ _id: req.params.id, ...taskScope(req.user) });
+    if (!task) {
+      return res.status(404).json({ success: false, error: 'Görev bulunamadı.' });
+    }
+
+    task.comments.push({ user: req.user._id, text: req.body.text });
+    await task.save();
+    await task.populate(COMMENT_USER_POPULATE);
+
+    res.status(201).json({ success: true, data: task.comments[task.comments.length - 1] });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getTasks,
+  getAssignableUsers,
+  createTask,
+  updateTaskStatus,
+  getActivityHeatmap,
+  getTaskComments,
+  addTaskComment,
+};

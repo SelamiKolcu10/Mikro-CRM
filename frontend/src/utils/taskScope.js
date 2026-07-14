@@ -17,3 +17,8 @@ export function canActOnTask(user, task) {
   if (canApproveTask(user, task)) return true;
   return task.assignedTo?._id === user._id || task.assignedTo === user._id;
 }
+
+/** Yorum yazma intern'e kapalı (backend'deki addTaskComment kuralının aynısı). */
+export function canCommentOnTask(user) {
+  return !!user && user.role !== ROLES.INTERN;
+}

@@ -71,6 +71,15 @@ const PERMISSIONS = {
     assign: [ROLES.SUPER_ADMIN, ROLES.STAFF],
     approve: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
+  // Proje Portföyü — rol seviyesinde sadece kaba bir filtredir (staff'ı hiç
+  // sokmaz demek değil, sadece intern/accountant/support'u eler). Asıl kural
+  // "Dev Lead mi" sorusudur ve düz rol dizisiyle ifade edilemez — bkz.
+  // utils/projectScope.js (canManageProjects), route'ta bu ikinci katman
+  // olarak uygulanır (bkz. routes/projectRoutes.js).
+  projects: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
   // The Pending Approvals queue itself — reviewing/deciding stays
   // super_admin only, regardless of what overrides exist, otherwise a user
   // could grant themselves more access. Reading the queue (who requested

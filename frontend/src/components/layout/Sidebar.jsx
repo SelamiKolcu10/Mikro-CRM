@@ -56,7 +56,13 @@ const Sidebar = () => {
   const visibleGroups = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.roles || (isInternal && item.roles.includes(user.role))),
+      // `visible(user)` opsiyonel bir genişletme — düz rol dizisiyle ifade
+      // edilemeyen kurallar için (ör. Dev Lead). Yoksa davranış değişmez.
+      items: group.items.filter((item) =>
+        item.visible
+          ? isInternal && item.visible(user)
+          : !item.roles || (isInternal && item.roles.includes(user.role))
+      ),
     }))
     .filter((group) => group.items.length > 0);
 

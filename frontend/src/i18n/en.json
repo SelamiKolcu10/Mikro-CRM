@@ -66,6 +66,7 @@
     "invoices": "Invoices",
     "invoicesV2": "Invoices v2 (Local OCR)",
     "spendingReport": "Spending Overview",
+    "projects": "Projects",
     "users": "User Management",
     "auditLog": "Audit Log",
     "portalTickets": "My Tickets",
@@ -430,6 +431,12 @@
     "detail": {
       "moveTo": "Move to:"
     },
+    "comments": {
+      "title": "Activity & Comments",
+      "empty": "No comments yet.",
+      "placeholder": "Write a comment...",
+      "send": "Send"
+    },
     "createSuccess": "Task created.",
     "status": {
       "todo": "To Do",
@@ -451,11 +458,15 @@
       "assignedTo": "Assignee",
       "selectAssignee": "Select assignee",
       "priority": "Priority",
-      "deadline": "Deadline"
+      "deadline": "Deadline",
+      "project": "Project",
+      "noProject": "No project selected",
+      "noEligibleDepartment": "No one from a department you can create tasks for is on this project's team."
     },
     "filters": {
       "allDepartments": "All Departments",
       "allAssignees": "All Assignees",
+      "allProjects": "All Projects",
       "onlyMine": "Only My Tasks"
     },
     "history": {
@@ -490,6 +501,46 @@
     "tabs": {
       "board": "Active Board",
       "history": "Task History"
+    }
+  },
+  "projects": {
+    "title": "Project Portfolio",
+    "subtitle": "Manage projects, tech stacks, and architecture notes",
+    "myTitle": "My Projects",
+    "mySubtitle": "See the projects you're part of and join the discussion",
+    "createTitle": "Create Project",
+    "editTitle": "Edit Project",
+    "createSuccess": "Project created.",
+    "updateSuccess": "Project updated.",
+    "deleteSuccess": "Project deleted.",
+    "deleteConfirmTitle": "Delete project",
+    "deleteConfirmMessage": "Are you sure you want to delete this project? Linked tasks keep their data but lose the project link.",
+    "empty": "No projects yet.",
+    "form": {
+      "name": "Project Name",
+      "techStack": "Tech Stack",
+      "techStackPlaceholder": "React, Node.js, Python (comma-separated)",
+      "teamMembers": "Team Members",
+      "noMembers": "No eligible members.",
+      "projectLead": "Project Lead",
+      "noLead": "No lead selected",
+      "projectLeadHint": "The project lead must be one of the team members and gains edit rights on this project (architecture notes, team)."
+    },
+    "drawer": {
+      "wiki": "Architecture Wiki",
+      "wikiEmpty": "No architecture notes yet.",
+      "tasks": "Project Tasks",
+      "tasksEmpty": "No tasks linked to this project.",
+      "addTask": "Add Task",
+      "teamEmpty": "No team members on this project yet.",
+      "teamLeadBadge": "Project Lead",
+      "discussionEmpty": "No messages yet. Be the first to write one.",
+      "tabs": {
+        "notes": "Architecture Notes",
+        "team": "Team",
+        "tasks": "Tasks",
+        "room": "Project Room"
+      }
     }
   },
   "mockData": {

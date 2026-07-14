@@ -66,6 +66,7 @@
     "invoices": "Faturalar",
     "invoicesV2": "Fatura v2 (Yerli OCR)",
     "spendingReport": "Genel Harcama",
+    "projects": "Projeler",
     "users": "Kullanıcı Yönetimi",
     "auditLog": "Denetim Kaydı",
     "portalTickets": "Taleplerim",
@@ -430,6 +431,12 @@
     "detail": {
       "moveTo": "Şu duruma taşı:"
     },
+    "comments": {
+      "title": "Aktivite ve Yorumlar",
+      "empty": "Henüz yorum yok.",
+      "placeholder": "Bir yorum yazın...",
+      "send": "Gönder"
+    },
     "createSuccess": "Görev oluşturuldu.",
     "status": {
       "todo": "Yapılacak",
@@ -451,11 +458,15 @@
       "assignedTo": "Atanan Kişi",
       "selectAssignee": "Kişi seçin",
       "priority": "Öncelik",
-      "deadline": "Bitiş Tarihi"
+      "deadline": "Bitiş Tarihi",
+      "project": "Proje",
+      "noProject": "Proje seçilmedi",
+      "noEligibleDepartment": "Bu projenin ekibinde, oluşturma yetkin olan bir departmandan kimse yok."
     },
     "filters": {
       "allDepartments": "Tüm Departmanlar",
       "allAssignees": "Tüm Kişiler",
+      "allProjects": "Tüm Projeler",
       "onlyMine": "Sadece Benim Görevlerim"
     },
     "history": {
@@ -490,6 +501,46 @@
     "tabs": {
       "board": "Aktif Pano",
       "history": "Görev Geçmişi"
+    }
+  },
+  "projects": {
+    "title": "Proje Portföyü",
+    "subtitle": "Projeleri, tech stack'i ve mimari notları yönetin",
+    "myTitle": "Projelerim",
+    "mySubtitle": "Ekibinde olduğun projeleri gör ve tartışmaya katıl",
+    "createTitle": "Proje Oluştur",
+    "editTitle": "Projeyi Düzenle",
+    "createSuccess": "Proje oluşturuldu.",
+    "updateSuccess": "Proje güncellendi.",
+    "deleteSuccess": "Proje silindi.",
+    "deleteConfirmTitle": "Projeyi sil",
+    "deleteConfirmMessage": "Bu projeyi silmek istediğinize emin misiniz? Bağlı görevlerin proje bağlantısı kaldırılır, görevler silinmez.",
+    "empty": "Henüz proje yok.",
+    "form": {
+      "name": "Proje Adı",
+      "techStack": "Teknolojiler",
+      "techStackPlaceholder": "React, Node.js, Python (virgülle ayırın)",
+      "teamMembers": "Ekip Üyeleri",
+      "noMembers": "Uygun üye yok.",
+      "projectLead": "Proje Lideri",
+      "noLead": "Lider seçilmedi",
+      "projectLeadHint": "Proje lideri, ekipten biri olmalı ve bu projede düzenleme yetkisi kazanır (mimari notlar, ekip)."
+    },
+    "drawer": {
+      "wiki": "Mimari Wiki",
+      "wikiEmpty": "Henüz mimari notu eklenmedi.",
+      "tasks": "Proje Görevleri",
+      "tasksEmpty": "Bu projeye bağlı görev yok.",
+      "addTask": "Görev Ekle",
+      "teamEmpty": "Bu projede henüz ekip üyesi yok.",
+      "teamLeadBadge": "Proje Lideri",
+      "discussionEmpty": "Henüz mesaj yok. İlk mesajı sen yaz.",
+      "tabs": {
+        "notes": "Mimari Notlar",
+        "team": "Ekip",
+        "tasks": "Görevler",
+        "room": "Proje Odası"
+      }
     }
   },
   "mockData": {

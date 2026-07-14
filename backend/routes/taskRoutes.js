@@ -10,6 +10,7 @@ const {
   updateTaskStatusValidators,
   assignableUsersValidators,
   activityHeatmapValidators,
+  addCommentValidators,
 } = require('../validators/taskValidators');
 const { PERMISSIONS } = require('../config/permissions');
 const {
@@ -18,6 +19,8 @@ const {
   createTask,
   updateTaskStatus,
   getActivityHeatmap,
+  getTaskComments,
+  addTaskComment,
 } = require('../controllers/taskController');
 
 // Görev modülü — super_admin, staff (bkz. config/permissions.js — asıl
@@ -35,5 +38,7 @@ router.patch(
   handleValidationErrors,
   updateTaskStatus
 );
+router.get('/:id/comments', redactForIntern, taskIdValidators, handleValidationErrors, getTaskComments);
+router.post('/:id/comments', addCommentValidators, handleValidationErrors, addTaskComment);
 
 module.exports = router;

@@ -49,6 +49,34 @@ const taskSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Atayan kullanıcı zorunludur.'],
     },
+    // Opsiyonel — projeye bağlı olmayan görevler de olabilir. department'tan
+    // bağımsız bir eksendir: bir projenin görevleri birden çok departmana
+    // yayılabilir, projectId hiçbir yetki/görünürlük kararına girmez (bkz.
+    // docs/superpowers/specs/2026-07-14-project-portfolio-task-comments-design.md).
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Project',
+      default: null,
+    },
+    comments: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        text: {
+          type: String,
+          required: [true, 'Yorum metni zorunludur.'],
+          trim: true,
+          maxlength: [1000, 'Yorum en fazla 1000 karakter olabilir.'],
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

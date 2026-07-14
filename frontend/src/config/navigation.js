@@ -13,8 +13,10 @@ import {
   HiOutlineKey,
   HiOutlineClipboardCheck,
   HiOutlineViewBoards,
+  HiOutlineFolderOpen,
 } from 'react-icons/hi';
 import { ROLES } from './permissions';
+import { canManageProjects } from '../utils/projectScope';
 
 /**
  * Single source of truth for both the staff sidebar and the customer portal
@@ -50,6 +52,10 @@ export const INTERNAL_NAV = [
     section: 'admin',
     sectionLabelKey: 'nav.admin',
     items: [
+      // Dev Lead koşulu düz rol dizisiyle ifade edilemez — `roles` sadece
+      // kaba filtre (staff, dev-lead olmasa da bu diziyi geçer), asıl karar
+      // `visible()`'da (bkz. Sidebar.jsx'teki genişletilmiş filtre).
+      { path: '/projects', icon: HiOutlineFolderOpen, labelKey: 'nav.projects', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF], visible: canManageProjects },
       { path: '/users', icon: HiOutlineShieldCheck, labelKey: 'nav.users', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN], badgeKey: 'pendingUsers' },
       { path: '/access-control', icon: HiOutlineKey, labelKey: 'nav.accessControl', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN] },
       { path: '/approvals', icon: HiOutlineClipboardCheck, labelKey: 'nav.approvals', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN], badgeKey: 'pendingApprovals' },

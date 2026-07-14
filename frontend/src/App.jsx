@@ -20,6 +20,7 @@ import ChatDashboard from './pages/ChatDashboard';
 import AccessControlMatrix from './pages/AccessControlMatrix';
 import PendingApprovals from './pages/PendingApprovals';
 import Tasks from './pages/Tasks';
+import Projects from './pages/Projects';
 import PortalTickets from './pages/portal/PortalTickets';
 import PortalProfile from './pages/portal/PortalProfile';
 import PortalChat from './pages/portal/PortalChat';
@@ -157,6 +158,9 @@ const App = () => {
               } />
               <Route path="/reports/spending" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.INTERN]}><SpendingDashboard /></RoleGuard>
+              } />
+              <Route path="/projects" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF]}><Projects /></RoleGuard>
               } />
               <Route path="/users" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.INTERN]}><UserManagement /></RoleGuard>

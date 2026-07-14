@@ -3,7 +3,8 @@ import TaskColumn from './TaskColumn';
 import TaskDetailModal from './TaskDetailModal';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { canActOnTask, canApproveTask } from '../../utils/taskScope';
+import { canActOnTask, canApproveTask, canCommentOnTask } from '../../utils/taskScope';
+import { useTaskComments } from '../../hooks/useTaskComments';
 
 const STATUSES = ['todo', 'in_progress', 'in_review', 'done'];
 const DONE_VISIBLE_DAYS = 7;
@@ -25,6 +26,7 @@ const TaskBoard = ({ tasks, onStatusChange }) => {
   const { t } = useLanguage();
   const [mobileColumn, setMobileColumn] = useState('todo');
   const [selectedTask, setSelectedTask] = useState(null);
+  const { comments, addComment } = useTaskComments(selectedTask?._id);
 
   const visibleTasks = tasks.filter(isVisibleOnBoard);
 
@@ -65,6 +67,9 @@ const TaskBoard = ({ tasks, onStatusChange }) => {
         onStatusChange={onStatusChange}
         canAct={selectedTask ? canActOnTask(user, selectedTask) : false}
         canApprove={selectedTask ? canApproveTask(user, selectedTask) : false}
+        comments={comments}
+        onAddComment={addComment}
+        canComment={canCommentOnTask(user)}
       />
     </>
   );

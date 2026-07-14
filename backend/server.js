@@ -34,6 +34,7 @@ app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/audit-logs', require('./routes/auditRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/approvals', require('./routes/approvalRoutes'));
 app.use('/api/permission-overrides', require('./routes/permissionOverrideRoutes'));
 

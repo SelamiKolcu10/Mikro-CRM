@@ -77,6 +77,11 @@ export const PERMISSIONS = {
     assign: [ROLES.SUPER_ADMIN, ROLES.STAFF],
     approve: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
+  // Proje Portföyü — kaba filtre; asıl kural (Dev Lead mi) utils/projectScope.js'te.
+  projects: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
   // The Pending Approvals queue itself — reviewing/deciding stays
   // super_admin only, regardless of what overrides exist, otherwise a user
   // could grant themselves more access. Reading the queue (who requested

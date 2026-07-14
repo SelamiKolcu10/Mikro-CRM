@@ -62,9 +62,11 @@ export function useTasks() {
 export function applyTaskFilters(tasks, filters, currentUserId) {
   return tasks.filter((task) => {
     const assigneeId = task.assignedTo?._id || task.assignedTo;
+    const projectId = task.projectId?._id || task.projectId;
     if (filters.onlyMine && assigneeId !== currentUserId) return false;
     if (filters.department && task.department !== filters.department) return false;
     if (filters.assigneeId && assigneeId !== filters.assigneeId) return false;
+    if (filters.projectId && projectId !== filters.projectId) return false;
     return true;
   });
 }

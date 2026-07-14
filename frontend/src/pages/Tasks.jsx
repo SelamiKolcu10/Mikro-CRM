@@ -11,7 +11,7 @@ import CreateTaskModal from '../components/tasks/CreateTaskModal';
 import toast from 'react-hot-toast';
 
 const TABS = ['board', 'history'];
-const INITIAL_FILTERS = { department: '', assigneeId: '', onlyMine: false };
+const INITIAL_FILTERS = { department: '', assigneeId: '', projectId: '', onlyMine: false };
 
 const Tasks = () => {
   const { t } = useLanguage();

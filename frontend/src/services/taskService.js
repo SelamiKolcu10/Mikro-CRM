@@ -6,6 +6,8 @@ const taskService = {
   updateStatus: (id, status) => api.patch(`/tasks/${id}/status`, { status }),
   getAssignableUsers: (department) => api.get('/tasks/assignable-users', { params: department ? { department } : {} }),
   getActivityHeatmap: (params) => api.get('/tasks/activity-heatmap', { params }),
+  getComments: (taskId) => api.get(`/tasks/${taskId}/comments`),
+  addComment: (taskId, text) => api.post(`/tasks/${taskId}/comments`, { text }),
 };
 
 export default taskService;
