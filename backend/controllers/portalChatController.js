@@ -50,10 +50,17 @@ const sendMyMessage = async (req, res, next) => {
 
     // $inc instead of read-modify-save — two messages landing in the same
     // instant must both count, not clobber each other's unread bump.
+    // lastMessageSenderType: 'customer' starts/restarts the SLA clock (see
+    // backend/services/slaEscalationService.js) — a still-escalated
+    // conversation stays escalated until staff actually replies.
     const updated = await Conversation.findByIdAndUpdate(
       conversation._id,
       {
-        $set: { lastMessageAt: message.createdAt, lastMessagePreview: message.body.slice(0, PREVIEW_LENGTH) },
+        $set: {
+          lastMessageAt: message.createdAt,
+          lastMessagePreview: message.body.slice(0, PREVIEW_LENGTH),
+          lastMessageSenderType: 'customer',
+        },
         $inc: { unreadByInternal: 1 },
       },
       { new: true }

@@ -24,11 +24,22 @@ const getConversations = async (req, res, next) => {
     const conversationByCustomer = new Map(conversations.map((c) => [c.customer.toString(), c]));
 
     const customerIds = customers.map((c) => c._id);
-    const openCounts = await Feedback.aggregate([
-      { $match: { customer: { $in: customerIds }, status: { $in: ['open', 'in-progress'] } } },
-      { $group: { _id: '$customer', count: { $sum: 1 } } },
+    const [openCounts, totalCounts] = await Promise.all([
+      Feedback.aggregate([
+        { $match: { customer: { $in: customerIds }, status: { $in: ['open', 'in-progress'] } } },
+        { $group: { _id: '$customer', count: { $sum: 1 } } },
+      ]),
+      Feedback.aggregate([
+        { $match: { customer: { $in: customerIds } } },
+        { $group: { _id: '$customer', count: { $sum: 1 } } },
+      ]),
     ]);
     const openCountMap = new Map(openCounts.map((row) => [row._id.toString(), row.count]));
+    // Distinct from openFeedbackCount — a customer whose only tickets are
+    // already resolved/closed has openFeedbackCount 0 but totalFeedbackCount
+    // > 0. The UI needs both so "no open ticket" doesn't read as "no ticket
+    // ever existed" (see totalCountMap usage below).
+    const totalCountMap = new Map(totalCounts.map((row) => [row._id.toString(), row.count]));
 
     const data = customers
       .map((customer) => {
@@ -41,6 +52,7 @@ const getConversations = async (req, res, next) => {
           lastMessagePreview: conversation?.lastMessagePreview || '',
           unreadByInternal: conversation?.unreadByInternal || 0,
           openFeedbackCount: openCountMap.get(customer._id.toString()) || 0,
+          totalFeedbackCount: totalCountMap.get(customer._id.toString()) || 0,
         };
       })
       .sort((a, b) => {
@@ -51,6 +63,24 @@ const getConversations = async (req, res, next) => {
       });
 
     res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   GET /api/chat/escalations
+ * @desc    Currently escalated conversations — initial-load source for the
+ *          sidebar badge and EscalationBanner (live updates after that come
+ *          from the 'conversation:escalated' socket event, not polling).
+ */
+const getEscalations = async (req, res, next) => {
+  try {
+    const escalations = await Conversation.find({ status: 'escalated' })
+      .populate('customer', 'name email company plan')
+      .populate('previousAssignee', 'name email')
+      .sort('-escalatedAt');
+    res.json({ success: true, data: escalations });
   } catch (error) {
     next(error);
   }
@@ -111,8 +141,8 @@ const getMessages = async (req, res, next) => {
  */
 const sendMessage = async (req, res, next) => {
   try {
-    const conversationExists = await Conversation.exists({ _id: req.params.id });
-    if (!conversationExists) {
+    const existing = await Conversation.findById(req.params.id).select('status');
+    if (!existing) {
       return res.status(404).json({ success: false, error: 'Sohbet bulunamadı.' });
     }
 
@@ -124,16 +154,29 @@ const sendMessage = async (req, res, next) => {
       body: req.body.body,
     });
 
+    // A staff reply resolves the SLA clock (lastMessageSenderType flips away
+    // from 'customer') and, if the conversation was escalated, un-escalates
+    // it — the replier auto-claims it rather than leaving assignedTo empty.
+    const update = {
+      $set: {
+        lastMessageAt: message.createdAt,
+        lastMessagePreview: message.body.slice(0, PREVIEW_LENGTH),
+        lastMessageSenderType: 'internal',
+      },
+      $inc: { unreadByCustomer: 1 },
+    };
+    if (existing.status === 'escalated') {
+      Object.assign(update.$set, {
+        status: 'active',
+        escalatedAt: null,
+        previousAssignee: null,
+        assignedTo: req.user._id,
+      });
+    }
+
     // $inc instead of read-modify-save — two replies landing in the same
     // instant must both count, not clobber each other's unread bump.
-    const conversation = await Conversation.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: { lastMessageAt: message.createdAt, lastMessagePreview: message.body.slice(0, PREVIEW_LENGTH) },
-        $inc: { unreadByCustomer: 1 },
-      },
-      { new: true }
-    );
+    const conversation = await Conversation.findByIdAndUpdate(req.params.id, update, { new: true });
 
     // clientId is echoed, never persisted — it's how the sender's own UI
     // reconciles its optimistic bubble whichever of REST/socket arrives first.
@@ -194,4 +237,4 @@ const assignConversation = async (req, res, next) => {
   }
 };
 
-module.exports = { getConversations, startConversation, getMessages, sendMessage, markRead, assignConversation };
+module.exports = { getConversations, getEscalations, startConversation, getMessages, sendMessage, markRead, assignConversation };

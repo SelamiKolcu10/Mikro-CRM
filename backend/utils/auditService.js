@@ -1,4 +1,4 @@
-const AuditLog = require('../models/AuditLog');
+const { writeChainedLog, computeSeverity } = require('./auditChain');
 
 const NEVER_LOG_VALUES = new Set(['password']);
 
@@ -47,7 +47,9 @@ async function record({ req, collectionName, documentId, action, before, after, 
     const changes = action === 'update' ? computeDiff(before, after, watchedFields) : [];
     if (action === 'update' && changes.length === 0) return; // nothing actually changed — skip noise
 
-    await AuditLog.create({
+    const severity = computeSeverity({ action, collectionName, changes });
+
+    await writeChainedLog({
       collectionName,
       documentId,
       action,
@@ -58,6 +60,7 @@ async function record({ req, collectionName, documentId, action, before, after, 
       snapshot: action !== 'update' ? after || before : null,
       ip: req.ip,
       userAgent: req.headers['user-agent'] || null,
+      severity,
     });
   } catch (err) {
     // Audit logging must never break the actual request it's observing.

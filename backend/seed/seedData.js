@@ -22,6 +22,9 @@ const Task = require('../models/Task');
 const TaskActivity = require('../models/TaskActivity');
 const { calculatePriority } = require('../utils/revenueImpact');
 
+// hireDate — createdAt'tan (hesap kaydı zamanı) kasıtlı olarak ayrı: Çalışan
+// Dizini/Profilim kıdemi buradan hesaplanır (bkz. utils/developerTree.js),
+// böylece seed her çalıştığında herkes "0 ay" görünmez.
 const seedUsers = [
   {
     name: 'Admin User',
@@ -29,6 +32,7 @@ const seedUsers = [
     password: 'admin123',
     role: 'super_admin',
     status: 'approved',
+    hireDate: new Date('2023-08-13'),
   },
   // Department leads
   {
@@ -39,6 +43,7 @@ const seedUsers = [
     status: 'approved',
     department: 'development',
     isDepartmentLead: true,
+    hireDate: new Date('2023-02-14'),
   },
   {
     name: 'Elif Kara',
@@ -48,6 +53,7 @@ const seedUsers = [
     status: 'approved',
     department: 'design',
     isDepartmentLead: true,
+    hireDate: new Date('2024-09-11'),
   },
   {
     name: 'Selami Kolcu',
@@ -57,6 +63,7 @@ const seedUsers = [
     status: 'approved',
     department: 'marketing',
     isDepartmentLead: true,
+    hireDate: new Date('2024-06-17'),
   },
   // Regular staff
   {
@@ -66,6 +73,7 @@ const seedUsers = [
     role: 'staff',
     status: 'approved',
     department: 'development',
+    hireDate: new Date('2024-02-15'),
   },
   {
     name: 'Zeynep Arslan',
@@ -74,6 +82,7 @@ const seedUsers = [
     role: 'staff',
     status: 'approved',
     department: 'design',
+    hireDate: new Date('2025-01-10'),
   },
 ];
 

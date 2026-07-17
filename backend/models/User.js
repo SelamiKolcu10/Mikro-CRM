@@ -87,6 +87,46 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Şirket kıdemi BURADAN hesaplanır — createdAt (hesap kaydı zamanı) değil.
+    // İkisi kasıtlı olarak ayrı: bir hesap bugün açılmış olsa bile kişi
+    // şirkette daha önceden çalışıyor olabilir (ör. göç/manuel kayıt).
+    // Null ise (yeni, normal akışla oluşturulan hesaplar) tenure hesaplaması
+    // createdAt'a düşer — bkz. utils/developerTree.js.
+    hireDate: {
+      type: Date,
+      default: null,
+    },
+    // Çalışan Dizini / Profilim modülü — yalnızca profil sahibi tarafından
+    // düzenlenir (bkz. userController.updateMyContactInfo), süper admin salt
+    // görüntüler. avatarUrl bu turda ham yüklenen fotoğrafın yoludur; AI
+    // vektör-avatar dönüştürme adımı kapsam dışı bırakıldı (sonraki iterasyon).
+    personalInfo: {
+      phone: { type: String, trim: true, default: '' },
+      linkedin: {
+        type: String,
+        trim: true,
+        default: '',
+        match: [/^$|^https?:\/\/(www\.)?linkedin\.com\/.*$/, 'Geçerli bir LinkedIn adresi giriniz.'],
+      },
+      github: {
+        type: String,
+        trim: true,
+        default: '',
+        match: [/^$|^https?:\/\/(www\.)?github\.com\/.*$/, 'Geçerli bir GitHub adresi giriniz.'],
+      },
+      avatarUrl: { type: String, default: '' },
+    },
+    // Bir projenin teamMembers'ına eklendiği an itibarıyla push edilir (bkz.
+    // projectController createProject/updateProject) — proje bazlı kıdem
+    // ("X aydır katkı sağlıyor") buradan hesaplanır. Üyelikten çıkarılınca
+    // silinmez (geçmiş kaydı korunur); "hâlâ ekipte mi" sorusu her zaman
+    // Project.teamMembers'ın GÜNCEL haline bakılarak ayrıca doğrulanır.
+    projectHistory: [
+      {
+        project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+        joinedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

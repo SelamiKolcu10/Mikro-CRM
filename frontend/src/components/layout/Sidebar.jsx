@@ -5,9 +5,11 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { INTERNAL_NAV, PORTAL_NAV } from '../../config/navigation';
-import { ROLES } from '../../config/permissions';
+import { ROLES, can } from '../../config/permissions';
 import userService from '../../services/userService';
 import approvalService from '../../services/approvalService';
+import chatService from '../../services/chatService';
+import { useSocket } from '../../context/SocketContext';
 
 /**
  * One sidebar for the whole app — staff and customer portal alike. Which
@@ -19,9 +21,11 @@ const Sidebar = () => {
   const { t } = useLanguage();
   const { user, customerUser, isInternal, isCustomer } = useAuth();
   const { isOpen, close } = useSidebar();
+  const { socket } = useSocket();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
+  const [chatEscalationsCount, setChatEscalationsCount] = useState(0);
 
   // Super admin sees badges for accounts awaiting approval and for queued
   // override actions awaiting review — both refreshed periodically so they
@@ -37,6 +41,30 @@ const Sidebar = () => {
     return () => clearInterval(interval);
   }, [isInternal, user?.role]);
 
+  // Escalation count is visible to every chat-capable role, not just
+  // super_admin — a breach is the team's problem. Live updates come from the
+  // socket event (same one ChatDashboard/EscalationBanner listen to), not
+  // polling: initial fetch on mount, then re-fetch whenever a new escalation
+  // fires while this session is open.
+  const canSeeChatEscalations = isInternal && can(user?.role, 'chat', 'read');
+  useEffect(() => {
+    if (!canSeeChatEscalations) return;
+    chatService.getEscalations().then((res) => setChatEscalationsCount(res.data.data.length)).catch(() => {});
+  }, [canSeeChatEscalations]);
+
+  useEffect(() => {
+    if (!socket || !canSeeChatEscalations) return undefined;
+    const refresh = () => {
+      chatService.getEscalations().then((res) => setChatEscalationsCount(res.data.data.length)).catch(() => {});
+    };
+    socket.on('conversation:escalated', refresh);
+    socket.on('conversation:updated', refresh);
+    return () => {
+      socket.off('conversation:escalated', refresh);
+      socket.off('conversation:updated', refresh);
+    };
+  }, [socket, canSeeChatEscalations]);
+
   useEffect(() => {
     if (theme === 'light') {
       document.body.classList.add('light-theme');
@@ -50,7 +78,8 @@ const Sidebar = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const badges = { pendingUsers: pendingCount, pendingApprovals: pendingApprovalsCount };
+  const badges = { pendingUsers: pendingCount, pendingApprovals: pendingApprovalsCount, chatEscalations: chatEscalationsCount };
+  const DANGER_BADGE_KEYS = new Set(['chatEscalations']);
 
   const navGroups = isInternal ? INTERNAL_NAV : PORTAL_NAV;
   const visibleGroups = navGroups
@@ -82,7 +111,11 @@ const Sidebar = () => {
       >
         <span className="nav-icon"><Icon /></span>
         <span>{t(item.labelKey)}</span>
-        {!!badgeValue && <span className="nav-badge">{badgeValue}</span>}
+        {!!badgeValue && (
+          <span className={`nav-badge ${DANGER_BADGE_KEYS.has(item.badgeKey) ? 'nav-badge--danger' : ''}`}>
+            {badgeValue}
+          </span>
+        )}
       </NavLink>
     );
   };

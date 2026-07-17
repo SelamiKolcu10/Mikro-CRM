@@ -35,6 +35,10 @@ const assignableUsersValidators = [
   query('department').optional().isIn(DEPARTMENTS).withMessage('Geçersiz departman.'),
 ];
 
+const workloadStatusValidators = [
+  query('department').optional().isIn(DEPARTMENTS).withMessage('Geçersiz departman.'),
+];
+
 const activityHeatmapValidators = [
   query('department').optional().isIn(DEPARTMENTS).withMessage('Geçersiz departman.'),
   query('userId').optional().isMongoId().withMessage('Geçersiz kullanıcı kimliği.'),
@@ -45,6 +49,7 @@ module.exports = {
   taskIdValidators,
   updateTaskStatusValidators,
   assignableUsersValidators,
+  workloadStatusValidators,
   activityHeatmapValidators,
   addCommentValidators,
 };

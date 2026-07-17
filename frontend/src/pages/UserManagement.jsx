@@ -2,36 +2,40 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import userService from '../services/userService';
-import ConfirmDialog from '../components/common/ConfirmDialog';
-import Modal from '../components/common/Modal';
+import projectService from '../services/projectService';
 import toast from 'react-hot-toast';
-import { HiOutlineCheck, HiOutlineX, HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi';
-import { ALL_ROLES, ROLE_LABELS, DEPARTMENTS, DEPARTMENT_LABELS, can } from '../config/permissions';
+import { HiOutlinePlus } from 'react-icons/hi';
+import { DEPARTMENTS, DEPARTMENT_LABELS, can } from '../config/permissions';
 import PermissionGate from '../components/auth/PermissionGate';
+import EmployeeCard from '../components/users/EmployeeCard';
+import EmployeePanel from '../components/users/EmployeePanel';
+import EmployeeAvatar from '../components/users/EmployeeAvatar';
+import ContributionRing from '../components/users/ContributionRing';
+import CreateUserModal from '../components/users/CreateUserModal';
 
-const STATUS_COLORS = {
-  pending: 'var(--color-info)',
-  approved: 'var(--color-success)',
-  rejected: 'var(--color-danger)',
-};
-
-const initialCreateForm = { name: '', email: '', role: 'staff' };
-
+/**
+ * Eski tablo tabanlı Kullanıcı Yönetimi'nin yerini alan kart tabanlı Çalışan
+ * Dizini. Rol/departman/lider atama, onay/red ve silme artık ayrı satır
+ * kontrolleri değil, karta tıklayınca açılan EmployeePanel'in "Yönetim"
+ * bölümünde toplanıyor (bkz. design mockup). "Projeler" sekmesi ise aynı
+ * veriyi proje-merkezli, yoğun bir görünümde sunuyor.
+ */
 const UserManagement = () => {
   const { t } = useLanguage();
   const { user: currentUser } = useAuth();
+  const isAdmin = can(currentUser.role, 'users', 'write');
+
+  const [tab, setTab] = useState('directory');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
-  const [deleteId, setDeleteId] = useState(null);
+  const [deptFilter, setDeptFilter] = useState('');
+  const [leadsOnly, setLeadsOnly] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
-  // Create user modal
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [createForm, setCreateForm] = useState(initialCreateForm);
-  const [creating, setCreating] = useState(false);
-
-  // Result modal — shows the generated temp password once
-  const [createResult, setCreateResult] = useState(null);
+  const [projectsOverview, setProjectsOverview] = useState(null);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -46,89 +50,26 @@ const UserManagement = () => {
     }
   }, [statusFilter]);
 
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  const fetchProjectsOverview = useCallback(() => {
+    setProjectsLoading(true);
+    projectService.getContributionsOverview()
+      .then((res) => setProjectsOverview(res.data.data))
+      .catch(() => { setProjectsOverview([]); toast.error(t('common.loadError')); })
+      .finally(() => setProjectsLoading(false));
+  }, []);
+
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (tab === 'projects' && isAdmin) fetchProjectsOverview();
+    if (tab !== 'directory') setSelectedId(null);
+  }, [tab, isAdmin, fetchProjectsOverview]);
 
-  const handleApprove = async (id) => {
-    try {
-      await userService.approve(id);
-      toast.success(t('users.approved'));
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || t('common.error'));
-    }
-  };
-
-  const handleReject = async (id) => {
-    try {
-      await userService.reject(id);
-      toast.success(t('users.rejected'));
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || t('common.error'));
-    }
-  };
-
-  const handleRoleChange = async (id, role) => {
-    try {
-      await userService.updateRole(id, role);
-      toast.success(t('common.update') + ' ✅');
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || t('common.error'));
-    }
-  };
-
-  const handleDepartmentChange = async (id, department) => {
-    try {
-      await userService.updateDepartment(id, { department: department || null });
-      toast.success(t('common.update') + ' ✅');
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || t('common.error'));
-    }
-  };
-
-  const handleLeadToggle = async (id, isDepartmentLead) => {
-    try {
-      await userService.updateDepartment(id, { isDepartmentLead });
-      toast.success(t('common.update') + ' ✅');
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || t('common.error'));
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    try {
-      await userService.delete(deleteId);
-      toast.success(t('common.delete') + ' ✅');
-      setDeleteId(null);
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || t('common.error'));
-    }
-  };
-
-  const handleCreateSubmit = async (e) => {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      const res = await userService.create(createForm);
-      setCreateModalOpen(false);
-      setCreateForm(initialCreateForm);
-      setCreateResult(res.data.data);
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || t('common.error'));
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const pendingCount = users.filter((u) => u.status === 'pending').length;
+  const visibleUsers = users.filter(
+    (u) => (!deptFilter || u.department === deptFilter) && (!leadsOnly || u.isDepartmentLead)
+  );
+  const filtered = !!(deptFilter || leadsOnly);
+  const selectedEmployee = users.find((u) => u._id === selectedId) || null;
 
   return (
     <>
@@ -138,216 +79,121 @@ const UserManagement = () => {
           <p>{t('users.subtitle')}</p>
         </div>
         <PermissionGate resource="users" action="write">
-          <button className="btn btn-primary" onClick={() => setCreateModalOpen(true)}>
+          <button className="btn btn-primary" onClick={() => setCreateOpen(true)}>
             <HiOutlinePlus /> {t('users.createUser')}
           </button>
         </PermissionGate>
       </div>
 
-      <div className="table-container">
-        <div className="table-header">
-          <div className="filter-group">
-            <select
-              className="form-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
+      {isAdmin && (
+        <div className="tabs">
+          <button type="button" className={`tab${tab === 'directory' ? ' active' : ''}`} onClick={() => setTab('directory')}>
+            <span className="tab-label">{t('users.directory.tabs.directory')}</span>
+          </button>
+          <button type="button" className={`tab${tab === 'projects' ? ' active' : ''}`} onClick={() => setTab('projects')}>
+            <span className="tab-label">{t('users.directory.tabs.projects')}</span>
+          </button>
+        </div>
+      )}
+
+      {tab === 'directory' || !isAdmin ? (
+        <>
+          <div className="filter-bar">
+            <select className="form-select compact" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">{t('users.allStatuses')}</option>
-              <option value="pending">{t('users.statuses.pending')} {pendingCount > 0 && statusFilter === '' ? `(${pendingCount})` : ''}</option>
+              <option value="pending">{t('users.statuses.pending')}</option>
               <option value="approved">{t('users.statuses.approved')}</option>
               <option value="rejected">{t('users.statuses.rejected')}</option>
             </select>
+            <span className="filter-sep" aria-hidden="true" />
+            <span className="filter-label">{t('users.directory.filterDepartment')}</span>
+            <button type="button" className={`chip${!deptFilter ? ' active' : ''}`} onClick={() => setDeptFilter('')}>{t('users.directory.all')}</button>
+            {DEPARTMENTS.map((d) => (
+              <button key={d} type="button" className={`chip${deptFilter === d ? ' active' : ''}`} onClick={() => setDeptFilter(d)}>
+                {t(DEPARTMENT_LABELS[d])}
+              </button>
+            ))}
+            <span className="filter-sep" aria-hidden="true" />
+            <button type="button" className={`chip${leadsOnly ? ' active' : ''}`} onClick={() => setLeadsOnly((v) => !v)}>
+              {t('users.directory.onlyLeads')}
+            </button>
           </div>
-        </div>
 
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>{t('auth.name')}</th>
-                <th>{t('auth.email')}</th>
-                <th>{t('users.role')}</th>
-                <th>{t('users.department')}</th>
-                <th>{t('users.isDepartmentLead')}</th>
-                <th>{t('users.status')}</th>
-                <th className="text-right">{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7}>{t('common.loading')}</td></tr>
-              ) : users.length === 0 ? (
-                <tr><td colSpan={7}>{t('common.noData')}</td></tr>
-              ) : (
-                users.map((u) => (
-                  <tr key={u._id}>
-                    <td data-label={t('auth.name')}>{u.name}</td>
-                    <td data-label={t('auth.email')}>{u.email}</td>
-                    <td data-label={t('users.role')}>
-                      {can(currentUser.role, 'users', 'write') ? (
-                        <select
-                          className="form-select compact"
-                          value={u.role}
-                          disabled={u._id === currentUser._id}
-                          onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                        >
-                          {ALL_ROLES.map((role) => (
-                            <option key={role} value={role}>{t(ROLE_LABELS[role])}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{t(ROLE_LABELS[u.role])}</span>
-                      )}
-                    </td>
-                    <td data-label={t('users.department')}>
-                      {can(currentUser.role, 'users', 'write') ? (
-                        <select
-                          className="form-select compact"
-                          value={u.department || ''}
-                          onChange={(e) => handleDepartmentChange(u._id, e.target.value)}
-                        >
-                          <option value="">{t('departments.none')}</option>
-                          {DEPARTMENTS.map((dept) => (
-                            <option key={dept} value={dept}>{t(DEPARTMENT_LABELS[dept])}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{u.department ? t(DEPARTMENT_LABELS[u.department]) : t('departments.none')}</span>
-                      )}
-                    </td>
-                    <td data-label={t('users.isDepartmentLead')}>
-                      {can(currentUser.role, 'users', 'write') ? (
-                        <input
-                          type="checkbox"
-                          checked={!!u.isDepartmentLead}
-                          onChange={(e) => handleLeadToggle(u._id, e.target.checked)}
-                        />
-                      ) : (
-                        <span>{u.isDepartmentLead ? '✓' : '—'}</span>
-                      )}
-                    </td>
-                    <td data-label={t('users.status')}>
-                      <span className="status-badge" style={{ color: STATUS_COLORS[u.status] }}>
-                        ● {t(`users.statuses.${u.status}`)}
-                      </span>
-                    </td>
-                    <td className="text-right" data-label={t('common.actions')}>
-                      <div className="action-buttons">
-                        {u.status === 'pending' && (
-                          <PermissionGate resource="users" action="approve">
-                            <button className="btn-icon" title={t('users.approve')} onClick={() => handleApprove(u._id)}>
-                              <HiOutlineCheck style={{ color: 'var(--color-success)' }} />
-                            </button>
-                            <button className="btn-icon" title={t('users.reject')} onClick={() => handleReject(u._id)}>
-                              <HiOutlineX style={{ color: 'var(--color-danger)' }} />
-                            </button>
-                          </PermissionGate>
-                        )}
-                        {u._id !== currentUser._id && (
-                          <PermissionGate resource="users" action="write">
-                            <button className="btn-icon" title={t('common.delete')} onClick={() => setDeleteId(u._id)}>
-                              <HiOutlineTrash />
-                            </button>
-                          </PermissionGate>
-                        )}
+          <div className="header-meta" style={{ marginBottom: 'var(--space-md)' }}>
+            <span className="count-pill">
+              <strong>{filtered ? `${visibleUsers.length} / ${users.length}` : users.length}</strong>&nbsp;{t('users.directory.employeeCount')}
+            </span>
+          </div>
+
+          <main className="grid" aria-label={t('users.title')}>
+            {loading ? (
+              <p className="empty-note">{t('common.loading')}</p>
+            ) : visibleUsers.length === 0 ? (
+              <p className="empty-note">{t('users.directory.noMatch')}</p>
+            ) : (
+              visibleUsers.map((u) => <EmployeeCard key={u._id} user={u} onClick={() => setSelectedId(u._id)} />)
+            )}
+          </main>
+        </>
+      ) : (
+        <>
+          <p className="subtitle" style={{ marginBottom: 'var(--space-lg)' }}>{t('users.projectsView.subtitle')}</p>
+          {projectsLoading ? (
+            <p className="empty-note">{t('common.loading')}</p>
+          ) : !projectsOverview || projectsOverview.length === 0 ? (
+            <p className="empty-note">{t('users.projectsView.empty')}</p>
+          ) : (
+            projectsOverview.map((project) => (
+              <section key={project._id} className="project-block">
+                <div className="project-head">
+                  <h2 className="acc-project">
+                    {project.name}
+                    {project.projectLead && <span className="pill pill--accent" style={{ marginLeft: 8 }}>{t('users.directory.leadBadge')}: {project.projectLead.name}</span>}
+                  </h2>
+                  <span className="count-pill"><strong>{project.totalDone}</strong>&nbsp;{t('users.projectsView.completedTasks')}</span>
+                </div>
+                <div className="member-list">
+                  {project.members.map((m) => (
+                    <div
+                      key={m.user._id}
+                      className="member-row"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => { setTab('directory'); setSelectedId(m.user._id); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTab('directory'); setSelectedId(m.user._id); } }}
+                    >
+                      <EmployeeAvatar user={m.user} size="sm" />
+                      <div className="member-id">
+                        <div className="member-name">
+                          {m.user.name}
+                          {m.isLead && <span className="pill pill--accent" style={{ marginLeft: 6 }}>{t('users.directory.leadBadge')}</span>}
+                        </div>
+                        <div className="dept">{m.user.department ? t(DEPARTMENT_LABELS[m.user.department]) : t('departments.none')}</div>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      <div className="acc-contrib">
+                        <div className="contrib-frac">
+                          <div className="frac-num">{m.userDone} / {project.totalDone}</div>
+                          <div className="frac-label">{t('users.tree.completedOf')}</div>
+                        </div>
+                        <ContributionRing userDone={m.userDone} totalDone={project.totalDone} size={40} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))
+          )}
+        </>
+      )}
 
-      <ConfirmDialog
-        isOpen={!!deleteId}
-        onClose={() => setDeleteId(null)}
-        onConfirm={handleDelete}
-        title={t('users.deleteConfirm')}
-        message={t('users.deleteWarning')}
+      <EmployeePanel
+        employee={selectedEmployee}
+        isAdmin={isAdmin}
+        onClose={() => setSelectedId(null)}
+        onChanged={() => { fetchUsers(); if (projectsOverview) fetchProjectsOverview(); }}
       />
 
-      {/* Create User Modal */}
-      <Modal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        title={<>👤 {t('users.createUser')}</>}
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={() => setCreateModalOpen(false)}>
-              {t('common.cancel')}
-            </button>
-            <button className="btn btn-primary" onClick={handleCreateSubmit} disabled={creating}>
-              {creating ? t('common.loading') : t('common.create')}
-            </button>
-          </>
-        }
-      >
-        <form onSubmit={handleCreateSubmit}>
-          <div className="form-group">
-            <label className="form-label">{t('auth.name')} *</label>
-            <input
-              type="text"
-              className="form-input"
-              value={createForm.name}
-              onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-              required
-              autoFocus
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">{t('auth.email')} *</label>
-            <input
-              type="email"
-              className="form-input"
-              value={createForm.email}
-              onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">{t('users.role')} *</label>
-            <select
-              className="form-select"
-              value={createForm.role}
-              onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-            >
-              {ALL_ROLES.filter((r) => r !== 'super_admin').map((role) => (
-                <option key={role} value={role}>{ROLE_LABELS[role]}</option>
-              ))}
-            </select>
-          </div>
-          <span className="form-hint">💡 {t('users.createUserHint')}</span>
-        </form>
-      </Modal>
-
-      {/* Result — temp password shown once */}
-      <Modal
-        isOpen={!!createResult}
-        onClose={() => setCreateResult(null)}
-        title={<>🔑 {t('users.userCreated')}</>}
-        footer={
-          <button className="btn btn-primary" onClick={() => setCreateResult(null)}>
-            {t('common.close')}
-          </button>
-        }
-      >
-        {createResult && (
-          <div>
-            <p>{createResult.name} ({t(ROLE_LABELS[createResult.role])}) {t('users.userCreatedHint')}</p>
-            <div className="form-group">
-              <label className="form-label">{t('auth.email')}</label>
-              <input type="text" className="form-input" value={createResult.email} readOnly />
-            </div>
-            <div className="form-group">
-              <label className="form-label">{t('customers.temporaryPassword')}</label>
-              <input type="text" className="form-input" value={createResult.temporaryPassword} readOnly />
-            </div>
-            <span className="form-hint">⚠️ {t('customers.portalAccessWarning')}</span>
-          </div>
-        )}
-      </Modal>
+      <CreateUserModal isOpen={createOpen} onClose={() => setCreateOpen(false)} onCreated={fetchUsers} />
     </>
   );
 };

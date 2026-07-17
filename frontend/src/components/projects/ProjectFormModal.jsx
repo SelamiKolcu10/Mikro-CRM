@@ -3,6 +3,7 @@ import Modal from '../common/Modal';
 import { useLanguage } from '../../context/LanguageContext';
 import { DEPARTMENT_LABELS } from '../../config/permissions';
 import projectService from '../../services/projectService';
+import { LOAD_EMOJI } from '../../utils/workload';
 import toast from 'react-hot-toast';
 
 const emptyForm = { name: '', techStack: '', teamMembers: [], projectLead: '' };
@@ -115,6 +116,11 @@ const ProjectFormModal = ({ isOpen, onClose, onSubmit, project }) => {
                   onChange={() => toggleMember(member._id)}
                 />
                 {member.name}
+                {member.loadStatus && (
+                  <span className="project-form-member-workload">
+                    {LOAD_EMOJI[member.loadStatus]} {t('common.workload')}: {member.workloadScore.toFixed(1)}
+                  </span>
+                )}
                 {member.department && (
                   <span className="project-form-member-dept">{t(DEPARTMENT_LABELS[member.department])}</span>
                 )}

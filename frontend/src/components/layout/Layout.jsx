@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import ReadOnlyBanner from './ReadOnlyBanner';
+import EscalationBanner from './EscalationBanner';
 import { SidebarProvider } from '../../context/SidebarContext';
 
 const Layout = () => {
@@ -12,6 +13,7 @@ const Layout = () => {
         <Navbar />
         <main className="main-content">
           <ReadOnlyBanner />
+          <EscalationBanner />
           <div className="page-container">
             <Outlet />
           </div>

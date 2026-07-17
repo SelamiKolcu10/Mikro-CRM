@@ -21,11 +21,12 @@ import AccessControlMatrix from './pages/AccessControlMatrix';
 import PendingApprovals from './pages/PendingApprovals';
 import Tasks from './pages/Tasks';
 import Projects from './pages/Projects';
+import Profile from './pages/Profile';
 import PortalTickets from './pages/portal/PortalTickets';
 import PortalProfile from './pages/portal/PortalProfile';
 import PortalChat from './pages/portal/PortalChat';
 import RoleGuard from './components/auth/RoleGuard';
-import { ROLES } from './config/permissions';
+import { ROLES, ALL_ROLES } from './config/permissions';
 
 const Spinner = () => (
   <div className="loading-spinner" style={{ minHeight: '100vh' }}>
@@ -170,6 +171,9 @@ const App = () => {
               } />
               <Route path="/chat" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN]}><ChatDashboard /></RoleGuard>
+              } />
+              <Route path="/profile" element={
+                <RoleGuard allow={ALL_ROLES}><Profile /></RoleGuard>
               } />
               <Route path="/access-control" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.INTERN]}><AccessControlMatrix /></RoleGuard>

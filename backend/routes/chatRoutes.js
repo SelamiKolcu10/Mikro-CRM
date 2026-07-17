@@ -13,6 +13,7 @@ const {
 const { ROLES, PERMISSIONS } = require('../config/permissions');
 const {
   getConversations,
+  getEscalations,
   startConversation,
   getMessages,
   sendMessage,
@@ -24,6 +25,10 @@ const {
 // intern için maskeli). Yazma (mesaj gönderme/başlatma/okundu işaretleme):
 // super_admin, staff, support — intern asla mesaj gönderemez.
 router.use(protect);
+
+// Before /conversations/:id/* — same permission as the conversation list,
+// no new data exposure (escalated conversations are already visible there).
+router.get('/escalations', authorize(...PERMISSIONS.chat.read), redactForIntern, getEscalations);
 
 router.get('/conversations', authorize(...PERMISSIONS.chat.read), redactForIntern, getConversations);
 router.post('/conversations/start', authorize(...PERMISSIONS.chat.write), startConversationValidators, handleValidationErrors, startConversation);

@@ -2,6 +2,21 @@ const Project = require('../models/Project');
 const Task = require('../models/Task');
 const User = require('../models/User');
 const { ROLES } = require('../config/permissions');
+const { computeWorkload } = require('../utils/workloadCalculator');
+
+/**
+ * Yeni eklenen ekip üyelerine projectHistory kaydı düşer (bkz. User modeli —
+ * proje bazlı kıdem buradan hesaplanır). Zaten bir kaydı olan üye tekrar
+ * eklenirse (çıkar-tekrar-ekle) joinedAt YENİLENMEZ — ilk katılım tarihi
+ * anlamlı kalan bilgidir.
+ */
+async function recordProjectJoins(projectId, newTeamMemberIds) {
+  if (!newTeamMemberIds || newTeamMemberIds.length === 0) return;
+  await User.updateMany(
+    { _id: { $in: newTeamMemberIds }, 'projectHistory.project': { $ne: projectId } },
+    { $push: { projectHistory: { project: projectId, joinedAt: new Date() } } }
+  );
+}
 
 const TEAM_MEMBER_POPULATE = { path: 'teamMembers', select: 'name email role department' };
 const PROJECT_LEAD_POPULATE = { path: 'projectLead', select: 'name email role department' };
@@ -106,7 +121,75 @@ const getEligibleMembers = async (req, res, next) => {
       status: 'approved',
       role: { $in: [ROLES.STAFF, ROLES.SUPER_ADMIN] },
     }).select('name email department role');
-    res.json({ success: true, data: users });
+
+    // Aynı Algorithmic Workload Balancer (bkz. taskController.getWorkloadStatus)
+    // burada departmandan bağımsız çalışır — proje ekibi departmanlar arası
+    // olduğu için tüm departmanlardaki üyelerin yoğunluğu tek seferde çekilir.
+    const userIds = users.map((u) => u._id);
+    const activeTasks = await Task.find({ assignedTo: { $in: userIds }, status: { $ne: 'done' } }).select('assignedTo priority deadline');
+    const tasksByUser = new Map();
+    for (const task of activeTasks) {
+      const key = task.assignedTo.toString();
+      if (!tasksByUser.has(key)) tasksByUser.set(key, []);
+      tasksByUser.get(key).push(task);
+    }
+
+    const now = Date.now();
+    const data = users.map((u) => {
+      const { activeTaskCount, workloadScore, loadStatus } = computeWorkload(tasksByUser.get(u._id.toString()) || [], now);
+      return { _id: u._id, name: u.name, email: u.email, department: u.department, role: u.role, activeTaskCount, workloadScore, loadStatus };
+    });
+
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   GET /api/projects/contributions-overview
+ * @desc    "Projeler" görünümü (Çalışan Dizini'nin proje-bazlı sekmesi) —
+ *          TÜM projeler (görevi olmayanlar dahil) ve her projenin TÜM ekip
+ *          üyeleri (henüz tamamlanmış görevi olmasa bile) — bkz. tasarım
+ *          kararı: "tüm çalışanları ve tüm projeleri görebilelim". Yetki
+ *          requireProjectManager ile aynı (bkz. routes/projectRoutes.js).
+ */
+const getContributionsOverview = async (req, res, next) => {
+  try {
+    const projects = await Project.find().populate([TEAM_MEMBER_POPULATE, PROJECT_LEAD_POPULATE]).sort({ createdAt: -1 });
+
+    const doneCounts = await Task.aggregate([
+      { $match: { projectId: { $ne: null }, status: 'done' } },
+      { $group: { _id: { projectId: '$projectId', assignedTo: '$assignedTo' }, count: { $sum: 1 } } },
+    ]);
+    const byProjectMember = new Map(doneCounts.map((c) => [`${c._id.projectId}:${c._id.assignedTo}`, c.count]));
+    const byProject = new Map();
+    for (const c of doneCounts) {
+      const key = c._id.projectId.toString();
+      byProject.set(key, (byProject.get(key) || 0) + c.count);
+    }
+
+    const data = projects.map((project) => {
+      const pid = project._id.toString();
+      const totalDone = byProject.get(pid) || 0;
+      const members = project.teamMembers
+        .map((member) => ({
+          user: { _id: member._id, name: member.name, department: member.department },
+          isLead: String(project.projectLead?._id || project.projectLead || '') === String(member._id),
+          userDone: byProjectMember.get(`${pid}:${member._id}`) || 0,
+        }))
+        .sort((a, b) => b.userDone - a.userDone);
+
+      return {
+        _id: project._id,
+        name: project.name,
+        projectLead: project.projectLead ? { _id: project.projectLead._id, name: project.projectLead.name } : null,
+        totalDone,
+        members,
+      };
+    });
+
+    res.json({ success: true, data });
   } catch (error) {
     next(error);
   }
@@ -173,6 +256,7 @@ const createProject = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Proje lideri ekip üyelerinden biri olmalıdır.' });
     }
     const project = await Project.create({ name, techStack, architectureNotes, teamMembers, projectLead: projectLead || null });
+    await recordProjectJoins(project._id, teamMembers);
     await project.populate([TEAM_MEMBER_POPULATE, PROJECT_LEAD_POPULATE]);
     const [withProgress] = await attachProgress([project]);
     res.status(201).json({ success: true, data: withProgress });
@@ -208,6 +292,12 @@ const updateProject = async (req, res, next) => {
     const finalLead = projectLead !== undefined ? projectLead : existing.projectLead;
     if (!validateProjectLead(finalTeamMembers, finalLead)) {
       return res.status(400).json({ success: false, error: 'Proje lideri ekip üyelerinden biri olmalıdır.' });
+    }
+
+    if (teamMembers !== undefined) {
+      const existingIds = new Set(existing.teamMembers.map(String));
+      const newlyAdded = teamMembers.filter((id) => !existingIds.has(String(id)));
+      await recordProjectJoins(req.params.id, newlyAdded);
     }
 
     const project = await Project.findByIdAndUpdate(req.params.id, updates, {
@@ -246,6 +336,7 @@ module.exports = {
   getProjectTasks,
   getMyProjects,
   getEligibleMembers,
+  getContributionsOverview,
   getProjectComments,
   addProjectComment,
   createProject,

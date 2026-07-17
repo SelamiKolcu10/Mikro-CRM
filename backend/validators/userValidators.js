@@ -34,4 +34,29 @@ const updateUserDepartmentValidators = [
   body('isDepartmentLead').optional().isBoolean().withMessage('isDepartmentLead boolean olmalıdır.'),
 ];
 
-module.exports = { createUserValidators, approveUserValidators, updateUserRoleValidators, rejectUserValidators, updateUserDepartmentValidators };
+// Profilim — telefon serbest metin (uluslararası formatlar için sıkı bir
+// regex zorlamıyoruz), LinkedIn/GitHub domain'e kilitli (bkz. User modelindeki
+// aynı match kuralı — burada da tekrarlanır ki hatalı istek save() beklemeden
+// 400 dönsün).
+const updateContactInfoValidators = [
+  body('phone').optional({ nullable: true }).trim().isLength({ max: 30 }).withMessage('Telefon en fazla 30 karakter olabilir.').escape(),
+  body('linkedin')
+    .optional({ nullable: true })
+    .trim()
+    .matches(/^$|^https?:\/\/(www\.)?linkedin\.com\/.*$/)
+    .withMessage('Geçerli bir LinkedIn adresi giriniz.'),
+  body('github')
+    .optional({ nullable: true })
+    .trim()
+    .matches(/^$|^https?:\/\/(www\.)?github\.com\/.*$/)
+    .withMessage('Geçerli bir GitHub adresi giriniz.'),
+];
+
+module.exports = {
+  createUserValidators,
+  approveUserValidators,
+  updateUserRoleValidators,
+  rejectUserValidators,
+  updateUserDepartmentValidators,
+  updateContactInfoValidators,
+};

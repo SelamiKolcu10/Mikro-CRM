@@ -5,6 +5,7 @@ const Project = require('../models/Project');
 const TaskActivity = require('../models/TaskActivity');
 const { ROLES, DEPARTMENTS } = require('../config/permissions');
 const { taskScope, canApproveTask, canActOnTask } = require('../utils/taskScope');
+const { computeWorkload } = require('../utils/workloadCalculator');
 
 const COMMENT_USER_POPULATE = { path: 'comments.user', select: 'name email role' };
 
@@ -53,6 +54,55 @@ const getAssignableUsers = async (req, res, next) => {
 
     const users = await User.find({ department: targetDepartment, status: 'approved' }).select('name email department');
     res.json({ success: true, data: users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   GET /api/tasks/workload-status?department=development
+ * @desc    Algorithmic Workload Balancer — per-user active-task load score
+ *          for the assignee dropdown in CreateTaskModal. Same gating as
+ *          getAssignableUsers above (only the department's own lead or
+ *          super_admin may see it) since it's shown at the exact same
+ *          decision point. Read-only, additive — never blocks task creation.
+ */
+const getWorkloadStatus = async (req, res, next) => {
+  try {
+    const isSuperAdmin = req.user.role === ROLES.SUPER_ADMIN;
+    if (!isSuperAdmin && !(req.user.isDepartmentLead && req.user.department)) {
+      return res.status(403).json({ success: false, error: 'Bu işlem için yetkiniz yok.' });
+    }
+
+    const targetDepartment = isSuperAdmin ? req.query.department : req.user.department;
+    if (!targetDepartment) {
+      return res.status(400).json({ success: false, error: 'Departman belirtilmedi.' });
+    }
+    if (!isSuperAdmin && targetDepartment !== req.user.department) {
+      return res.status(403).json({ success: false, error: 'Sadece kendi departmanınızın verilerini görebilirsiniz.' });
+    }
+    if (!DEPARTMENTS.includes(targetDepartment)) {
+      return res.status(400).json({ success: false, error: 'Geçersiz departman.' });
+    }
+
+    const users = await User.find({ department: targetDepartment, status: 'approved' }).select('name email');
+    const userIds = users.map((u) => u._id);
+
+    const activeTasks = await Task.find({ assignedTo: { $in: userIds }, status: { $ne: 'done' } }).select('assignedTo priority deadline');
+    const tasksByUser = new Map();
+    for (const task of activeTasks) {
+      const key = task.assignedTo.toString();
+      if (!tasksByUser.has(key)) tasksByUser.set(key, []);
+      tasksByUser.get(key).push(task);
+    }
+
+    const now = Date.now();
+    const data = users.map((u) => {
+      const { activeTaskCount, workloadScore, loadStatus } = computeWorkload(tasksByUser.get(u._id.toString()) || [], now);
+      return { _id: u._id, name: u.name, email: u.email, activeTaskCount, workloadScore, loadStatus };
+    });
+
+    res.json({ success: true, data });
   } catch (error) {
     next(error);
   }
@@ -312,6 +362,7 @@ const addTaskComment = async (req, res, next) => {
 module.exports = {
   getTasks,
   getAssignableUsers,
+  getWorkloadStatus,
   createTask,
   updateTaskStatus,
   getActivityHeatmap,

@@ -23,7 +23,8 @@
     "loadError": "Failed to load data",
     "readOnlyMode": "Read-Only Mode",
     "readOnlyModeHint": "You're viewing as Intern — creating, editing, and deleting is disabled.",
-    "pendingApproval": "Awaiting Admin Approval"
+    "pendingApproval": "Awaiting Admin Approval",
+    "workload": "Workload"
   },
   "roles": {
     "superAdmin": "Super Admin",
@@ -68,6 +69,7 @@
     "spendingReport": "Spending Overview",
     "projects": "Projects",
     "users": "User Management",
+    "profile": "My Profile",
     "auditLog": "Audit Log",
     "portalTickets": "My Tickets",
     "portalProfile": "My Profile",
@@ -87,7 +89,7 @@
   },
   "users": {
     "title": "User Management",
-    "subtitle": "Approve user accounts and manage their roles",
+    "subtitle": "See everyone on the team, their roles, and their project contributions in one place.",
     "createUser": "Add New User",
     "createUserHint": "There is no public registration form — new staff accounts are created here.",
     "userCreated": "User Created",
@@ -107,7 +109,62 @@
       "rejected": "Rejected"
     },
     "deleteConfirm": "Are you sure you want to delete this user?",
-    "deleteWarning": "This action cannot be undone."
+    "deleteWarning": "This action cannot be undone.",
+    "directory": {
+      "tabs": { "directory": "Employee Directory", "projects": "Projects" },
+      "employeeCount": "employees",
+      "filterDepartment": "Department",
+      "all": "All",
+      "onlyLeads": "Leads Only",
+      "noMatch": "No employees match these filters.",
+      "noContact": "No contact info added",
+      "tenureSuffix": "with the company",
+      "leadBadge": "Lead"
+    },
+    "management": {
+      "title": "Management",
+      "pendingHint": "This account request is awaiting approval. Role and department can't be set until it's approved.",
+      "leadToggleHint": "Can manage their department's tasks and approval flows",
+      "deleteAction": "Delete User",
+      "deleteConfirm": "Permanently delete {name}? This cannot be undone.",
+      "rejectConfirm": "Reject the account request for {name}?",
+      "roleSaved": "Role updated",
+      "deptSaved": "Department updated",
+      "leadOn": "Made department lead",
+      "leadOff": "Removed as lead"
+    },
+    "tree": {
+      "companyTenure": "With the company",
+      "projectCount": "Projects contributed to",
+      "projectCountSuffix": "projects",
+      "contributedProjects": "Projects Contributed To",
+      "since": "contributing",
+      "activeTasks": "Active Tasks",
+      "doneTasks": "Completed Tasks",
+      "contributionNote": "Of {total} tasks completed on this project, {mine} belong to this person.",
+      "completedOf": "completed tasks",
+      "empty": "No project contributions yet."
+    },
+    "projectsView": {
+      "subtitle": "Contribution view by project. Click a person to open their management panel.",
+      "completedTasks": "completed tasks",
+      "empty": "No projects yet."
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Only you can edit your contact info and profile photo.",
+    "changePhoto": "Change profile photo",
+    "dropHint": "Drag and drop a photo here",
+    "chooseFile": "Choose File",
+    "previewHint": "Preview — not applied until saved",
+    "photoSaved": "Photo updated",
+    "fileTooLarge": "File must be under 2MB.",
+    "phone": "Phone",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "visibilityNote": "This information is only visible to you and super admins.",
+    "contactSaved": "Saved"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -288,8 +345,9 @@
     "selectConversation": "Select a conversation to view it",
     "customerInfo": "Customer Info",
     "customerSince": "Customer since",
-    "openTickets": "Open Support Tickets",
-    "noOpenTickets": "No open tickets",
+    "openTickets": "Support Tickets",
+    "noOpenTickets": "No tickets",
+    "ticketsSummary": "{open} open · {resolved} resolved",
     "assignedTo": "Assigned to",
     "unassigned": "Unassigned",
     "assignToMe": "Assign to me",
@@ -300,6 +358,7 @@
     "portalTitle": "Live Support",
     "portalSubtitle": "Chat with our team instantly for any questions",
     "searchCustomers": "Search customers...",
+    "clearFilters": "Clear filters",
     "noThreadYet": "No messages yet — click to start",
     "avgResponseTime": "Avg. Response Time",
     "noResponseData": "No data yet",
@@ -314,7 +373,19 @@
     "convertToBugTicket": "Convert to Bug Ticket",
     "bugTicketCreated": "Bug ticket created",
     "quickLinks": "Quick Links",
-    "viewCustomerTickets": "View This Customer's Tickets"
+    "viewCustomerTickets": "View This Customer's Tickets",
+    "sla": {
+      "label": "SLA",
+      "exceeded": "Exceeded",
+      "critical": "critical",
+      "warning": "warning",
+      "filterChip": "SLA risk",
+      "targetHint": "{plan} · {hours}h target",
+      "toastEscalated": "SLA breach",
+      "bannerCount": "{count} conversations breached SLA",
+      "bannerOldest": "oldest: {name} (+{time})",
+      "bannerCta": "Go to chat →"
+    }
   },
   "accessControl": {
     "title": "Access Control Matrix",
@@ -396,12 +467,41 @@
     "summaryUpdateMultiple": "{actor} updated these fields on {collection}: {fields}",
     "valueMasked": "••••••",
     "valueEmpty": "—",
+    "severity": "Severity",
+    "severityInfo": "Info",
+    "severitySensitive": "Sensitive",
+    "severityCritical": "Critical",
+    "allSeverities": "All",
+    "unverifiable": "Unverifiable",
+    "chainVerified": "Chain integrity verified",
+    "chainVerifying": "Verifying chain…",
+    "chainBroken": "CHAIN INTEGRITY VIOLATED",
+    "chainBrokenAt": "Break detected at record #{sequence}",
+    "chainUnavailable": "Verification could not run right now",
+    "chainRecordCount": "{count} records",
+    "chainLastCheck": "Last check: {time}",
+    "reverify": "Re-verify",
+    "retry": "Retry",
+    "jumpToBreak": "Jump to break",
+    "chainBreakHeading": "CHAIN BROKEN HERE",
+    "chainBreakBody": "The hash chain for records before this point cannot be verified — records may have been altered or deleted.",
+    "chainBreakExpected": "Expected: {expected}",
+    "chainBreakFound": "Found: {found}",
+    "searchPlaceholder": "Search: actor, record, summary…",
+    "allActors": "All actors",
+    "clearFilters": "Clear filters",
+    "loadMore": "Load more ({count} more records)",
+    "noMatchingLogs": "No records match your filters",
+    "hashLabel": "Hash",
+    "prevHashLabel": "Previous",
+    "hashCopied": "Hash copied to clipboard",
     "collections": {
       "user": "User",
       "customer": "Customer",
       "customerUser": "Customer Portal Account",
       "feedback": "Feedback",
-      "permissionOverride": "Permission Override"
+      "permissionOverride": "Permission Override",
+      "system": "System"
     },
     "fields": {
       "name": "Name",
@@ -462,6 +562,10 @@
       "project": "Project",
       "noProject": "No project selected",
       "noEligibleDepartment": "No one from a department you can create tasks for is on this project's team."
+    },
+    "workload": {
+      "warningWithAlternative": "Assigning this task to {name} will exceed their optimal weekly delivery threshold. Current workload score: {score}. It is highly recommended to allocate this task to an optimal team member like {altName}.",
+      "warning": "Assigning this task to {name} will exceed their optimal weekly delivery threshold. Current workload score: {score}."
     },
     "filters": {
       "allDepartments": "All Departments",

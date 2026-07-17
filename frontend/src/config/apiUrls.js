@@ -5,6 +5,9 @@
  * required for Vite to expose them to client code) instead of editing code.
  */
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Yüklenen avatar gibi statik dosyalar backend'in kökünden (API_URL'in
+// `/api` öneki olmadan) servis edilir — bkz. backend/server.js `/uploads`.
+export const ASSET_BASE_URL = API_URL.replace(/\/api\/?$/, '');
 export const INVOICE_API_URL = import.meta.env.VITE_INVOICE_API_URL || 'http://localhost:5001/api';
 export const INVOICE_V2_API_URL = import.meta.env.VITE_INVOICE_V2_API_URL || 'http://localhost:5002/api';
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';

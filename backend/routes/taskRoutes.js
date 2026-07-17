@@ -9,6 +9,7 @@ const {
   taskIdValidators,
   updateTaskStatusValidators,
   assignableUsersValidators,
+  workloadStatusValidators,
   activityHeatmapValidators,
   addCommentValidators,
 } = require('../validators/taskValidators');
@@ -16,6 +17,7 @@ const { PERMISSIONS } = require('../config/permissions');
 const {
   getTasks,
   getAssignableUsers,
+  getWorkloadStatus,
   createTask,
   updateTaskStatus,
   getActivityHeatmap,
@@ -29,6 +31,7 @@ router.use(protect, authorize(...PERMISSIONS.tasks.read));
 
 router.get('/', redactForIntern, getTasks);
 router.get('/assignable-users', assignableUsersValidators, handleValidationErrors, getAssignableUsers);
+router.get('/workload-status', workloadStatusValidators, handleValidationErrors, getWorkloadStatus);
 router.get('/activity-heatmap', activityHeatmapValidators, handleValidationErrors, getActivityHeatmap);
 router.post('/', authorize(...PERMISSIONS.tasks.write), createTaskValidators, handleValidationErrors, createTask);
 router.patch(

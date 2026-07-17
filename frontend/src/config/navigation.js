@@ -15,7 +15,7 @@ import {
   HiOutlineViewBoards,
   HiOutlineFolderOpen,
 } from 'react-icons/hi';
-import { ROLES } from './permissions';
+import { ROLES, ALL_ROLES } from './permissions';
 import { canManageProjects } from '../utils/projectScope';
 
 /**
@@ -36,7 +36,8 @@ export const INTERNAL_NAV = [
       { path: '/customers', icon: HiOutlineUsers, labelKey: 'nav.customers', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
       { path: '/feedbacks', icon: HiOutlineChatAlt2, labelKey: 'nav.feedbacks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
       { path: '/tasks', icon: HiOutlineViewBoards, labelKey: 'nav.tasks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN] },
-      { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
+      { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN], badgeKey: 'chatEscalations' },
+      { path: '/profile', icon: HiOutlineUserCircle, labelKey: 'nav.profile', roles: ALL_ROLES },
     ],
   },
   {

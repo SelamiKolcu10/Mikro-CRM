@@ -18,6 +18,7 @@ const {
   getProjectTasks,
   getMyProjects,
   getEligibleMembers,
+  getContributionsOverview,
   getProjectComments,
   addProjectComment,
   createProject,
@@ -87,6 +88,7 @@ router.use(protect, authorize(...PERMISSIONS.projects.read));
 // tanımlanmalı, yoksa Express onları :id olarak eşleştirir.
 router.get('/mine', getMyProjects);
 router.get('/eligible-members', requireProjectManager, getEligibleMembers);
+router.get('/contributions-overview', requireProjectManager, getContributionsOverview);
 router.get('/', requireProjectManager, getProjects);
 router.get('/:id', projectIdValidators, handleValidationErrors, requireProjectManager, getProjectById);
 router.get('/:id/tasks', projectIdValidators, handleValidationErrors, requireProjectViewer, getProjectTasks);

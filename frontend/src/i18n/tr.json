@@ -23,7 +23,8 @@
     "loadError": "Veriler yüklenemedi",
     "readOnlyMode": "Salt Okunur Mod",
     "readOnlyModeHint": "Stajer rolüyle görüntülüyorsunuz — ekleme, düzenleme ve silme işlemleri yapılamaz.",
-    "pendingApproval": "Admin Onayı Bekliyor"
+    "pendingApproval": "Admin Onayı Bekliyor",
+    "workload": "Yoğunluk"
   },
   "roles": {
     "superAdmin": "Süper Admin",
@@ -68,6 +69,7 @@
     "spendingReport": "Genel Harcama",
     "projects": "Projeler",
     "users": "Kullanıcı Yönetimi",
+    "profile": "Profilim",
     "auditLog": "Denetim Kaydı",
     "portalTickets": "Taleplerim",
     "portalProfile": "Profilim",
@@ -87,7 +89,7 @@
   },
   "users": {
     "title": "Kullanıcı Yönetimi",
-    "subtitle": "Kullanıcı hesaplarını onaylayın, rollerini yönetin",
+    "subtitle": "Ekipteki herkesi, rollerini ve proje katkılarını tek yerden görüntüleyin.",
     "createUser": "Yeni Kullanıcı Ekle",
     "createUserHint": "Sistemde dışarıdan kayıt formu yoktur — yeni personel hesapları burada oluşturulur.",
     "userCreated": "Kullanıcı Oluşturuldu",
@@ -107,7 +109,62 @@
       "rejected": "Reddedildi"
     },
     "deleteConfirm": "Bu kullanıcıyı silmek istediğinize emin misiniz?",
-    "deleteWarning": "Bu işlem geri alınamaz."
+    "deleteWarning": "Bu işlem geri alınamaz.",
+    "directory": {
+      "tabs": { "directory": "Çalışan Dizini", "projects": "Projeler" },
+      "employeeCount": "çalışan",
+      "filterDepartment": "Departman",
+      "all": "Tümü",
+      "onlyLeads": "Sadece Liderler",
+      "noMatch": "Bu filtrelerle eşleşen çalışan yok.",
+      "noContact": "İletişim bilgisi eklenmemiş",
+      "tenureSuffix": "şirkette",
+      "leadBadge": "Lider"
+    },
+    "management": {
+      "title": "Yönetim",
+      "pendingHint": "Hesap talebi onay bekliyor. Onaylanana kadar rol ve departman atanamaz.",
+      "leadToggleHint": "Departmanının görev ve onay akışlarını yönetebilir",
+      "deleteAction": "Kullanıcıyı Sil",
+      "deleteConfirm": "{name} kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+      "rejectConfirm": "{name} için hesap talebi reddedilsin mi?",
+      "roleSaved": "Rol güncellendi",
+      "deptSaved": "Departman güncellendi",
+      "leadOn": "Departman lideri yapıldı",
+      "leadOff": "Liderlik kaldırıldı"
+    },
+    "tree": {
+      "companyTenure": "Şirkette",
+      "projectCount": "Katkı verilen proje",
+      "projectCountSuffix": "proje",
+      "contributedProjects": "Katkı Sağlanan Projeler",
+      "since": "katkı sağlıyor",
+      "activeTasks": "Aktif Görevler",
+      "doneTasks": "Tamamlanan Görevler",
+      "contributionNote": "Projede tamamlanan {total} görevin {mine} tanesi bu kişiye ait.",
+      "completedOf": "tamamlanan görev",
+      "empty": "Henüz proje katkısı bulunmuyor."
+    },
+    "projectsView": {
+      "subtitle": "Proje bazında katkı görünümü. Bir kişiye tıklayarak yönetim paneline geçebilirsin.",
+      "completedTasks": "tamamlanan görev",
+      "empty": "Henüz proje bulunmuyor."
+    }
+  },
+  "profile": {
+    "title": "Profilim",
+    "subtitle": "İletişim bilgilerini ve profil fotoğrafını yalnızca sen düzenleyebilirsin.",
+    "changePhoto": "Profil fotoğrafını değiştir",
+    "dropHint": "Fotoğrafı buraya sürükleyip bırak",
+    "chooseFile": "Dosya Seç",
+    "previewHint": "Önizleme — kaydedene kadar uygulanmaz",
+    "photoSaved": "Fotoğraf güncellendi",
+    "fileTooLarge": "Dosya en fazla 2MB olabilir.",
+    "phone": "Telefon",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "visibilityNote": "Bu bilgiler yalnızca sana ve süper adminlere görünür.",
+    "contactSaved": "Kaydedildi"
   },
   "dashboard": {
     "title": "Kontrol Paneli",
@@ -288,8 +345,9 @@
     "selectConversation": "Görüntülemek için bir sohbet seçin",
     "customerInfo": "Müşteri Bilgileri",
     "customerSince": "Müşterimiz olalı",
-    "openTickets": "Açık Destek Talepleri",
-    "noOpenTickets": "Açık talep yok",
+    "openTickets": "Destek Talepleri",
+    "noOpenTickets": "Hiç talep yok",
+    "ticketsSummary": "{open} açık · {resolved} çözüldü",
     "assignedTo": "Atanan",
     "unassigned": "Atanmamış",
     "assignToMe": "Bana ata",
@@ -300,6 +358,7 @@
     "portalTitle": "Canlı Destek",
     "portalSubtitle": "Sorularınız için ekibimizle anında yazışın",
     "searchCustomers": "Müşteri ara...",
+    "clearFilters": "Filtreleri temizle",
     "noThreadYet": "Henüz mesaj yok — başlatmak için tıklayın",
     "avgResponseTime": "Ort. Yanıt Süresi",
     "noResponseData": "Henüz veri yok",
@@ -314,7 +373,19 @@
     "convertToBugTicket": "Bug Ticket'a Çevir",
     "bugTicketCreated": "Bug ticket oluşturuldu",
     "quickLinks": "Hızlı Bağlantılar",
-    "viewCustomerTickets": "Bu Müşterinin Taleplerini Gör"
+    "viewCustomerTickets": "Bu Müşterinin Taleplerini Gör",
+    "sla": {
+      "label": "SLA",
+      "exceeded": "Aşıldı",
+      "critical": "kritik",
+      "warning": "uyarı",
+      "filterChip": "SLA riski",
+      "targetHint": "{plan} · {hours} saat hedef",
+      "toastEscalated": "SLA ihlali",
+      "bannerCount": "{count} görüşme SLA'yı aştı",
+      "bannerOldest": "en eskisi: {name} (+{time})",
+      "bannerCta": "Sohbete git →"
+    }
   },
   "accessControl": {
     "title": "Erişim Kontrol Matrisi",
@@ -396,12 +467,41 @@
     "summaryUpdateMultiple": "{actor}, {collection} kaydında şu alanları güncelledi: {fields}",
     "valueMasked": "••••••",
     "valueEmpty": "—",
+    "severity": "Önem Derecesi",
+    "severityInfo": "Bilgi",
+    "severitySensitive": "Hassas",
+    "severityCritical": "Kritik",
+    "allSeverities": "Tümü",
+    "unverifiable": "Doğrulanamadı",
+    "chainVerified": "Zincir bütünlüğü doğrulandı",
+    "chainVerifying": "Zincir doğrulanıyor…",
+    "chainBroken": "ZİNCİR BÜTÜNLÜĞÜ İHLAL EDİLDİ",
+    "chainBrokenAt": "Kayıt #{sequence}'de kırılma tespit edildi",
+    "chainUnavailable": "Doğrulama şu anda çalıştırılamadı",
+    "chainRecordCount": "{count} kayıt",
+    "chainLastCheck": "Son kontrol: {time}",
+    "reverify": "Yeniden doğrula",
+    "retry": "Tekrar dene",
+    "jumpToBreak": "Kırılma noktasına git",
+    "chainBreakHeading": "ZİNCİR BURADA KIRILMIŞ",
+    "chainBreakBody": "Bu noktadan önceki kayıtların hash zinciri doğrulanamıyor — kayıtlar değiştirilmiş veya silinmiş olabilir.",
+    "chainBreakExpected": "Beklenen: {expected}",
+    "chainBreakFound": "Bulunan: {found}",
+    "searchPlaceholder": "Ara: aktör, kayıt, özet…",
+    "allActors": "Tüm kullanıcılar",
+    "clearFilters": "Filtreleri temizle",
+    "loadMore": "Daha fazla yükle ({count} kayıt daha)",
+    "noMatchingLogs": "Filtrelere uyan kayıt yok",
+    "hashLabel": "Hash",
+    "prevHashLabel": "Önceki",
+    "hashCopied": "Hash panoya kopyalandı",
     "collections": {
       "user": "Kullanıcı",
       "customer": "Müşteri",
       "customerUser": "Müşteri Portalı Hesabı",
       "feedback": "Geri Bildirim",
-      "permissionOverride": "Yetki İstisnası"
+      "permissionOverride": "Yetki İstisnası",
+      "system": "Sistem"
     },
     "fields": {
       "name": "Ad",
@@ -462,6 +562,10 @@
       "project": "Proje",
       "noProject": "Proje seçilmedi",
       "noEligibleDepartment": "Bu projenin ekibinde, oluşturma yetkin olan bir departmandan kimse yok."
+    },
+    "workload": {
+      "warningWithAlternative": "Bu görevi {name} kişisine atamak, kişinin optimal haftalık teslim eşiğini aşacak. Mevcut iş yükü skoru: {score}. Bunun yerine {altName} gibi daha az yüklü bir ekip üyesine atamanız önerilir.",
+      "warning": "Bu görevi {name} kişisine atamak, kişinin optimal haftalık teslim eşiğini aşacak. Mevcut iş yükü skoru: {score}."
     },
     "filters": {
       "allDepartments": "Tüm Departmanlar",

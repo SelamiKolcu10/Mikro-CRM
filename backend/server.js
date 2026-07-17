@@ -1,10 +1,12 @@
 const express = require('express');
+const path = require('path');
 const http = require('http');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const { applySecurity } = require('./middleware/security');
 const { initSocket } = require('./socket');
+const slaEscalationService = require('./services/slaEscalationService');
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +25,10 @@ const app = express();
 applySecurity(app, { frontendUrl: process.env.FRONTEND_URL });
 
 app.use(express.json({ limit: '1mb' }));
+
+// Yüklenen profil fotoğrafları — statik, herkese açık (avatar zaten görünür
+// olması gereken bir görsel, ayrı bir auth katmanı gerektirmiyor).
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -57,4 +63,6 @@ httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 API available at http://localhost:${PORT}/api`);
   console.log(`💬 Socket.io chat ready`);
+  slaEscalationService.start();
+  console.log(`⏱️  SLA escalation daemon started`);
 });

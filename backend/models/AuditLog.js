@@ -21,7 +21,10 @@ const auditLogSchema = new mongoose.Schema(
   {
     collectionName: {
       type: String,
-      enum: ['User', 'Customer', 'CustomerUser', 'Feedback', 'PermissionOverride'],
+      // 'System' is reserved for synthetic entries the app writes about
+      // itself (e.g. the hash-chain migration genesis marker), not a real
+      // audited collection.
+      enum: ['User', 'Customer', 'CustomerUser', 'Feedback', 'PermissionOverride', 'System'],
       required: true,
     },
     documentId: {
@@ -63,6 +66,29 @@ const auditLogSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Hash-chain fields (SOC2/ISO27001-style tamper evidence). Written
+    // exclusively by utils/auditChain.js:writeChainedLog — never set these
+    // directly, the chain integrity depends on prevHash/hash always being
+    // computed together from the previous record. See utils/auditChain.js
+    // for the verification algorithm.
+    sequence: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
+    prevHash: {
+      type: String,
+      required: true,
+    },
+    hash: {
+      type: String,
+      required: true,
+    },
+    severity: {
+      type: String,
+      enum: ['info', 'sensitive', 'critical'],
+      required: true,
+    },
   },
   {
     timestamps: true,
@@ -72,5 +98,6 @@ const auditLogSchema = new mongoose.Schema(
 auditLogSchema.index({ collectionName: 1, documentId: 1 });
 auditLogSchema.index({ actor: 1 });
 auditLogSchema.index({ createdAt: -1 });
+auditLogSchema.index({ severity: 1 });
 
 module.exports = mongoose.model('AuditLog', auditLogSchema);

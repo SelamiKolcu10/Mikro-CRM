@@ -1,7 +1,10 @@
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const User = require('../models/User');
 const { ALL_ROLES, ROLES } = require('../config/permissions');
 const auditService = require('../utils/auditService');
+const { buildDeveloperTree } = require('../utils/developerTree');
 
 // createUser deliberately excludes super_admin: minting a brand-new highest-
 // privilege account in one shot is a bigger blast radius than promoting an
@@ -294,6 +297,121 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   GET /api/users/me/profile
+ * @desc    Profilim sayfası — kendi kişisel bilgileri + Developer Tree (kıdem +
+ *          proje bazlı katkı). Herkes kendi profilini görebilir, ekstra bir
+ *          `users` kaynağı iznine bağlı değil (bkz. routes/userRoutes.js —
+ *          sadece `protect`).
+ */
+const getMyProfile = async (req, res, next) => {
+  try {
+    const tree = await buildDeveloperTree(req.user);
+    res.json({
+      success: true,
+      data: {
+        _id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        department: req.user.department,
+        isDepartmentLead: req.user.isDepartmentLead,
+        createdAt: req.user.createdAt,
+        personalInfo: req.user.personalInfo,
+        ...tree,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   PATCH /api/users/me/profile
+ * @desc    Telefon/LinkedIn/GitHub — yalnızca profil sahibi düzenleyebilir
+ *          (bkz. tasarım kararı: süper admin bu alanları salt görüntüler).
+ */
+const updateMyContactInfo = async (req, res, next) => {
+  try {
+    const { phone, linkedin, github } = req.body;
+    const user = await User.findById(req.user._id);
+    const before = { ...user.personalInfo?.toObject?.() };
+
+    if (phone !== undefined) user.personalInfo.phone = phone;
+    if (linkedin !== undefined) user.personalInfo.linkedin = linkedin;
+    if (github !== undefined) user.personalInfo.github = github;
+    await user.save();
+
+    await auditService.record({
+      req,
+      collectionName: 'User',
+      documentId: user._id,
+      action: 'update',
+      before,
+      after: user.personalInfo.toObject(),
+      watchedFields: ['phone', 'linkedin', 'github'],
+    });
+
+    res.json({ success: true, data: user.personalInfo });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   POST /api/users/me/avatar
+ * @desc    Ham fotoğraf yükleme — AI vektör-avatar dönüştürme adımı bilerek
+ *          kapsam dışı (bkz. tasarım kararı), bu tur yalnızca gerçek
+ *          fotoğrafı diske kaydedip avatarUrl'i günceller. Eski dosya (varsa)
+ *          diskten silinir ki /uploads/avatars sınırsız büyümesin.
+ */
+const uploadMyAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Bir görsel dosyası yükleyin.' });
+    }
+
+    const user = await User.findById(req.user._id);
+    const previousUrl = user.personalInfo.avatarUrl;
+
+    user.personalInfo.avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await user.save();
+
+    if (previousUrl) {
+      const previousPath = path.join(__dirname, '..', previousUrl);
+      fs.unlink(previousPath, () => {}); // best-effort — eski dosya kalsa da işlevi bozmaz
+    }
+
+    res.json({ success: true, data: { avatarUrl: user.personalInfo.avatarUrl } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   GET /api/users/:id/tree
+ * @desc    Çalışan Dizini panelindeki Developer Tree — süper admin herkesinkini,
+ *          diğer herkes yalnızca kendisininkini görebilir.
+ */
+const getUserTree = async (req, res, next) => {
+  try {
+    const isSelf = req.params.id === req.user._id.toString();
+    if (!isSelf && req.user.role !== ROLES.SUPER_ADMIN) {
+      return res.status(403).json({ success: false, error: 'Bu profili görüntüleme yetkiniz yok.' });
+    }
+
+    const user = isSelf ? req.user : await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
+    }
+
+    const tree = await buildDeveloperTree(user);
+    res.json({ success: true, data: { tenureMonths: tree.tenureMonths, tenureDays: tree.tenureDays, createdAt: user.createdAt, projects: tree.projects } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createUser,
   getAllUsers,
@@ -304,4 +422,8 @@ module.exports = {
   updateUserRole,
   updateUserDepartment,
   deleteUser,
+  getMyProfile,
+  updateMyContactInfo,
+  uploadMyAvatar,
+  getUserTree,
 };

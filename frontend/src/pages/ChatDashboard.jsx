@@ -1,14 +1,18 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useConversation } from '../hooks/useConversation';
+import { useSlaClock } from '../hooks/useSlaClock';
+import { getSlaState } from '../utils/sla';
 import chatService from '../services/chatService';
 import feedbackService from '../services/feedbackService';
 import ConnectionStatus from '../components/chat/ConnectionStatus';
 import MessageBubble from '../components/chat/MessageBubble';
 import MessageInput from '../components/chat/MessageInput';
+import SlaCountdownChip from '../components/chat/SlaCountdownChip';
+import SlaSummary from '../components/chat/SlaSummary';
 import PermissionGate from '../components/auth/PermissionGate';
 import toast from 'react-hot-toast';
 import {
@@ -105,16 +109,34 @@ const compareConversations = (a, b) => {
   return (a.customer?.name || '').localeCompare(b.customer?.name || '');
 };
 
+// An unread reply is the most actionable "something just happened" signal —
+// it outranks even SLA severity (an unread breach and a read-but-still-
+// breached conversation both need attention, but the one nobody has even
+// looked at yet gets first billing, same priority treatment as the
+// escalation banner gives SLA risk). Ties within a rank keep
+// compareConversations' recency order.
+const SLA_SORT_RANK = { breached: 0, critical: 0, warning: 1, ok: 2 };
+
+const priorityRank = (c, now) => (c.unreadByInternal > 0 ? -1 : SLA_SORT_RANK[getSlaState(c, now).state]);
+
+const compareBySlaAndRecency = (a, b, now) => {
+  const rankDiff = priorityRank(a, now) - priorityRank(b, now);
+  return rankDiff !== 0 ? rankDiff : compareConversations(a, b);
+};
+
 const ChatDashboard = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { socket } = useSocket();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [conversations, setConversations] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('');
+  const [slaFilter, setSlaFilter] = useState(() => searchParams.get('sla') === 'risk');
   const [convertingBug, setConvertingBug] = useState(false);
+  const slaClockTick = useSlaClock(); // eslint-disable-line no-unused-vars -- forces periodic re-render so chips/rail/sort stay live
   // Mobile-only WhatsApp-style screen stack ('list' | 'chat' | 'profile').
   // Deliberately kept separate from selectedCustomerId — that way resizing
   // back to desktop just reverts to the classic split-pane view without
@@ -166,17 +188,54 @@ const ChatDashboard = () => {
     return () => socket.off('conversation:updated', handleUpdated);
   }, [socket, selectedCustomerId]);
 
+  // A conversation crossing into 'escalated' is a distinct, one-time event
+  // (unlike the 30s tick, which just re-evaluates existing data) — update its
+  // row locally and fire exactly one toast per breach, never a repeat.
+  useEffect(() => {
+    if (!socket) return undefined;
+    const handleEscalated = ({ conversationId, customerName }) => {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c._id === conversationId
+            ? { ...c, status: 'escalated', escalatedAt: new Date().toISOString(), assignedTo: null }
+            : c
+        )
+      );
+      toast.error(`${t('chat.sla.toastEscalated')}: ${customerName}`);
+    };
+    socket.on('conversation:escalated', handleEscalated);
+    return () => socket.off('conversation:escalated', handleEscalated);
+  }, [socket, t]);
+
   const filteredConversations = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return conversations.filter((c) => {
-      const matchesPlan = !planFilter || c.customer?.plan === planFilter;
-      const matchesQuery =
-        !q ||
-        c.customer?.name?.toLowerCase().includes(q) ||
-        c.customer?.company?.toLowerCase().includes(q);
-      return matchesPlan && matchesQuery;
-    });
-  }, [conversations, searchQuery, planFilter]);
+    const now = Date.now();
+    return conversations
+      .filter((c) => {
+        const matchesPlan = !planFilter || c.customer?.plan === planFilter;
+        const matchesQuery =
+          !q ||
+          c.customer?.name?.toLowerCase().includes(q) ||
+          c.customer?.company?.toLowerCase().includes(q);
+        const matchesSla = !slaFilter || getSlaState(c, now).state !== 'ok';
+        return matchesPlan && matchesQuery && matchesSla;
+      })
+      .sort((a, b) => compareBySlaAndRecency(a, b, now));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- slaClockTick intentionally re-triggers this on the 30s tick
+  }, [conversations, searchQuery, planFilter, slaFilter, slaClockTick]);
+
+  const slaCounts = useMemo(() => {
+    const now = Date.now();
+    let critical = 0;
+    let warning = 0;
+    for (const c of conversations) {
+      const { state } = getSlaState(c, now);
+      if (state === 'critical' || state === 'breached') critical += 1;
+      else if (state === 'warning') warning += 1;
+    }
+    return { critical, warning };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, slaClockTick]);
 
   const { messages, loading: loadingMessages, connected, send, retry } = useConversation({
     conversationId: selectedId,
@@ -187,6 +246,18 @@ const ChatDashboard = () => {
   });
 
   const avgResponseMinutes = useMemo(() => computeAvgResponseMinutes(messages), [messages]);
+
+  const setSlaFilterAndUrl = useCallback((value) => {
+    setSlaFilter(value);
+    setSearchParams(value ? { sla: 'risk' } : {});
+  }, [setSearchParams]);
+
+  const hasActiveFilters = Boolean(searchQuery || planFilter || slaFilter);
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setPlanFilter('');
+    setSlaFilterAndUrl(false);
+  };
 
   useEffect(() => {
     if (selectedId) {
@@ -261,7 +332,14 @@ const ChatDashboard = () => {
           <h1>💬 {t('chat.title')}</h1>
           <p>{t('chat.subtitle')}</p>
         </div>
-        <ConnectionStatus />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+          <SlaSummary
+            criticalCount={slaCounts.critical}
+            warningCount={slaCounts.warning}
+            onFilterClick={() => setSlaFilterAndUrl(true)}
+          />
+          <ConnectionStatus />
+        </div>
       </div>
 
       <div className={`table-container chat-layout chat-layout-mobile-${mobileView}`}>
@@ -284,47 +362,84 @@ const ChatDashboard = () => {
                 </option>
               ))}
             </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={`filter-chip ${slaFilter ? 'active' : ''}`}
+                onClick={() => setSlaFilterAndUrl(!slaFilter)}
+              >
+                {t('chat.sla.filterChip')}
+              </button>
+              {hasActiveFilters && (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={clearAllFilters}>
+                  {t('chat.clearFilters')}
+                </button>
+              )}
+            </div>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {filteredConversations.length === 0 ? (
-              <div className="table-empty"><p>{t('chat.noConversations')}</p></div>
+              <div className="table-empty">
+                <p>{t('chat.noConversations')}</p>
+                {hasActiveFilters && (
+                  <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 'var(--space-sm)' }} onClick={clearAllFilters}>
+                    {t('chat.clearFilters')}
+                  </button>
+                )}
+              </div>
             ) : (
-              filteredConversations.map((c) => (
-                <div
-                  key={c.customer?._id}
-                  onClick={() => handleSelectCustomer(c)}
-                  style={{
-                    padding: 'var(--space-md)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    gap: 'var(--space-sm)',
-                    borderBottom: '1px solid var(--border-color)',
-                    background: c.customer?._id === selectedCustomerId ? 'var(--glass-bg-hover)' : 'transparent',
-                  }}
-                >
-                  <div className="user-avatar" style={{ background: getAvatarColor(c.customer?._id), backgroundImage: 'none' }}>
-                    {getInitials(c.customer?.company || c.customer?.name)}
+              filteredConversations.map((c) => {
+                const slaState = getSlaState(c);
+                const railClass =
+                  slaState.state === 'critical' || slaState.state === 'breached'
+                    ? 'sla-rail--critical'
+                    : slaState.state === 'warning'
+                      ? 'sla-rail--warning'
+                      : '';
+                return (
+                  <div
+                    key={c.customer?._id}
+                    onClick={() => handleSelectCustomer(c)}
+                    className={railClass}
+                    style={{
+                      padding: 'var(--space-md)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      gap: 'var(--space-sm)',
+                      borderBottom: '1px solid var(--border-color)',
+                      background: c.customer?._id === selectedCustomerId ? 'var(--glass-bg-hover)' : 'transparent',
+                    }}
+                  >
+                    <div className="user-avatar" style={{ background: getAvatarColor(c.customer?._id), backgroundImage: 'none' }}>
+                      {getInitials(c.customer?.company || c.customer?.name)}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                        <strong style={{ fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.customer?.name || '—'}
+                        </strong>
+                        {c.unreadByInternal > 0 && <span className="nav-badge">{c.unreadByInternal}</span>}
+                      </div>
+                      <span className={`badge badge-${c.customer?.plan}`} style={{ marginTop: 2 }}>
+                        {t(`customers.plans.${c.customer?.plan}`)}
+                      </span>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {c.lastMessagePreview || t('chat.noThreadYet')}
+                      </div>
+                      {slaState.state === 'ok' ? (
+                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: 2 }}>
+                          {c.lastMessageAt ? relativeTime(c.lastMessageAt) : ''}
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: 4 }}>
+                          <SlaCountdownChip slaState={slaState} plan={c.customer?.plan} />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                      <strong style={{ fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {c.customer?.name || '—'}
-                      </strong>
-                      {c.unreadByInternal > 0 && <span className="nav-badge">{c.unreadByInternal}</span>}
-                    </div>
-                    <span className={`badge badge-${c.customer?.plan}`} style={{ marginTop: 2 }}>
-                      {t(`customers.plans.${c.customer?.plan}`)}
-                    </span>
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {c.lastMessagePreview || t('chat.noThreadYet')}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: 2 }}>
-                      {c.lastMessageAt ? relativeTime(c.lastMessageAt) : ''}
-                    </div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -358,9 +473,12 @@ const ChatDashboard = () => {
                     <span className={`badge badge-${selected.customer?.plan}`}>{t(`customers.plans.${selected.customer?.plan}`)}</span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-tertiary)', fontSize: '11px' }}>
-                  <HiOutlineClock />
-                  {t('chat.avgResponseTime')}: {avgResponseMinutes !== null ? `${avgResponseMinutes} dk` : t('chat.noResponseData')}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                  <SlaCountdownChip slaState={getSlaState(selected)} plan={selected.customer?.plan} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                    <HiOutlineClock />
+                    {t('chat.avgResponseTime')}: {avgResponseMinutes !== null ? `${avgResponseMinutes} dk` : t('chat.noResponseData')}
+                  </div>
                 </div>
               </div>
 
@@ -408,7 +526,11 @@ const ChatDashboard = () => {
                 <HiOutlineExclamationCircle /> {t('chat.openTickets')}
               </div>
               <div style={{ fontSize: '13px', marginTop: 2 }}>
-                {selected.openFeedbackCount > 0 ? selected.openFeedbackCount : t('chat.noOpenTickets')}
+                {selected.totalFeedbackCount > 0
+                  ? t('chat.ticketsSummary')
+                      .replace('{open}', selected.openFeedbackCount)
+                      .replace('{resolved}', selected.totalFeedbackCount - selected.openFeedbackCount)
+                  : t('chat.noOpenTickets')}
               </div>
             </div>
 
