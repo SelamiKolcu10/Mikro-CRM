@@ -27,13 +27,17 @@ const WRITE_ROLES = [ROLES.SUPER_ADMIN, ROLES.STAFF];
 // WRITE_ROLES role passes straight through (identical to before), anyone
 // else with a Super Admin-granted PermissionOverride gets queued for
 // approval instead of a flat 403 — see middleware/authorizeOrQueue.js.
+// Validators run BEFORE authorizeOrQueue so that a request captured into the
+// approval queue (override path) is already validated AND .escape()'d — the
+// queued payload is later executed verbatim on approval, so it must not skip
+// the same input hardening the direct path gets.
 router.route('/')
   .get(authorize(...READ_ROLES), getCustomers)
-  .post(authorizeOrQueue('customers', 'write', ...WRITE_ROLES), createCustomerValidators, handleValidationErrors, createCustomer);
+  .post(createCustomerValidators, handleValidationErrors, authorizeOrQueue('customers', 'write', ...WRITE_ROLES), createCustomer);
 
 router.route('/:id')
   .get(authorize(...READ_ROLES), getCustomer)
-  .put(authorizeOrQueue('customers', 'write', ...WRITE_ROLES), updateCustomerValidators, handleValidationErrors, updateCustomer)
+  .put(updateCustomerValidators, handleValidationErrors, authorizeOrQueue('customers', 'write', ...WRITE_ROLES), updateCustomer)
   .delete(authorizeOrQueue('customers', 'delete', ...WRITE_ROLES), deleteCustomer);
 
 router.post('/:id/portal-access', authorize(...WRITE_ROLES), grantPortalAccess);

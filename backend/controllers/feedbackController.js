@@ -2,6 +2,7 @@ const Feedback = require('../models/Feedback');
 const Customer = require('../models/Customer');
 const { calculatePriority } = require('../utils/revenueImpact');
 const auditService = require('../utils/auditService');
+const escapeRegex = require('../utils/escapeRegex');
 
 const FEEDBACK_WATCHED_FIELDS = ['title', 'description', 'type', 'status', 'assignedTo'];
 
@@ -30,9 +31,12 @@ const getFeedbacks = async (req, res, next) => {
     if (priority) filter.priority = priority;
     if (customer) filter.customer = customer;
     if (search) {
+      // Escaped → literal substring match, not an attacker-controlled regex
+      // (ReDoS guard). See utils/escapeRegex.js.
+      const safe = escapeRegex(search);
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+        { title: { $regex: safe, $options: 'i' } },
+        { description: { $regex: safe, $options: 'i' } },
       ];
     }
 

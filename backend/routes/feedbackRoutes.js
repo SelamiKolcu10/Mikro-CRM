@@ -28,13 +28,16 @@ const UPDATE_ROLES = [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT];
 // Stats route must come before /:id to avoid matching "stats" as an ID
 router.get('/stats/summary', authorize(...READ_ROLES), getStats);
 
+// Validators run BEFORE authorizeOrQueue so a queued (override-path) request
+// is validated + .escape()'d before it's stored and later executed on
+// approval — see the same note in customerRoutes.js.
 router.route('/')
   .get(authorize(...READ_ROLES), getFeedbacks)
-  .post(authorizeOrQueue('feedbacks', 'write', ...WRITE_ROLES), createFeedbackValidators, handleValidationErrors, createFeedback);
+  .post(createFeedbackValidators, handleValidationErrors, authorizeOrQueue('feedbacks', 'write', ...WRITE_ROLES), createFeedback);
 
 router.route('/:id')
   .get(authorize(...READ_ROLES), getFeedback)
-  .put(authorizeOrQueue('feedbacks', 'write', ...UPDATE_ROLES), updateFeedbackValidators, handleValidationErrors, updateFeedback)
+  .put(updateFeedbackValidators, handleValidationErrors, authorizeOrQueue('feedbacks', 'write', ...UPDATE_ROLES), updateFeedback)
   .delete(authorizeOrQueue('feedbacks', 'delete', ...WRITE_ROLES), deleteFeedback);
 
 module.exports = router;

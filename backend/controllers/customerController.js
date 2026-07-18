@@ -4,6 +4,7 @@ const Feedback = require('../models/Feedback');
 const CustomerUser = require('../models/CustomerUser');
 const auditService = require('../utils/auditService');
 const { calculatePriority } = require('../utils/revenueImpact');
+const escapeRegex = require('../utils/escapeRegex');
 
 const CUSTOMER_WATCHED_FIELDS = ['name', 'email', 'company', 'plan', 'mrr', 'source', 'notes'];
 
@@ -20,10 +21,14 @@ const getCustomers = async (req, res, next) => {
     const filter = {};
     if (plan) filter.plan = plan;
     if (search) {
+      // Escaped → matched as a literal substring, never as an attacker regex
+      // (ReDoS guard). mongo-sanitize only strips operator KEYS, not string
+      // values, so this escaping is the actual defense here.
+      const safe = escapeRegex(search);
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
+        { name: { $regex: safe, $options: 'i' } },
+        { email: { $regex: safe, $options: 'i' } },
+        { company: { $regex: safe, $options: 'i' } },
       ];
     }
 
