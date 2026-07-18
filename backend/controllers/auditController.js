@@ -1,16 +1,29 @@
 const AuditLog = require('../models/AuditLog');
 const { verifyChain } = require('../utils/auditChain');
+const { ROLES } = require('../config/permissions');
 
 const SEVERITIES = ['info', 'sensitive', 'critical'];
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-function buildFilter({ collectionName, documentId, actor, actorEmail, action, severity, dateFrom, dateTo, search }) {
+/**
+ * `maskActorIdentity` (intern) drops every actor-identity axis from the
+ * query — the actor/actorEmail filters and the email fields of the free-text
+ * search. Otherwise the output masking (redactForIntern) is defeated by an
+ * enumeration oracle: an intern could filter/search by a guessed email and
+ * learn from the result count whether that actor has audit activity, even
+ * though the emails render as ******. Non-email search axes (snapshot
+ * name/title) stay available so search still works.
+ */
+function buildFilter(
+  { collectionName, documentId, actor, actorEmail, action, severity, dateFrom, dateTo, search },
+  { maskActorIdentity = false } = {}
+) {
   const filter = {};
   if (collectionName) filter.collectionName = collectionName;
   if (documentId) filter.documentId = documentId;
-  if (actor) filter.actor = actor;
-  if (actorEmail) filter.actorEmail = actorEmail;
+  if (!maskActorIdentity && actor) filter.actor = actor;
+  if (!maskActorIdentity && actorEmail) filter.actorEmail = actorEmail;
   if (action) filter.action = action;
   if (severity) filter.severity = severity;
   if (dateFrom || dateTo) {
@@ -20,12 +33,14 @@ function buildFilter({ collectionName, documentId, actor, actorEmail, action, se
   }
   if (search) {
     const re = new RegExp(escapeRegex(search), 'i');
-    filter.$or = [
-      { actorEmail: re },
-      { 'snapshot.name': re },
-      { 'snapshot.title': re },
-      { 'snapshot.email': re },
-    ];
+    filter.$or = maskActorIdentity
+      ? [{ 'snapshot.name': re }, { 'snapshot.title': re }]
+      : [
+          { actorEmail: re },
+          { 'snapshot.name': re },
+          { 'snapshot.title': re },
+          { 'snapshot.email': re },
+        ];
   }
   return filter;
 }
@@ -40,8 +55,12 @@ function buildFilter({ collectionName, documentId, actor, actorEmail, action, se
 const getAuditLogs = async (req, res, next) => {
   try {
     const { page = 1, limit = 25 } = req.query;
-    const filter = buildFilter(req.query);
-    const countFilter = buildFilter({ ...req.query, severity: undefined });
+    // Intern's audit view masks actor emails on output — also strip the
+    // actor-identity axes from the query so result counts can't be used as an
+    // enumeration oracle (see buildFilter).
+    const maskActorIdentity = req.user.role === ROLES.INTERN;
+    const filter = buildFilter(req.query, { maskActorIdentity });
+    const countFilter = buildFilter({ ...req.query, severity: undefined }, { maskActorIdentity });
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 

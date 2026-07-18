@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { ROLES } = require('../config/permissions');
 
 /**
  * Financial reporting reads the invoice collections directly rather than
@@ -207,6 +208,11 @@ const exportSpendingCsv = async (req, res, next) => {
     const { dateFrom, dateTo } = req.query;
     const dateRange = buildDateRange(dateFrom, dateTo);
 
+    // Intern has spendingReport.read for spend visibility, but vendor tax
+    // numbers are withheld from their export — accountant/super_admin still
+    // get them (needed for accounting/reporting).
+    const withholdTaxNumber = req.user.role === ROLES.INTERN;
+
     const projection = {
       vendorName: 1,
       vendorTaxNumber: 1,
@@ -243,7 +249,7 @@ const exportSpendingCsv = async (req, res, next) => {
         [
           row.service,
           row.vendorName || '',
-          row.vendorTaxNumber || '',
+          withholdTaxNumber ? '' : row.vendorTaxNumber || '',
           row.invoiceNumber || '',
           date ? new Date(date).toLocaleDateString('tr-TR') : '',
           (row.totalBase || 0).toFixed(2),
