@@ -34,6 +34,14 @@ const customerUserSchema = new mongoose.Schema(
       enum: ['active', 'disabled'],
       default: 'active',
     },
+    // Embedded in every issued portal JWT and re-checked on each request
+    // (see middleware/portalAuth.js). Bumped on password change so a leaked
+    // portal token stops being trusted immediately instead of staying valid
+    // for its full 7-day lifetime — the portal-side mirror of User.tokenVersion.
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     lastLoginAt: {
       type: Date,
       default: null,
@@ -86,6 +94,12 @@ customerUserSchema.methods.registerSuccessfulLogin = async function () {
     this.lockUntil = null;
     await this.save();
   }
+};
+
+// Invalidates every portal token issued before this call — call on password
+// change. Does not save(); the caller persists it alongside the new password.
+customerUserSchema.methods.bumpTokenVersion = function () {
+  this.tokenVersion = (this.tokenVersion || 0) + 1;
 };
 
 module.exports = mongoose.model('CustomerUser', customerUserSchema);

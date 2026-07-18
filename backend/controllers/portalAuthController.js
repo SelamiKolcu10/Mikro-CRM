@@ -80,6 +80,7 @@ const changePassword = async (req, res, next) => {
     }
 
     customerUser.password = newPassword;
+    customerUser.bumpTokenVersion(); // revoke any other portal token in the wild
     await customerUser.save();
 
     // Value is never logged (auditService masks any field literally named

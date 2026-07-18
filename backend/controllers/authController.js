@@ -27,7 +27,14 @@ const generateInternalToken = (user) => {
 
 const generatePortalToken = (customerUser) => {
   return jwt.sign(
-    { id: customerUser._id, customerId: customerUser.customer, aud: 'portal' },
+    {
+      id: customerUser._id,
+      customerId: customerUser.customer,
+      // Snapshot of tokenVersion at issue time — protectPortal compares it
+      // against the live value so a password change revokes older tokens.
+      tokenVersion: customerUser.tokenVersion || 0,
+      aud: 'portal',
+    },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -54,11 +61,12 @@ const login = async (req, res, next) => {
 
     const user = await User.findOne({ email }).select('+password');
     if (user) {
+      // A locked account must return the SAME generic response as a wrong
+      // password / unknown email — a distinct "account locked" message would
+      // let an attacker confirm which emails map to real accounts (user
+      // enumeration). The lockout still applies; it's just not disclosed.
       if (user.isLocked()) {
-        return res.status(403).json({
-          success: false,
-          error: 'Çok fazla başarısız deneme nedeniyle hesabınız geçici olarak kilitlendi. 15 dakika sonra tekrar deneyin.',
-        });
+        return res.status(401).json({ success: false, error: 'Invalid email or password' });
       }
 
       if (!(await user.matchPassword(password))) {
@@ -99,11 +107,10 @@ const login = async (req, res, next) => {
       .populate('customer', 'name email company plan mrr');
 
     if (customerUser) {
+      // Same generic response for a locked portal account — see the staff
+      // branch above (user-enumeration hardening).
       if (customerUser.isLocked()) {
-        return res.status(403).json({
-          success: false,
-          error: 'Çok fazla başarısız deneme nedeniyle hesabınız geçici olarak kilitlendi. 15 dakika sonra tekrar deneyin.',
-        });
+        return res.status(401).json({ success: false, error: 'Invalid email or password' });
       }
 
       if (!(await customerUser.matchPassword(password))) {

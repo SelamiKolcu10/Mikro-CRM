@@ -1,6 +1,8 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const Conversation = require('../models/Conversation');
+const User = require('../models/User');
+const CustomerUser = require('../models/CustomerUser');
 const { PERMISSIONS } = require('../config/permissions');
 
 const CHAT_ROLES = new Set(PERMISSIONS.chat.read);
@@ -14,11 +16,14 @@ const conversationRoom = (conversationId) => `conversation:${conversationId}`;
 let io = null;
 
 /**
- * Trusts the JWT claims (role/id for staff, customerId for portal) the same
- * way the invoice microservices do — no DB lookup on every socket connect.
- * The REST endpoints that actually write data still re-verify against the
- * live DB via `protect`/`protectPortal`; sockets are only used here for room
- * membership and push delivery, never as the write path itself.
+ * Authenticates a socket connection. Unlike a pure claims-trust handshake,
+ * this re-checks the live DB the same way `protect`/`protectPortal` and the
+ * invoice microservices do — the socket is itself a *read* channel (room
+ * members receive `message:new` pushes), so a revoked/de-provisioned account
+ * must be denied here too, not just on the REST write path. Verifying
+ * tokenVersion + live status/role at connect time means a fired employee, a
+ * chat-demoted user, or a revoked token can no longer keep receiving live
+ * customer messages for the token's remaining lifetime.
  */
 async function authenticateSocket(socket, next) {
   try {
@@ -28,16 +33,26 @@ async function authenticateSocket(socket, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (decoded.aud === 'internal') {
-      if (!CHAT_ROLES.has(decoded.role)) return next(new Error('Not authorized — chat not permitted for this role'));
+      const live = await User.findById(decoded.id).select('role status tokenVersion').lean();
+      if (!live || live.status !== 'approved') return next(new Error('Not authorized'));
+      if ((decoded.tokenVersion || 0) !== (live.tokenVersion || 0)) return next(new Error('Not authorized — token revoked'));
+      // Role comes from the live document, never the token — a chat demotion
+      // is effective immediately.
+      if (!CHAT_ROLES.has(live.role)) return next(new Error('Not authorized — chat not permitted for this role'));
       socket.data.accountType = 'internal';
       socket.data.userId = decoded.id;
-      socket.data.role = decoded.role;
+      socket.data.role = live.role;
       return next();
     }
 
     if (decoded.aud === 'portal') {
+      const cu = await CustomerUser.findById(decoded.id).select('status customer tokenVersion').lean();
+      if (!cu || cu.status !== 'active') return next(new Error('Not authorized'));
+      if ((decoded.tokenVersion || 0) !== (cu.tokenVersion || 0)) return next(new Error('Not authorized — token revoked'));
       socket.data.accountType = 'customer';
-      socket.data.customerId = decoded.customerId;
+      // customer ref from the live record, not the token, in case the token
+      // predates a record change.
+      socket.data.customerId = cu.customer;
       return next();
     }
 

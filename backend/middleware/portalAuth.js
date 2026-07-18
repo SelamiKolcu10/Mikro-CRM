@@ -30,6 +30,17 @@ const protectPortal = async (req, res, next) => {
       return res.status(401).json({ success: false, error: 'Not authorized' });
     }
 
+    // Reject tokens issued before the last password change (revocation).
+    // Tokens minted before this field existed carry no claim → `|| 0`, which
+    // matches the default, so pre-existing sessions keep working.
+    if ((decoded.tokenVersion || 0) !== (customerUser.tokenVersion || 0)) {
+      return res.status(401).json({
+        success: false,
+        error: 'Oturumunuz geçersiz kılındı. Lütfen tekrar giriş yapın.',
+        code: 'TOKEN_REVOKED',
+      });
+    }
+
     req.customerUser = customerUser;
     req.customerId = customerUser.customer;
     next();
