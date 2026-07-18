@@ -28,6 +28,7 @@ const {
   getUserTree,
 } = require('../controllers/userController');
 const { uploadAvatar } = require('../middleware/uploadAvatar');
+const { verifyAvatarSignature } = require('../middleware/fileSignature');
 const { PERMISSIONS } = require('../config/permissions');
 
 // Kullanıcı yönetimi — okuma: super_admin + intern (e-postalar maskeli),
@@ -38,7 +39,7 @@ router.use(protect);
 // `/:id` route'undan ÖNCE tanımlanmalı yoksa "me" bir ObjectId gibi yakalanır.
 router.get('/me/profile', getMyProfile);
 router.patch('/me/profile', updateContactInfoValidators, handleValidationErrors, updateMyContactInfo);
-router.post('/me/avatar', (req, res, next) => uploadAvatar(req, res, (err) => (err ? res.status(400).json({ success: false, error: err.message }) : next())), uploadMyAvatar);
+router.post('/me/avatar', (req, res, next) => uploadAvatar(req, res, (err) => (err ? res.status(400).json({ success: false, error: err.message }) : next())), verifyAvatarSignature, uploadMyAvatar);
 
 router.post('/', authorize(...PERMISSIONS.users.write), createUserValidators, handleValidationErrors, createUser);
 router.get('/', authorize(...PERMISSIONS.users.read), redactForIntern, getAllUsers);
