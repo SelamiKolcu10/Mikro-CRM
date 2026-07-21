@@ -7,12 +7,19 @@ const {
   deleteCustomer,
   grantPortalAccess,
   disablePortalAccess,
+  getCustomerTimeline,
+  logCustomerActivity,
 } = require('../controllers/customerController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/authorize');
 const { authorizeOrQueue } = require('../middleware/authorizeOrQueue');
 const { handleValidationErrors } = require('../middleware/validate');
-const { createCustomerValidators, updateCustomerValidators } = require('../validators/customerValidators');
+const {
+  createCustomerValidators,
+  updateCustomerValidators,
+  getTimelineValidators,
+  logActivityValidators,
+} = require('../validators/customerValidators');
 const { ROLES } = require('../config/permissions');
 
 const router = express.Router();
@@ -42,5 +49,14 @@ router.route('/:id')
 
 router.post('/:id/portal-access', authorize(...WRITE_ROLES), grantPortalAccess);
 router.patch('/:id/portal-access/disable', authorize(...WRITE_ROLES), disablePortalAccess);
+
+// Birleşik müşteri timeline'ı — herkes okuyabilir (deal öğeleri controller
+// içinde deals.read'e göre ayrıca filtrelenir, bkz. customerController.js).
+router.get('/:id/timeline', getTimelineValidators, handleValidationErrors, authorize(...READ_ROLES), getCustomerTimeline);
+// Düz authorize — authorizeOrQueue KULLANILMAZ: override akışı onaylanınca
+// bu payload'ı ({ type, note }) executeUpdateCustomer'a Customer.update gibi
+// geçirir, ki Customer şemasında olmayan alanlardır (veri bozulması riski).
+// Aktivite loglama ayrı bir aksiyon — genişletilmiş override kapsamı Faz 2.
+router.post('/:id/activities', logActivityValidators, handleValidationErrors, authorize(...WRITE_ROLES), logCustomerActivity);
 
 module.exports = router;

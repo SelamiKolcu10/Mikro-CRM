@@ -21,6 +21,7 @@ import AccessControlMatrix from './pages/AccessControlMatrix';
 import PendingApprovals from './pages/PendingApprovals';
 import Tasks from './pages/Tasks';
 import Leads from './pages/Leads';
+import Deals from './pages/Deals';
 import Projects from './pages/Projects';
 import Profile from './pages/Profile';
 import LeadForm from './pages/LeadForm';
@@ -161,6 +162,9 @@ const App = () => {
               } />
               <Route path="/leads" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN]}><Leads /></RoleGuard>
+              } />
+              <Route path="/deals" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT]}><Deals /></RoleGuard>
               } />
               <Route path="/invoices" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><Invoices /></RoleGuard>

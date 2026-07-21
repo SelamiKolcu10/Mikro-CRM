@@ -12,9 +12,11 @@
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../invoice-ocr-service && npm install && cd ../invoice-ocr-v2 && npm install",
     "seed": "cd backend && npm run seed",
     "test:invoices": "cd invoice-ocr-service && npm test",
-    "test:invoices-v2": "cd invoice-ocr-v2 && npm test"
+    "test:invoices-v2": "cd invoice-ocr-v2 && npm test",
+    "verify:customers": "node scripts/verify-customer-timeline.js"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "puppeteer": "^25.3.0"
   }
 }

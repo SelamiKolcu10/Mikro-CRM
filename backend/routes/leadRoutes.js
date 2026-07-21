@@ -11,6 +11,7 @@ const {
   leadIdValidators,
   updateLeadStatusValidators,
   addLeadNoteValidators,
+  convertLeadValidators,
 } = require('../validators/leadValidators');
 const {
   checkHoneypot,
@@ -20,6 +21,7 @@ const {
   updateLeadStatus,
   addLeadNote,
   assignLeadToMe,
+  convertLead,
 } = require('../controllers/leadController');
 
 // Bilerek router genelinde `protect` YOK — bu router'ın POST / route'u
@@ -45,5 +47,8 @@ router.get('/:id/events', protect, authorize(...PERMISSIONS.leads.read), redactF
 router.patch('/:id/status', protect, authorize(...PERMISSIONS.leads.write), updateLeadStatusValidators, handleValidationErrors, updateLeadStatus);
 router.post('/:id/notes', protect, authorize(...PERMISSIONS.leads.write), addLeadNoteValidators, handleValidationErrors, addLeadNote);
 router.patch('/:id/assign-to-me', protect, authorize(...PERMISSIONS.leads.write), leadIdValidators, handleValidationErrors, assignLeadToMe);
+// Lead → Deal dönüşümü: Customer + Deal oluşturur (bkz. leadController.convertLead).
+// leads.write == deals.write == [super_admin, staff] — aynı ekip.
+router.post('/:id/convert', protect, authorize(...PERMISSIONS.leads.write), convertLeadValidators, handleValidationErrors, convertLead);
 
 module.exports = router;

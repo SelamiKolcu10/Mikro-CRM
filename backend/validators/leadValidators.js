@@ -1,5 +1,6 @@
 const { body, param } = require('express-validator');
 const { LEAD_TYPES, BUDGET_RANGES, TIMEFRAMES, LEAD_STATUSES } = require('../config/leads');
+const { DEAL_CURRENCIES } = require('../config/deals');
 
 // Deliberately NOT using express-validator's .escape() here — same rationale
 // as validators/taskValidators.js: name/company/message render as plain JSX
@@ -37,4 +38,16 @@ const addLeadNoteValidators = [
   body('note').trim().isLength({ min: 1, max: 1000 }).withMessage('Not 1-1000 karakter olmalıdır.'),
 ];
 
-module.exports = { createLeadValidators, leadIdValidators, updateLeadStatusValidators, addLeadNoteValidators };
+// Lead → Deal dönüşümü (bkz. leadController.convertLead). value modalda girilir
+// (budgetRange yalnızca client-side bir öneri değeri ön-doldurur, sunucuya
+// gelen gerçek tutar budur). Diğer alanlar opsiyonel.
+const convertLeadValidators = [
+  param('id').isMongoId().withMessage('Geçersiz talep kimliği.'),
+  body('value').isFloat({ min: 0 }).withMessage('Tutar 0 veya daha büyük olmalıdır.'),
+  body('title').optional({ checkFalsy: true }).trim().isLength({ min: 2, max: 150 }).withMessage('Başlık 2-150 karakter olmalıdır.'),
+  body('currency').optional({ checkFalsy: true }).isIn(DEAL_CURRENCIES).withMessage('Geçersiz para birimi.'),
+  body('expectedCloseDate').optional({ checkFalsy: true }).isISO8601().withMessage('Geçersiz tarih.'),
+  body('ownerId').optional({ checkFalsy: true }).isMongoId().withMessage('Geçersiz sorumlu kimliği.'),
+];
+
+module.exports = { createLeadValidators, leadIdValidators, updateLeadStatusValidators, addLeadNoteValidators, convertLeadValidators };

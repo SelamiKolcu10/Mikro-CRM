@@ -5,6 +5,7 @@ import feedbackService from '../services/feedbackService';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import PermissionGate from '../components/auth/PermissionGate';
+import CustomerDetailDrawer from '../components/customers/CustomerDetailDrawer';
 import { useMyPendingApprovals } from '../hooks/useMyPendingApprovals';
 import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2, HiOutlineKey, HiOutlineClock, HiOutlineUserGroup } from 'react-icons/hi';
@@ -39,6 +40,9 @@ const Customers = () => {
   // Delete confirm
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Detail drawer (birleşik aktivite timeline'ı — bkz. hooks/useCustomerTimeline.js)
+  const [detailCustomer, setDetailCustomer] = useState(null);
 
   // Portal access grant result (temp password shown once)
   const [portalAccessResult, setPortalAccessResult] = useState(null);
@@ -261,7 +265,7 @@ const Customers = () => {
             {customers.map((c) => {
               const pendingAction = pendingByTarget.get(c._id);
               return (
-                <tr key={c._id}>
+                <tr key={c._id} className="is-clickable-row" onClick={() => setDetailCustomer(c)}>
                   <td data-label={t('customers.name')}>
                     <div className="cell-name">{c.name}</div>
                     <div className="cell-email">{c.email}</div>
@@ -274,7 +278,7 @@ const Customers = () => {
                     </span>
                   </td>
                   <td data-label={t('customers.source')}>{t(`customers.sources.${c.source}`)}</td>
-                  <td data-label={t('common.actions')}>
+                  <td data-label={t('common.actions')} onClick={(e) => e.stopPropagation()}>
                     {pendingAction ? (
                       <span className="pending-badge" title={t(`approvals.action${pendingAction.action[0].toUpperCase()}${pendingAction.action.slice(1)}`)}>
                         <HiOutlineClock /> {t('common.pendingApproval')}
@@ -544,6 +548,8 @@ const Customers = () => {
           </div>
         )}
       </Modal>
+
+      <CustomerDetailDrawer customer={detailCustomer} onClose={() => setDetailCustomer(null)} />
     </>
   );
 };

@@ -1,7 +1,11 @@
 const Lead = require('../models/Lead');
 const LeadEvent = require('../models/LeadEvent');
 const Customer = require('../models/Customer');
+const Deal = require('../models/Deal');
+const DealEvent = require('../models/DealEvent');
 const { scoreLead, isCorporateEmail } = require('../utils/leadScoring');
+const { DEAL_STAGE_PROBABILITY } = require('../config/deals');
+const { withComputedFields: withDealComputedFields, DEAL_POPULATE } = require('./dealController');
 
 const ANONYMOUS_ACTOR_NAME = 'Web Formu';
 
@@ -209,6 +213,89 @@ const assignLeadToMe = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   POST /api/leads/:id/convert
+ * @desc    Nitelikli lead'i Deal'e dönüştür — TEK aksiyonla hem (yoksa) Customer
+ *          oluşturur hem Deal açar (bkz. spec §2, omurga kararı). Lead=nitelendirme
+ *          biter, Deal=kapama başlar. Lead.status'e DOKUNULMAZ; dönüşüm ayrı bir
+ *          eksen (convertedDeal).
+ *
+ *          Partial-failure güvenli sıra (transaction gerektirmez — projenin
+ *          "gevşek tutarlılık" tercihi, bkz. createLead notu): önce Customer
+ *          (email unique → idempotent, yarış güvenli), sonra Deal, sonra Lead
+ *          güncelle. Deal hata verirse ortada yalnız (varsa yeni) bir Customer
+ *          kalır — zararsız, çift kayıt yok.
+ */
+const convertLead = async (req, res, next) => {
+  try {
+    const { value, title, currency, expectedCloseDate, ownerId } = req.body;
+
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) {
+      return res.status(404).json({ success: false, error: 'Talep bulunamadı.' });
+    }
+    if (lead.convertedDeal) {
+      return res.status(409).json({ success: false, error: 'Bu talep zaten bir fırsata dönüştürülmüş.' });
+    }
+
+    // 1) Customer bul/oluştur — önce mevcut bağ, sonra email eşleşmesi, sonra yeni.
+    let customer = null;
+    if (lead.linkedCustomer) {
+      customer = await Customer.findById(lead.linkedCustomer).select('_id');
+    }
+    if (!customer) {
+      customer = await Customer.findOne({ email: lead.email }).select('_id');
+    }
+    if (!customer) {
+      customer = await Customer.create({
+        name: lead.name,
+        email: lead.email,
+        company: lead.company || '',
+        // Lead.source bir Referer URL'i; Customer.source enum'una girmez → 'other'.
+        source: 'other',
+      });
+    }
+
+    // 2) Deal oluştur.
+    const deal = await Deal.create({
+      title: title || `${lead.company || lead.name} — Teklif`,
+      customer: customer._id,
+      lead: lead._id,
+      value,
+      currency: currency || 'TRY',
+      stage: 'initial_contact',
+      probability: DEAL_STAGE_PROBABILITY.initial_contact,
+      expectedCloseDate: expectedCloseDate || null,
+      owner: ownerId || req.user._id,
+    });
+
+    // 3) Lead'i bağla (çift dönüşüm kilidi + panel rozeti için).
+    lead.convertedDeal = deal._id;
+    lead.linkedCustomer = customer._id;
+    await lead.save();
+
+    // 4) Her iki timeline'a da iz düş (ikincil — hata verse ana kayıtlar durur).
+    await LeadEvent.create({
+      lead: lead._id,
+      actor: req.user._id,
+      actorName: req.user.name,
+      action: 'converted',
+    });
+    await DealEvent.create({
+      deal: deal._id,
+      actor: req.user._id,
+      actorName: req.user.name,
+      action: 'created',
+      toStage: 'initial_contact',
+    });
+
+    await deal.populate(DEAL_POPULATE);
+    res.status(201).json({ success: true, data: withDealComputedFields(deal) });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   checkHoneypot,
   createLead,
@@ -217,4 +304,5 @@ module.exports = {
   updateLeadStatus,
   addLeadNote,
   assignLeadToMe,
+  convertLead,
 };

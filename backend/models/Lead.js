@@ -50,6 +50,11 @@ const leadSchema = new mongoose.Schema(
     // Email eşleşirse otomatik bağlanır (bkz. §8) — yeni Customer oluşturmaz,
     // sadece referans kurar.
     linkedCustomer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
+    // Bu lead bir Deal'e dönüştürüldüyse referansı — çift dönüşümü engeller
+    // (bkz. leadController.convertLead) + panelde "Deal'e dönüştürüldü" rozeti/
+    // linki için. null = henüz dönüşmemiş. Lead.status'e DOKUNULMAZ: dönüşüm
+    // ayrı bir eksen, won/lost aynen kalır (bkz. deal-pipeline spec §1.4).
+    convertedDeal: { type: mongoose.Schema.Types.ObjectId, ref: 'Deal', default: null },
     // Sunucuda türetilir (Referer header), istemciden asla kabul edilmez.
     source: { type: String, default: '' },
     ip: { type: String, default: null },

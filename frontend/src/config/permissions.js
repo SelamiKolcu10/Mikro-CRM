@@ -103,6 +103,13 @@ export const PERMISSIONS = {
     read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN],
     write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
+  // Satış Pipeline (Deal/Fırsat) — bkz. backend/config/permissions.js aynı gerekçe.
+  // read: super_admin+staff+accountant (forecast için), write: super_admin+staff.
+  // intern BİLEREK yok (ciro verisi kapalı) — menü de gizli, backend 403 verir.
+  deals: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
 };
 
 // Resources a Super Admin can grant a runtime PermissionOverride for — kept

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { LEAD_STATUSES } = require('../config/leads');
 
-const ACTIONS = ['created', 'status_changed', 'assigned', 'note_added'];
+const ACTIONS = ['created', 'status_changed', 'assigned', 'note_added', 'converted'];
 
 /**
  * Lead'in operasyonel zaman çizelgesi — TaskActivity ile birebir aynı desen

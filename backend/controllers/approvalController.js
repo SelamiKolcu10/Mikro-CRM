@@ -30,7 +30,7 @@ const DISPATCH = {
       return customer;
     },
     update: async (payload, auditReq, targetId) => {
-      const { customer, beforeSnapshot } = await executeUpdateCustomer(targetId, payload);
+      const { customer, beforeSnapshot } = await executeUpdateCustomer(targetId, payload, auditReq.user);
       await auditService.record({ req: auditReq, collectionName: 'Customer', documentId: customer._id, action: 'update', before: beforeSnapshot, after: customer.toObject(), watchedFields: CUSTOMER_WATCHED_FIELDS });
       return customer;
     },

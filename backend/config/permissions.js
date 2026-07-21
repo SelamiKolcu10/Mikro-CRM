@@ -104,6 +104,15 @@ const PERMISSIONS = {
     read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN],
     write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
+  // Satış Pipeline (Deal/Fırsat) — GÖRÜNTÜLEME: super_admin + staff + accountant
+  // (accountant forecast/ciro için okur). DEĞİŞTİRME: yalnız super_admin+staff
+  // (satışı yürüten ekip). intern BİLEREK HARİÇ: deal.value hassas ciro verisi
+  // — leads'teki gibi maskeleme değil, tamamen kapalı (route intern'i hiç
+  // sokmaz). Tasarım: docs/superpowers/specs/2026-07-21-deal-pipeline-design.md §5.
+  deals: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
 };
 
 // Resources a Super Admin can grant a runtime PermissionOverride for — kept

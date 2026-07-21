@@ -5429,3 +5429,289 @@ body.light-theme .heatmap-cell-0 {
   .skeleton-line { animation: none; }
   .bar-list .bar-item-fill { transition: none; }
 }
+
+/* ============================================================
+   Deal / Satış Pipeline — board, kart, forecast bandı, drawer.
+   Asama rengi tek kaynaktan: .deal-stage--X uc degisken tanimlar
+   (--stage-color / --stage-soft / --stage-border), badge/kart-kenari/
+   nokta/chip hepsi bunlari okur. lead-status--* renk sistemiyle hizali.
+   ============================================================ */
+.deal-stage--initial_contact { --stage-color: var(--color-info); --stage-soft: var(--color-info-soft); --stage-border: rgba(59, 130, 246, 0.28); }
+.deal-stage--meeting { --stage-color: var(--color-warning); --stage-soft: var(--color-warning-soft); --stage-border: rgba(245, 158, 11, 0.28); }
+.deal-stage--proposal { --stage-color: var(--plan-premium); --stage-soft: var(--plan-premium-soft); --stage-border: rgba(139, 92, 246, 0.28); }
+.deal-stage--negotiation { --stage-color: var(--accent-secondary); --stage-soft: var(--accent-primary-glow); --stage-border: var(--border-color-active); }
+.deal-stage--won { --stage-color: var(--color-success); --stage-soft: var(--color-success-soft); --stage-border: rgba(16, 185, 129, 0.3); }
+.deal-stage--lost { --stage-color: var(--text-tertiary); --stage-soft: var(--glass-bg); --stage-border: var(--border-color); }
+
+/* ---- Forecast ozet bandi ---- */
+.forecast-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.forecast-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+.forecast-card::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent-primary);
+  opacity: 0.7;
+}
+.forecast-card--open::after { background: var(--color-info); }
+.forecast-card--weighted::after { background: var(--accent-primary); }
+.forecast-card--expected::after { background: var(--color-warning); }
+.forecast-card--won::after { background: var(--color-success); }
+.forecast-card:hover { border-color: var(--border-color-hover); box-shadow: var(--shadow-md); }
+.forecast-card-icon {
+  display: grid;
+  place-items: center;
+  width: 42px; height: 42px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent-primary-glow);
+  color: var(--accent-primary);
+  font-size: 1.25rem;
+}
+.forecast-card--open .forecast-card-icon { background: var(--color-info-soft); color: var(--color-info); }
+.forecast-card--expected .forecast-card-icon { background: var(--color-warning-soft); color: var(--color-warning); }
+.forecast-card--won .forecast-card-icon { background: var(--color-success-soft); color: var(--color-success); }
+.forecast-card-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.forecast-card-label { font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.forecast-card-value { font-size: var(--font-size-xl); font-weight: 700; color: var(--text-primary); line-height: 1.1; }
+.forecast-card-sub { font-size: var(--font-size-xs); color: var(--text-tertiary); }
+
+/* ---- Board & kolonlar ---- */
+.deal-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(248px, 1fr));
+  gap: var(--space-md);
+  overflow-x: auto;
+  padding-bottom: var(--space-sm);
+  align-items: start;
+}
+.deal-column {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 248px;
+  transition: all var(--transition-base);
+}
+.deal-column-head { display: flex; flex-direction: column; gap: 4px; padding-bottom: var(--space-xs); border-bottom: 1px solid var(--border-color); }
+.deal-column-head h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  margin: 0;
+}
+.deal-column-dot { width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--stage-color); flex-shrink: 0; }
+.deal-column-totals { display: flex; align-items: baseline; gap: var(--space-sm); padding-left: 17px; }
+.deal-column-total { font-size: var(--font-size-sm); font-weight: 700; color: var(--text-primary); }
+.deal-column-weighted { font-size: var(--font-size-xs); color: var(--text-tertiary); }
+.deal-column-body { display: flex; flex-direction: column; gap: var(--space-sm); max-height: 62vh; overflow-y: auto; min-height: 40px; }
+
+/* ---- Deal karti ---- */
+.deal-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--stage-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  cursor: grab;
+  transition: all var(--transition-base);
+}
+.deal-card:hover { border-color: var(--border-color-hover); border-left-color: var(--stage-color); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.deal-card:active { cursor: grabbing; }
+.deal-card--dragging { opacity: 0.45; border-style: dashed; }
+.deal-card-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.deal-stage-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  color: var(--stage-color);
+  background: var(--stage-soft);
+  border: 1px solid var(--stage-border);
+  white-space: nowrap;
+}
+.deal-prob-chip {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--border-color-hover);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+.deal-card-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary); margin: 2px 0 0; line-height: 1.3; }
+.deal-card-customer { font-size: var(--font-size-xs); color: var(--text-secondary); }
+.deal-card-value { font-size: var(--font-size-lg); font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em; margin-top: 2px; }
+.deal-card-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); margin-top: var(--space-xs); }
+.deal-card-owner { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.deal-card-owner-name { font-size: var(--font-size-xs); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deal-card-date { font-size: var(--font-size-xs); color: var(--text-tertiary); white-space: nowrap; }
+.deal-card-date--overdue { color: var(--color-danger); font-weight: 600; }
+
+/* ---- Timeline stage chip (drawer) ---- */
+.deal-stage-chip {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  color: var(--stage-color);
+  background: var(--stage-soft);
+  border: 1px solid var(--stage-border);
+}
+
+/* ---- Deal detay drawer ---- */
+.deal-detail-drawer { max-width: 640px; }
+.deal-drawer-heading { display: flex; flex-direction: column; gap: var(--space-sm); }
+.deal-drawer-meta { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+.deal-drawer-value { font-size: var(--font-size-lg); font-weight: 800; color: var(--text-primary); }
+.deal-drawer-topgrid { display: flex; align-items: center; gap: var(--space-lg); }
+.deal-drawer-facts { display: flex; flex-direction: column; gap: 6px; }
+.deal-fact { display: flex; align-items: center; gap: 8px; font-size: var(--font-size-sm); color: var(--text-secondary); }
+.deal-fact svg { color: var(--text-tertiary); flex-shrink: 0; }
+.deal-fact--muted { color: var(--text-tertiary); }
+
+/* ---- Edit / form alanlari (drawer + modallar ortak) ---- */
+.deal-edit-form { display: flex; flex-direction: column; gap: var(--space-md); }
+.deal-edit-field { display: flex; flex-direction: column; gap: 5px; }
+.deal-edit-field > span { font-size: var(--font-size-xs); font-weight: 600; color: var(--text-secondary); }
+.deal-edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+.deal-convert-hint { font-size: var(--font-size-sm); color: var(--text-secondary); margin: 0 0 var(--space-md); line-height: 1.5; }
+
+/* ---- Lead panelindeki donustur aksiyonu ---- */
+.lead-convert-btn { align-self: flex-start; margin-top: var(--space-sm); }
+.lead-converted-badge {
+  align-self: flex-start;
+  margin-top: var(--space-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+.lead-converted-badge:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+
+/* ---- Mobil: board tek kolon + sekmeler (task-board deseni) ---- */
+.deal-board-mobile-tabs { display: none; }
+@media (max-width: 768px) {
+  .forecast-bar { grid-template-columns: repeat(2, 1fr); gap: var(--space-sm); }
+  .deal-board-mobile-tabs {
+    display: flex;
+    gap: var(--space-xs);
+    overflow-x: auto;
+    padding-bottom: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+  .deal-board { grid-template-columns: 1fr; }
+  .deal-column { display: none; }
+  .deal-column.deal-column-mobile-active { display: flex; }
+  .deal-edit-row { grid-template-columns: 1fr; }
+  .deal-drawer-topgrid { gap: var(--space-md); }
+}
+
+/* =========================================================================
+   Müşteri Birleşik Timeline'ı (P2) — DealEvent+LeadEvent+Feedback+
+   CustomerEvent'i harmanlayan drawer. İskelet .lead-timeline'ı yeniden
+   kullanır (bkz. tasarım spec'i docs/superpowers/specs/
+   2026-07-22-customer-timeline-design.md §4.3-4.4); burada yalnız satır
+   tıklanabilirliği, kaynak-renk dot'ları, chip/gruplama ve log formu.
+   ========================================================================= */
+
+.is-clickable-row { cursor: pointer; }
+
+.customer-detail-drawer { max-width: 640px; }
+.customer-drawer-heading { display: flex; flex-direction: column; gap: var(--space-sm); }
+.customer-drawer-meta { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+
+/* ---- Kaynak renk sistemi — dot rengi "kaynak ikonu" görevi görür
+   (deal=mor, lead=mavi, feedback=turuncu, manuel=nötr). Renk tek başına
+   anlam taşımaz; her zaman metin etiketiyle birlikte (WCAG). ---- */
+.customer-timeline--note .lead-timeline-dot,
+.customer-timeline--call .lead-timeline-dot,
+.customer-timeline--meeting .lead-timeline-dot,
+.customer-timeline--email .lead-timeline-dot { background: var(--text-tertiary); }
+.customer-timeline--created .lead-timeline-dot { background: var(--accent-primary); }
+.customer-timeline--plan .lead-timeline-dot { background: var(--color-info); }
+.customer-timeline--deal .lead-timeline-dot { background: #8b5cf6; }
+.customer-timeline--deal-won .lead-timeline-dot { background: var(--color-success); }
+.customer-timeline--deal-lost .lead-timeline-dot { background: var(--color-danger); }
+.customer-timeline--lead .lead-timeline-dot { background: var(--color-info); }
+.customer-timeline--feedback .lead-timeline-dot { background: var(--color-warning); }
+
+.customer-timeline-day-group { margin-bottom: var(--space-lg); }
+.customer-timeline-day-label {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-sm);
+}
+
+.customer-timeline-chips { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.customer-timeline-arrow { color: var(--text-tertiary); }
+.customer-timeline-subject { font-weight: 600; color: var(--text-primary); }
+.customer-timeline-load-more { align-self: center; margin-top: var(--space-sm); }
+.customer-timeline { display: flex; flex-direction: column; }
+
+/* ---- Aktivite loglama formu (drawer üstü) ---- */
+.log-activity-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+.log-activity-type-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+.log-activity-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.log-activity-type-btn:hover { background: var(--bg-hover); }
+.log-activity-type-btn.active {
+  color: var(--accent-primary);
+  background: var(--color-info-soft, rgba(59, 130, 246, 0.12));
+  border-color: var(--accent-primary);
+}

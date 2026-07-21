@@ -2,9 +2,16 @@ const crypto = require('crypto');
 const Customer = require('../models/Customer');
 const Feedback = require('../models/Feedback');
 const CustomerUser = require('../models/CustomerUser');
+const CustomerEvent = require('../models/CustomerEvent');
+const Lead = require('../models/Lead');
+const LeadEvent = require('../models/LeadEvent');
+const Deal = require('../models/Deal');
+const DealEvent = require('../models/DealEvent');
 const auditService = require('../utils/auditService');
 const { calculatePriority } = require('../utils/revenueImpact');
 const escapeRegex = require('../utils/escapeRegex');
+const { buildTimeline } = require('../utils/customerTimeline');
+const { PERMISSIONS } = require('../config/permissions');
 
 const CUSTOMER_WATCHED_FIELDS = ['name', 'email', 'company', 'plan', 'mrr', 'source', 'notes'];
 
@@ -94,11 +101,32 @@ const getCustomer = async (req, res, next) => {
 // queued request" — see the callers.
 // ---------------------------------------------------------------------------
 
-async function executeCreateCustomer(payload) {
-  return Customer.create(payload);
+// Timeline'ın "created"/"plan_changed" sistem olayları — gevşek tutarlılık
+// (leadController.js:38 felsefesi): CustomerEvent yazımı hata verse bile ana
+// Customer işlemi geri alınmaz, bu yüzden execute* fonksiyonlarını bloklamaz.
+// AuditLog'a DEĞİL buraya: AuditLog hash-zincirli güvenlik izi, bu ise
+// müşteri-görünür operasyonel timeline (LeadEvent/AuditLog ayrımıyla aynı
+// gerekçe — bkz. tasarım spec'i §3.4).
+async function recordSystemEvent(payload) {
+  try {
+    await CustomerEvent.create(payload);
+  } catch {
+    // Sessizce yut — timeline ikincil, ana kayıt kaybolmamalı.
+  }
 }
 
-async function executeUpdateCustomer(id, payload) {
+async function executeCreateCustomer(payload) {
+  const customer = await Customer.create(payload);
+  await recordSystemEvent({
+    customer: customer._id,
+    actor: null,
+    actorName: 'Sistem',
+    action: 'created',
+  });
+  return customer;
+}
+
+async function executeUpdateCustomer(id, payload, actor = null) {
   const before = await Customer.findById(id);
   if (!before) throw notFound('Customer not found');
   const beforeSnapshot = before.toObject();
@@ -111,6 +139,17 @@ async function executeUpdateCustomer(id, payload) {
       { customer: customer._id },
       { revenueImpact: customer.mrr, priority: calculatePriority(customer.mrr) }
     );
+  }
+
+  if (payload.plan !== undefined && payload.plan !== beforeSnapshot.plan) {
+    await recordSystemEvent({
+      customer: customer._id,
+      actor: actor?._id || null,
+      actorName: actor?.name || 'Sistem',
+      action: 'plan_changed',
+      fromPlan: beforeSnapshot.plan,
+      toPlan: customer.plan,
+    });
   }
 
   return { customer, beforeSnapshot };
@@ -157,7 +196,7 @@ const createCustomer = async (req, res, next) => {
  */
 const updateCustomer = async (req, res, next) => {
   try {
-    const { customer, beforeSnapshot } = await executeUpdateCustomer(req.params.id, req.body);
+    const { customer, beforeSnapshot } = await executeUpdateCustomer(req.params.id, req.body, req.user);
 
     await auditService.record({
       req,
@@ -274,6 +313,102 @@ const disablePortalAccess = async (req, res, next) => {
   }
 };
 
+// Her kaynaktan tek seferde çekilecek üst sınır — v1 hacimleri düşük
+// (getLeads/getDeals'in "hepsini çek, client'ta işle" deseniyle uyumlu, bkz.
+// tasarım spec'i §3.1). Gerçek server-side sayfalama P4'e bırakıldı.
+const TIMELINE_SOURCE_CAP = 200;
+const DEFAULT_TIMELINE_LIMIT = 50;
+
+/**
+ * @route   GET /api/customers/:id/timeline
+ * @desc    Müşterinin birleşik aktivite akışı — DealEvent+LeadEvent+Feedback+
+ *          CustomerEvent'i okuma-anında harmanlar (bkz. utils/customerTimeline.js).
+ *          Ciro-hassas deal öğeleri yalnız deals.read yetkisi olan roller için
+ *          dahil edilir (bkz. tasarım spec'i §3.1, §5) — intern/support timeline'ı
+ *          görür ama deal öğelerini görmez.
+ */
+const getCustomerTimeline = async (req, res, next) => {
+  try {
+    const customer = await Customer.findById(req.params.id).select('_id').lean();
+    if (!customer) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    const limit = Math.min(parseInt(req.query.limit, 10) || DEFAULT_TIMELINE_LIMIT, 100);
+    const before = req.query.before ? new Date(req.query.before) : null;
+
+    const canReadDeals = PERMISSIONS.deals.read.includes(req.user.role);
+
+    const [customerEvents, feedbacks, leadIds, dealIds] = await Promise.all([
+      CustomerEvent.find({ customer: customer._id }).sort('-createdAt').limit(TIMELINE_SOURCE_CAP),
+      Feedback.find({ customer: customer._id }).sort('-createdAt').limit(TIMELINE_SOURCE_CAP),
+      Lead.find({ linkedCustomer: customer._id }).distinct('_id'),
+      canReadDeals ? Deal.find({ customer: customer._id }).distinct('_id') : Promise.resolve([]),
+    ]);
+
+    const [leadEvents, dealEvents] = await Promise.all([
+      LeadEvent.find({ lead: { $in: leadIds } })
+        .sort('-createdAt')
+        .limit(TIMELINE_SOURCE_CAP)
+        .populate('lead', 'type'),
+      dealIds.length
+        ? DealEvent.find({ deal: { $in: dealIds } })
+            .sort('-createdAt')
+            .limit(TIMELINE_SOURCE_CAP)
+            .populate('deal', 'title currency')
+        : Promise.resolve([]),
+    ]);
+
+    let items = buildTimeline({ customerEvents, dealEvents, leadEvents, feedbacks });
+
+    if (before) {
+      items = items.filter((item) => new Date(item.at).getTime() < before.getTime());
+    }
+
+    const hasMore = items.length > limit;
+    const page = items.slice(0, limit);
+    const nextCursor = hasMore ? page[page.length - 1].at : null;
+
+    res.json({
+      success: true,
+      data: { items: page, hasMore, nextCursor },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   POST /api/customers/:id/activities
+ * @desc    Temsilcinin elle eklediği etkileşim kaydı (not/arama/toplantı/
+ *          e-posta) — LeadEvent deseni: actor manuel türlerde her zaman
+ *          authed bir personelden gelir (bkz. tasarım spec'i §3.2).
+ */
+const logCustomerActivity = async (req, res, next) => {
+  try {
+    const customer = await Customer.findById(req.params.id).select('_id').lean();
+    if (!customer) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    const { type, note } = req.body;
+
+    const event = await CustomerEvent.create({
+      customer: customer._id,
+      actor: req.user._id,
+      actorName: req.user.name,
+      action: type,
+      note: note || null,
+    });
+
+    const [item] = buildTimeline({ customerEvents: [event] });
+
+    res.status(201).json({ success: true, data: item });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCustomers,
   getCustomer,
@@ -282,6 +417,8 @@ module.exports = {
   deleteCustomer,
   grantPortalAccess,
   disablePortalAccess,
+  getCustomerTimeline,
+  logCustomerActivity,
   executeCreateCustomer,
   executeUpdateCustomer,
   executeDeleteCustomer,

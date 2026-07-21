@@ -8,6 +8,8 @@ const customerService = {
   delete: (id) => api.delete(`/customers/${id}`),
   grantPortalAccess: (id) => api.post(`/customers/${id}/portal-access`),
   disablePortalAccess: (id) => api.patch(`/customers/${id}/portal-access/disable`),
+  getTimeline: (id, params = {}) => api.get(`/customers/${id}/timeline`, { params }),
+  logActivity: (id, data) => api.post(`/customers/${id}/activities`, data),
 };
 
 export default customerService;

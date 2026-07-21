@@ -47,6 +47,7 @@ app.use('/api/permission-overrides', require('./routes/permissionOverrideRoutes'
 // tek route'u (POST /) uygulamadaki ilk auth'suz yazma yüzeyi (bkz. spec
 // docs/superpowers/specs/2026-07-21-lead-intake-forms-design.md §3).
 app.use('/api/leads', require('./routes/leadRoutes'));
+app.use('/api/deals', require('./routes/dealRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {

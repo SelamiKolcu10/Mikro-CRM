@@ -24,7 +24,8 @@
     "readOnlyMode": "Salt Okunur Mod",
     "readOnlyModeHint": "Stajer rolüyle görüntülüyorsunuz — ekleme, düzenleme ve silme işlemleri yapılamaz.",
     "pendingApproval": "Admin Onayı Bekliyor",
-    "workload": "Yoğunluk"
+    "workload": "Yoğunluk",
+    "saved": "Kaydedildi"
   },
   "roles": {
     "superAdmin": "Süper Admin",
@@ -87,7 +88,8 @@
     "lightMode": "Aydınlık Mod",
     "darkMode": "Karanlık Mod",
     "openMenu": "Menüyü Aç",
-    "closeSidebar": "Menüyü Kapat"
+    "closeSidebar": "Menüyü Kapat",
+    "deals": "Fırsatlar"
   },
   "users": {
     "title": "Kullanıcı Yönetimi",
@@ -113,7 +115,10 @@
     "deleteConfirm": "Bu kullanıcıyı silmek istediğinize emin misiniz?",
     "deleteWarning": "Bu işlem geri alınamaz.",
     "directory": {
-      "tabs": { "directory": "Çalışan Dizini", "projects": "Projeler" },
+      "tabs": {
+        "directory": "Çalışan Dizini",
+        "projects": "Projeler"
+      },
       "employeeCount": "çalışan",
       "filterDepartment": "Departman",
       "all": "Tümü",
@@ -218,6 +223,46 @@
       "email": "E-posta",
       "in-app": "Uygulama İçi",
       "other": "Diğer"
+    },
+    "detail": {
+      "timeline": "Aktivite Zaman Çizelgesi",
+      "noActivity": "Bu müşteriyle henüz kayıtlı etkileşim yok.",
+      "activityType": "Aktivite türü",
+      "activityTypes": {
+        "note": "Not",
+        "call": "Arama",
+        "meeting": "Toplantı",
+        "email": "E-posta"
+      },
+      "notePlaceholderRequired": "Ne oldu?",
+      "notePlaceholderOptional": "Opsiyonel özet...",
+      "logActivity": "Aktivite Ekle"
+    },
+    "timeline": {
+      "today": "Bugün",
+      "yesterday": "Dün",
+      "loadMore": "Daha fazla yükle",
+      "system": "Sistem",
+      "noteLogged": "not ekledi",
+      "callLogged": "arama kaydetti",
+      "meetingLogged": "toplantı kaydetti",
+      "emailLogged": "e-posta kaydetti",
+      "customerCreated": "müşteri oldu",
+      "planChanged": "planı değiştirdi:",
+      "dealCreated": "fırsat oluşturdu",
+      "dealStageChanged": "fırsat aşamasını değiştirdi:",
+      "dealValueChanged": "fırsat tutarını güncelledi:",
+      "dealNoteAdded": "fırsata not ekledi",
+      "dealWon": "fırsatı kazanıldı işaretledi:",
+      "dealLost": "fırsatı kaybedildi işaretledi:",
+      "dealAssigned": "fırsata sorumlu atadı",
+      "leadCreated": "talep gönderdi",
+      "leadStatusChanged": "talep durumunu değiştirdi:",
+      "leadAssigned": "talebe sorumlu atadı",
+      "leadNoteAdded": "talebe not ekledi",
+      "leadConverted": "talebi fırsata dönüştürdü",
+      "feedbackCreated": "destek talebi açtı",
+      "unknown": "aktivite"
     }
   },
   "feedbacks": {
@@ -596,9 +641,18 @@
         "status_changed": "taşıdı →"
       },
       "months": {
-        "0": "Oca", "1": "Şub", "2": "Mar", "3": "Nis",
-        "4": "May", "5": "Haz", "6": "Tem", "7": "Ağu",
-        "8": "Eyl", "9": "Eki", "10": "Kas", "11": "Ara"
+        "0": "Oca",
+        "1": "Şub",
+        "2": "Mar",
+        "3": "Nis",
+        "4": "May",
+        "5": "Haz",
+        "6": "Tem",
+        "7": "Ağu",
+        "8": "Eyl",
+        "9": "Eki",
+        "10": "Kas",
+        "11": "Ara"
       },
       "days": {
         "1": "Pzt",
@@ -610,10 +664,28 @@
       "today": "Bugün",
       "prevMonth": "Önceki ay",
       "nextMonth": "Sonraki ay",
-      "weekdays": ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
+      "weekdays": [
+        "Pzt",
+        "Sal",
+        "Çar",
+        "Per",
+        "Cum",
+        "Cmt",
+        "Paz"
+      ],
       "months": [
-        "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+        "Ocak",
+        "Şubat",
+        "Mart",
+        "Nisan",
+        "Mayıs",
+        "Haziran",
+        "Temmuz",
+        "Ağustos",
+        "Eylül",
+        "Ekim",
+        "Kasım",
+        "Aralık"
       ],
       "moreCount": "+{count} daha",
       "noDeadlineTasks": "Tarihsiz Görevler",
@@ -706,12 +778,15 @@
       "timeline": "Zaman Çizelgesi",
       "notePlaceholder": "Ekip içi not ekle...",
       "addNote": "Not Ekle",
-      "noEvents": "Henüz aktivite yok."
+      "noEvents": "Henüz aktivite yok.",
+      "convertToDeal": "Fırsata Dönüştür",
+      "convertedToDeal": "Fırsata dönüştürüldü"
     },
     "timeline": {
       "created": "talebi oluşturdu",
       "statusChanged": "durumu değiştirdi:",
-      "assigned": "kendine atadı"
+      "assigned": "kendine atadı",
+      "converted": "fırsata dönüştürdü"
     }
   },
   "projects": {
@@ -789,5 +864,74 @@
     "Oyunlaştırma özelliği uygulamayı daha çekici hale getirirdi. Görevleri tamamlamak için puanlar!": "Oyunlaştırma özelliği uygulamayı daha çekici hale getirirdi. Görevleri tamamlamak için puanlar!",
     "Türkçe dil desteği": "Türkçe dil desteği",
     "Uygulama Türkçe dilini desteklemeli. Türkiye'deki birçok kullanıcı bunu takdir eder.": "Uygulama Türkçe dilini desteklemeli. Türkiye'deki birçok kullanıcı bunu takdir eder."
+  },
+  "deals": {
+    "panel": {
+      "title": "Satış Pipeline",
+      "subtitle": "Fırsatları aşamalara göre yönetin, ciro tahminini görün",
+      "newDeal": "Yeni Fırsat",
+      "empty": "Henüz fırsat yok. Bir talebi dönüştürerek ya da yeni fırsat ekleyerek başlayın."
+    },
+    "stage": {
+      "initial_contact": "İlk Temas",
+      "meeting": "Görüşme",
+      "proposal": "Teklif",
+      "negotiation": "Pazarlık",
+      "won": "Kazanıldı",
+      "lost": "Kaybedildi"
+    },
+    "forecast": {
+      "openPipeline": "Açık Pipeline",
+      "openCount": "{n} açık fırsat",
+      "weighted": "Ağırlıklı Forecast",
+      "weightedSub": "Olasılıkla ağırlıklandırılmış",
+      "expectedThisMonth": "Bu Ay Beklenen",
+      "expectedSub": "Kapanışı bu aya planlı",
+      "wonThisMonth": "Bu Ay Kazanılan",
+      "wonSub": "Kapanan anlaşmalar"
+    },
+    "card": {
+      "probability": "Kazanma olasılığı"
+    },
+    "detail": {
+      "stage": "Aşama",
+      "details": "Detaylar",
+      "title": "Başlık",
+      "value": "Tutar",
+      "currency": "Para Birimi",
+      "probability": "Olasılık",
+      "expectedClose": "Tahmini Kapanış",
+      "lostReason": "Kayıp Nedeni",
+      "fromLead": "Talepten dönüştürüldü",
+      "timeline": "Zaman Çizelgesi",
+      "notePlaceholder": "Ekip içi not ekle...",
+      "addNote": "Not Ekle",
+      "noEvents": "Henüz aktivite yok."
+    },
+    "convert": {
+      "title": "Fırsata Dönüştür",
+      "hint": "Bu talebi bir satış fırsatına dönüştürür. Müşteri kaydı yoksa otomatik oluşturulur.",
+      "defaultTitleSuffix": "Teklif",
+      "valueRequired": "Geçerli bir tutar girin.",
+      "submit": "Dönüştür",
+      "success": "Fırsat oluşturuldu."
+    },
+    "form": {
+      "title": "Yeni Fırsat",
+      "customer": "Müşteri",
+      "selectCustomer": "Müşteri seçin",
+      "customerRequired": "Lütfen bir müşteri seçin.",
+      "submit": "Oluştur",
+      "success": "Fırsat oluşturuldu."
+    },
+    "timeline": {
+      "created": "fırsatı oluşturdu",
+      "stageChanged": "aşamayı değiştirdi:",
+      "valueChanged": "tutarı güncelledi:",
+      "noteAdded": "not ekledi",
+      "won": "kazanıldı olarak işaretledi:",
+      "lost": "kaybedildi olarak işaretledi:",
+      "assigned": "sorumlu atadı"
+    }
   }
 }

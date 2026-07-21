@@ -15,6 +15,7 @@ import {
   HiOutlineFolderOpen,
   HiOutlineInbox,
   HiOutlinePencilAlt,
+  HiOutlineTrendingUp,
 } from 'react-icons/hi';
 import { ROLES } from './permissions';
 import { canManageProjects } from '../utils/projectScope';
@@ -41,6 +42,9 @@ export const INTERNAL_NAV = [
       // ham PII taşıdığı için support/intern dışında tutuldu. Bildirim badge'i
       // (newLeads) Faz 3'te eklenecek (bkz. Sidebar.jsx fetchPending).
       { path: '/leads', icon: HiOutlineInbox, labelKey: 'nav.leads', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN] },
+      // Satış Pipeline — Formlar'ın (lead) doğal devamı: nitelikli lead → Deal.
+      // intern yok (ciro verisi kapalı, bkz. config/permissions.js deals).
+      { path: '/deals', icon: HiOutlineTrendingUp, labelKey: 'nav.deals', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT] },
       { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN], badgeKey: 'chatEscalations' },
       // Profilim ana menüden çıkarıldı → sidebar alt bilgisindeki profil kartına
       // taşındı (bkz. components/layout/Sidebar.jsx footer). Rota (/profile) aynen

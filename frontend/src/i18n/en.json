@@ -24,7 +24,8 @@
     "readOnlyMode": "Read-Only Mode",
     "readOnlyModeHint": "You're viewing as Intern — creating, editing, and deleting is disabled.",
     "pendingApproval": "Awaiting Admin Approval",
-    "workload": "Workload"
+    "workload": "Workload",
+    "saved": "Saved"
   },
   "roles": {
     "superAdmin": "Super Admin",
@@ -87,7 +88,8 @@
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode",
     "openMenu": "Open Menu",
-    "closeSidebar": "Close Menu"
+    "closeSidebar": "Close Menu",
+    "deals": "Deals"
   },
   "users": {
     "title": "User Management",
@@ -113,7 +115,10 @@
     "deleteConfirm": "Are you sure you want to delete this user?",
     "deleteWarning": "This action cannot be undone.",
     "directory": {
-      "tabs": { "directory": "Employee Directory", "projects": "Projects" },
+      "tabs": {
+        "directory": "Employee Directory",
+        "projects": "Projects"
+      },
       "employeeCount": "employees",
       "filterDepartment": "Department",
       "all": "All",
@@ -218,6 +223,46 @@
       "email": "Email",
       "in-app": "In-App",
       "other": "Other"
+    },
+    "detail": {
+      "timeline": "Activity Timeline",
+      "noActivity": "No recorded activity with this customer yet.",
+      "activityType": "Activity type",
+      "activityTypes": {
+        "note": "Note",
+        "call": "Call",
+        "meeting": "Meeting",
+        "email": "Email"
+      },
+      "notePlaceholderRequired": "What happened?",
+      "notePlaceholderOptional": "Optional summary...",
+      "logActivity": "Log Activity"
+    },
+    "timeline": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "loadMore": "Load more",
+      "system": "System",
+      "noteLogged": "added a note",
+      "callLogged": "logged a call",
+      "meetingLogged": "logged a meeting",
+      "emailLogged": "logged an email",
+      "customerCreated": "became a customer",
+      "planChanged": "changed plan:",
+      "dealCreated": "created a deal",
+      "dealStageChanged": "changed deal stage:",
+      "dealValueChanged": "updated deal value:",
+      "dealNoteAdded": "added a deal note",
+      "dealWon": "marked deal as won:",
+      "dealLost": "marked deal as lost:",
+      "dealAssigned": "assigned the deal",
+      "leadCreated": "submitted a request",
+      "leadStatusChanged": "changed request status:",
+      "leadAssigned": "assigned the request",
+      "leadNoteAdded": "added a request note",
+      "leadConverted": "converted the request to a deal",
+      "feedbackCreated": "opened a support item",
+      "unknown": "activity"
     }
   },
   "feedbacks": {
@@ -596,9 +641,18 @@
         "status_changed": "moved to"
       },
       "months": {
-        "0": "Jan", "1": "Feb", "2": "Mar", "3": "Apr",
-        "4": "May", "5": "Jun", "6": "Jul", "7": "Aug",
-        "8": "Sep", "9": "Oct", "10": "Nov", "11": "Dec"
+        "0": "Jan",
+        "1": "Feb",
+        "2": "Mar",
+        "3": "Apr",
+        "4": "May",
+        "5": "Jun",
+        "6": "Jul",
+        "7": "Aug",
+        "8": "Sep",
+        "9": "Oct",
+        "10": "Nov",
+        "11": "Dec"
       },
       "days": {
         "1": "Mon",
@@ -610,10 +664,28 @@
       "today": "Today",
       "prevMonth": "Previous month",
       "nextMonth": "Next month",
-      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      "weekdays": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+      ],
       "months": [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
       ],
       "moreCount": "+{count} more",
       "noDeadlineTasks": "Undated Tasks",
@@ -706,12 +778,15 @@
       "timeline": "Timeline",
       "notePlaceholder": "Add an internal note...",
       "addNote": "Add Note",
-      "noEvents": "No activity yet."
+      "noEvents": "No activity yet.",
+      "convertToDeal": "Convert to Deal",
+      "convertedToDeal": "Converted to deal"
     },
     "timeline": {
       "created": "created the request",
       "statusChanged": "changed status:",
-      "assigned": "assigned to self"
+      "assigned": "assigned to self",
+      "converted": "converted to a deal"
     }
   },
   "projects": {
@@ -789,5 +864,74 @@
     "Oyunlaştırma özelliği uygulamayı daha çekici hale getirirdi. Görevleri tamamlamak için puanlar!": "A gamification feature would make the app more engaging. Points for completing tasks!",
     "Türkçe dil desteği": "Support for Turkish language",
     "Uygulama Türkçe dilini desteklemeli. Türkiye'deki birçok kullanıcı bunu takdir eder.": "The app should support Turkish language. Many users in Turkey would appreciate it."
+  },
+  "deals": {
+    "panel": {
+      "title": "Sales Pipeline",
+      "subtitle": "Manage opportunities by stage and forecast revenue",
+      "newDeal": "New Deal",
+      "empty": "No deals yet. Start by converting a lead or adding a new deal."
+    },
+    "stage": {
+      "initial_contact": "Initial Contact",
+      "meeting": "Meeting",
+      "proposal": "Proposal",
+      "negotiation": "Negotiation",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "forecast": {
+      "openPipeline": "Open Pipeline",
+      "openCount": "{n} open deals",
+      "weighted": "Weighted Forecast",
+      "weightedSub": "Weighted by probability",
+      "expectedThisMonth": "Expected This Month",
+      "expectedSub": "Close date this month",
+      "wonThisMonth": "Won This Month",
+      "wonSub": "Closed-won deals"
+    },
+    "card": {
+      "probability": "Win probability"
+    },
+    "detail": {
+      "stage": "Stage",
+      "details": "Details",
+      "title": "Title",
+      "value": "Value",
+      "currency": "Currency",
+      "probability": "Probability",
+      "expectedClose": "Expected Close",
+      "lostReason": "Lost Reason",
+      "fromLead": "Converted from lead",
+      "timeline": "Timeline",
+      "notePlaceholder": "Add an internal note...",
+      "addNote": "Add Note",
+      "noEvents": "No activity yet."
+    },
+    "convert": {
+      "title": "Convert to Deal",
+      "hint": "Converts this lead into a sales deal. A customer record is created automatically if none exists.",
+      "defaultTitleSuffix": "Proposal",
+      "valueRequired": "Enter a valid amount.",
+      "submit": "Convert",
+      "success": "Deal created."
+    },
+    "form": {
+      "title": "New Deal",
+      "customer": "Customer",
+      "selectCustomer": "Select a customer",
+      "customerRequired": "Please select a customer.",
+      "submit": "Create",
+      "success": "Deal created."
+    },
+    "timeline": {
+      "created": "created the deal",
+      "stageChanged": "changed the stage:",
+      "valueChanged": "updated the value:",
+      "noteAdded": "added a note",
+      "won": "marked as won:",
+      "lost": "marked as lost:",
+      "assigned": "assigned an owner"
+    }
   }
 }

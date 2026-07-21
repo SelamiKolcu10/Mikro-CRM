@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { HiOutlineX, HiOutlineMail, HiOutlinePhone, HiOutlineUserAdd, HiOutlineBadgeCheck } from 'react-icons/hi';
+import { useNavigate } from 'react-router-dom';
+import { HiOutlineX, HiOutlineMail, HiOutlinePhone, HiOutlineUserAdd, HiOutlineBadgeCheck, HiOutlineTrendingUp, HiOutlineArrowRight } from 'react-icons/hi';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { LEAD_STATUSES, LEAD_STATUS_CLASS, LEAD_TEMPERATURE_CLASS } from '../../config/leads';
 import { can } from '../../config/permissions';
 import { summarizeLead } from '../../utils/leadSummary';
 import { useLeadEvents } from '../../hooks/useLeadEvents';
+import ConvertLeadModal from '../deals/ConvertLeadModal';
 import toast from 'react-hot-toast';
 
 const EVENT_LABEL_KEY = {
@@ -14,6 +16,7 @@ const EVENT_LABEL_KEY = {
   status_changed: 'leads.timeline.statusChanged',
   assigned: 'leads.timeline.assigned',
   note_added: 'leads.timeline.noteAdded',
+  converted: 'leads.timeline.converted',
 };
 
 /**
@@ -25,11 +28,13 @@ const EVENT_LABEL_KEY = {
 const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const drawerRef = useRef(null);
   const [note, setNote] = useState('');
   const [submittingNote, setSubmittingNote] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [showConvert, setShowConvert] = useState(false);
   const { events, loading: eventsLoading, addNote, refresh: refreshEvents } = useLeadEvents(lead?._id);
 
   useEffect(() => {
@@ -135,6 +140,24 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
                   <HiOutlineBadgeCheck /> {t('leads.detail.existingCustomer')}: <strong>{lead.linkedCustomer.name}</strong>
                 </span>
               )}
+
+              {/* Satış: nitelikli lead → Deal. Dönüştürülmüşse rozet+link, değilse
+                  (yetkiliyse) dönüştür butonu. Dönüşüm Customer'ı da oluşturur. */}
+              {lead.convertedDeal ? (
+                <button
+                  type="button"
+                  className="lead-converted-badge"
+                  onClick={() => { onClose(); navigate('/deals'); }}
+                >
+                  <HiOutlineTrendingUp /> {t('leads.detail.convertedToDeal')} <HiOutlineArrowRight />
+                </button>
+              ) : (
+                canWrite && (
+                  <button type="button" className="btn btn-primary btn-sm lead-convert-btn" onClick={() => setShowConvert(true)}>
+                    <HiOutlineTrendingUp /> {t('leads.detail.convertToDeal')}
+                  </button>
+                )
+              )}
             </section>
 
             <section className="project-drawer-section">
@@ -214,6 +237,7 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
                           )}
                           {ev.action === 'created' && <span>{t(EVENT_LABEL_KEY.created)}</span>}
                           {ev.action === 'assigned' && <span>{t(EVENT_LABEL_KEY.assigned)}</span>}
+                          {ev.action === 'converted' && <span>{t(EVENT_LABEL_KEY.converted)}</span>}
                           {ev.action === 'note_added' && <span className="lead-timeline-note">{ev.note}</span>}
                         </div>
                       </div>
@@ -225,6 +249,13 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
           </div>
         </div>
       </div>
+
+      <ConvertLeadModal
+        lead={showConvert ? lead : null}
+        isOpen={showConvert}
+        onClose={() => setShowConvert(false)}
+        onConverted={() => { onClose(); navigate('/deals'); }}
+      />
     </>,
     document.body
   );
