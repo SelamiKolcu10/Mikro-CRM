@@ -4,6 +4,7 @@ import Modal from '../../components/common/Modal';
 import toast from 'react-hot-toast';
 import { HiOutlinePlus } from 'react-icons/hi';
 
+// Destek talebi (Feedback) etiketleri
 const STATUS_LABELS = {
   open: 'Açık',
   'in-progress': 'İşlemde',
@@ -20,19 +21,66 @@ const STATUS_COLORS = {
 
 const TYPE_LABELS = { bug: 'Hata', feature: 'Özellik İsteği', improvement: 'İyileştirme' };
 
+// Başvuru (Lead) etiketleri — portal TR-only olduğundan sabit Türkçe.
+const LEAD_TYPE_LABELS = { quote: 'Fiyat teklifi', idea: 'Proje fikri', question: 'Genel soru' };
+const LEAD_STATUS_LABELS = {
+  new: 'Yeni',
+  in_review: 'İncelemede',
+  contacted: 'İletişime Geçildi',
+  quoted: 'Teklif Verildi',
+  won: 'Kazanıldı',
+  lost: 'Kaybedildi',
+};
+const LEAD_STATUS_COLORS = {
+  new: 'var(--color-info)',
+  in_review: 'var(--color-warning)',
+  contacted: 'var(--accent-secondary)',
+  quoted: 'var(--plan-premium)',
+  won: 'var(--color-success)',
+  lost: 'var(--text-tertiary)',
+};
+
+const truncate = (s, n) => (s && s.length > n ? `${s.slice(0, n).trimEnd()}…` : s || '');
+
 const initialForm = { title: '', description: '', type: 'bug' };
 
 const PortalTickets = () => {
-  const [tickets, setTickets] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
 
-  const fetchTickets = useCallback(async () => {
+  // Destek talepleri (Feedback) + başvurular (Lead) tek listede — kullanıcı
+  // "Taleplerim"de ikisini birlikte görür (bkz. istek). İki farklı veri modeli
+  // ortak bir satır şekline normalize edilip tarihe göre birleştirilir.
+  const fetchAll = useCallback(async () => {
     try {
-      const res = await portalTicketService.getAll();
-      setTickets(res.data.data);
+      const [fbRes, leadRes] = await Promise.all([
+        portalTicketService.getAll(),
+        portalTicketService.getMyLeads(),
+      ]);
+      const fbItems = fbRes.data.data.map((f) => ({
+        id: f._id,
+        kind: 'ticket',
+        category: 'Destek',
+        title: f.title,
+        typeLabel: TYPE_LABELS[f.type] || f.type,
+        statusLabel: STATUS_LABELS[f.status] || f.status,
+        statusColor: STATUS_COLORS[f.status],
+        createdAt: f.createdAt,
+      }));
+      const leadItems = leadRes.data.data.map((l) => ({
+        id: l._id,
+        kind: 'lead',
+        category: 'Başvuru',
+        title: truncate(l.message, 60) || LEAD_TYPE_LABELS[l.type],
+        typeLabel: LEAD_TYPE_LABELS[l.type] || l.type,
+        statusLabel: LEAD_STATUS_LABELS[l.status] || l.status,
+        statusColor: LEAD_STATUS_COLORS[l.status],
+        createdAt: l.createdAt,
+      }));
+      setItems([...fbItems, ...leadItems].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (err) {
       toast.error('Talepler yüklenemedi');
     } finally {
@@ -41,18 +89,18 @@ const PortalTickets = () => {
   }, []);
 
   useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+    fetchAll();
+  }, [fetchAll]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       await portalTicketService.create(form);
-      toast.success('Talebiniz oluşturuldu ✅');
+      toast.success('Talebiniz oluşturuldu');
       setModalOpen(false);
       setForm(initialForm);
-      fetchTickets();
+      fetchAll();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Bir hata oluştu');
     } finally {
@@ -64,8 +112,8 @@ const PortalTickets = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>🎫 Taleplerim</h1>
-          <p>Destek taleplerinizi buradan takip edebilir, yenisini oluşturabilirsiniz</p>
+          <h1>Taleplerim</h1>
+          <p>Destek talepleriniz ve başvurularınızı buradan takip edebilirsiniz</p>
         </div>
         <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
           <HiOutlinePlus /> Yeni Talep
@@ -86,19 +134,22 @@ const PortalTickets = () => {
             <tbody>
               {loading ? (
                 <tr><td colSpan={4}>Yükleniyor...</td></tr>
-              ) : tickets.length === 0 ? (
+              ) : items.length === 0 ? (
                 <tr><td colSpan={4}>Henüz talebiniz yok</td></tr>
               ) : (
-                tickets.map((ticket) => (
-                  <tr key={ticket._id}>
-                    <td data-label="Başlık">{ticket.title}</td>
-                    <td data-label="Tür">{TYPE_LABELS[ticket.type] || ticket.type}</td>
+                items.map((item) => (
+                  <tr key={`${item.kind}-${item.id}`}>
+                    <td data-label="Başlık">
+                      <span className={`portal-kind-badge portal-kind-badge--${item.kind}`}>{item.category}</span>
+                      {item.title}
+                    </td>
+                    <td data-label="Tür">{item.typeLabel}</td>
                     <td data-label="Durum">
-                      <span className="status-badge" style={{ color: STATUS_COLORS[ticket.status] }}>
-                        ● {STATUS_LABELS[ticket.status] || ticket.status}
+                      <span className="status-badge" style={{ color: item.statusColor }}>
+                        ● {item.statusLabel}
                       </span>
                     </td>
-                    <td data-label="Oluşturulma">{new Date(ticket.createdAt).toLocaleDateString('tr-TR')}</td>
+                    <td data-label="Oluşturulma">{new Date(item.createdAt).toLocaleDateString('tr-TR')}</td>
                   </tr>
                 ))
               )}

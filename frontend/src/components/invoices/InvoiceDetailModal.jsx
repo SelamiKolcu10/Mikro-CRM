@@ -63,7 +63,7 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
       onClose={() => { setEditing(false); onClose(); }}
       title={
         <>
-          🧾 {invoice.vendorName || t('invoices.lineItems')}
+          {invoice.vendorName || t('invoices.lineItems')}
           <span
             className="modal-status-dot"
             style={{ backgroundColor: statusColors[invoice.validationStatus] }}
@@ -98,7 +98,7 @@ const InvoiceDetailModal = ({ invoice, isOpen, onClose, onSave }) => {
       {/* Warning banner for mismatch */}
       {invoice.validationStatus === 'mismatch' && (
         <div className="alert alert-warning" id="mismatch-alert">
-          ⚠️ {invoice.validationMessage || t('invoices.correctionHint')}
+          {invoice.validationMessage || t('invoices.correctionHint')}
         </div>
       )}
 

@@ -208,6 +208,73 @@ const updateTaskStatus = async (req, res, next) => {
 };
 
 /**
+ * @route   PATCH /api/tasks/:id/deadline
+ * @desc    Takvimde sürükle-bırak ile (veya tarih-seçiciden) deadline
+ *          taşıma. Yetki durum onayıyla aynı çizgide: yalnızca görevin
+ *          departman lideri ya da super_admin taşıyabilir — assignee'ye
+ *          açık değil (tasarım kararı: deadline planlama bir liderlik
+ *          işlemi, "durumu ilerletme" değil).
+ *
+ *          İki liderin aynı görevi eşzamanlı taşıması: Task şemasında
+ *          optimisticConcurrency açık, `expectedVersion` (istemcinin son
+ *          gördüğü __v) uyuşmazsa Mongoose VersionError fırlatır, burada
+ *          409'a çevrilir — istemci "başkası güncelledi, yenile" gösterir.
+ */
+const updateTaskDeadline = async (req, res, next) => {
+  try {
+    const { deadline, expectedVersion } = req.body;
+
+    const task = await Task.findOne({ _id: req.params.id, ...taskScope(req.user) });
+    if (!task) {
+      return res.status(404).json({ success: false, error: 'Görev bulunamadı.' });
+    }
+
+    if (!canApproveTask(req.user, task)) {
+      return res.status(403).json({ success: false, error: 'Bu görevin tarihini değiştirme yetkiniz yok.' });
+    }
+
+    if (expectedVersion !== undefined && task.__v !== expectedVersion) {
+      return res.status(409).json({
+        success: false,
+        error: 'Bu görev başka biri tarafından güncellendi. Lütfen sayfayı yenileyin.',
+      });
+    }
+
+    const previousDeadline = task.deadline;
+    const nextDeadline = deadline ? new Date(deadline) : null;
+    task.deadline = nextDeadline;
+
+    try {
+      await task.save();
+    } catch (saveError) {
+      if (saveError.name === 'VersionError') {
+        return res.status(409).json({
+          success: false,
+          error: 'Bu görev başka biri tarafından güncellendi. Lütfen sayfayı yenileyin.',
+        });
+      }
+      throw saveError;
+    }
+
+    await TaskActivity.create({
+      task: task._id,
+      changedBy: req.user._id,
+      changedByName: req.user.name,
+      taskTitle: task.title,
+      department: task.department,
+      action: 'deadline_changed',
+      fromDeadline: previousDeadline,
+      toDeadline: nextDeadline,
+    });
+    await task.populate(TASK_POPULATE);
+
+    res.json({ success: true, data: task });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @route   GET /api/tasks/activity-heatmap?department=&userId=
  * @desc    Son 365 günü günlük gruplar. Returns a pre-aggregated dictionary
  *          keyed by date with both summary counts and a capped detail array
@@ -273,6 +340,8 @@ const getActivityHeatmap = async (req, res, next) => {
                     task: '$taskTitle',
                     from: '$fromStatus',
                     to: '$toStatus',
+                    fromDeadline: { $dateToString: { format: '%Y-%m-%d', date: '$fromDeadline', onNull: null } },
+                    toDeadline: { $dateToString: { format: '%Y-%m-%d', date: '$toDeadline', onNull: null } },
                     time: { $dateToString: { format: '%H:%M', date: '$createdAt' } },
                   },
                 },
@@ -365,6 +434,7 @@ module.exports = {
   getWorkloadStatus,
   createTask,
   updateTaskStatus,
+  updateTaskDeadline,
   getActivityHeatmap,
   getTaskComments,
   addTaskComment,

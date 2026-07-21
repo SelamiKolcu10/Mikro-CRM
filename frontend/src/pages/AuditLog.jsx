@@ -113,7 +113,7 @@ const AuditLog = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>🛡️ {t('auditLog.title')}</h1>
+          <h1>{t('auditLog.title')}</h1>
           <p>{t('auditLog.subtitle')}</p>
         </div>
       </div>

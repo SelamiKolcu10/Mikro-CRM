@@ -7,7 +7,7 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import PermissionGate from '../components/auth/PermissionGate';
 import { useMyPendingApprovals } from '../hooks/useMyPendingApprovals';
 import toast from 'react-hot-toast';
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2, HiOutlineKey, HiOutlineClock } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSearch, HiOutlineChatAlt2, HiOutlineKey, HiOutlineClock, HiOutlineUserGroup } from 'react-icons/hi';
 
 const initialForm = {
   name: '', email: '', company: '', plan: 'free', mrr: 0, source: 'email', notes: '',
@@ -122,7 +122,7 @@ const Customers = () => {
         ...feedbackForm,
         customer: feedbackCustomer._id,
       });
-      toast.success(t('common.create') + ' ✓');
+      toast.success(t('common.create'));
       setFeedbackModalOpen(false);
     } catch (err) {
       toast.error(err.response?.data?.error || t('common.error'));
@@ -144,7 +144,7 @@ const Customers = () => {
         setModalOpen(false);
         refreshPending();
       } else {
-        toast.success((editingId ? t('common.update') : t('common.create')) + ' ✓');
+        toast.success(editingId ? t('common.update') : t('common.create'));
         setModalOpen(false);
         fetchCustomers();
       }
@@ -163,7 +163,7 @@ const Customers = () => {
         toast.success(t('common.pendingApproval'));
         refreshPending();
       } else {
-        toast.success(t('common.delete') + ' ✓');
+        toast.success(t('common.delete'));
         fetchCustomers();
       }
       setDeleteId(null);
@@ -316,7 +316,7 @@ const Customers = () => {
               <tr>
                 <td colSpan="6">
                   <div className="table-empty">
-                    <div className="table-empty-icon">👥</div>
+                    <div className="table-empty-icon"><HiOutlineUserGroup /></div>
                     <p>{t('common.noData')}</p>
                   </div>
                 </td>
@@ -431,7 +431,7 @@ const Customers = () => {
       <Modal
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
-        title={<>💬 {t('feedbacks.addFeedback')}</>}
+        title={t('feedbacks.addFeedback')}
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setFeedbackModalOpen(false)}>
@@ -503,7 +503,7 @@ const Customers = () => {
           </div>
 
           <span className="form-hint">
-            💡 {t('feedbacks.autoCalculated')}
+            {t('feedbacks.autoCalculated')}
           </span>
         </form>
       </Modal>
@@ -522,7 +522,7 @@ const Customers = () => {
       <Modal
         isOpen={!!portalAccessResult}
         onClose={() => setPortalAccessResult(null)}
-        title={<>🔑 {t('customers.portalAccessGranted')}</>}
+        title={t('customers.portalAccessGranted')}
         footer={
           <button className="btn btn-primary" onClick={() => setPortalAccessResult(null)}>
             {t('common.close')}
@@ -540,7 +540,7 @@ const Customers = () => {
               <label className="form-label">{t('customers.temporaryPassword')}</label>
               <input type="text" className="form-input" value={portalAccessResult.temporaryPassword} readOnly />
             </div>
-            <span className="form-hint">⚠️ {t('customers.portalAccessWarning')}</span>
+            <span className="form-hint">{t('customers.portalAccessWarning')}</span>
           </div>
         )}
       </Modal>

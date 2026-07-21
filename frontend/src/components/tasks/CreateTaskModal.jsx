@@ -240,7 +240,7 @@ const CreateTaskModal = ({ isOpen, onClose, onCreate, getAssignableUsers, projec
           </div>
           {selectedWorkload?.loadStatus === 'OVERLOADED' && (
             <div className="alert alert-warning">
-              ⚠️ {alternativeUser
+              {alternativeUser
                 ? t('tasks.workload.warningWithAlternative')
                     .replace('{name}', selectedWorkload.name)
                     .replace('{score}', selectedWorkload.workloadScore.toFixed(1))

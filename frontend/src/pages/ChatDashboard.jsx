@@ -329,7 +329,7 @@ const ChatDashboard = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>💬 {t('chat.title')}</h1>
+          <h1>{t('chat.title')}</h1>
           <p>{t('chat.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>

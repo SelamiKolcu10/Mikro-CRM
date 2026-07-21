@@ -1,5 +1,5 @@
 const { ROLES } = require('../config/permissions');
-const { redactEmails } = require('../utils/redactPII');
+const { redactPII } = require('../utils/redactPII');
 
 /**
  * Sadece intern rolü için: `res.json({..., data})` çağrısındaki `data`
@@ -14,7 +14,7 @@ const redactForIntern = (req, res, next) => {
   const originalJson = res.json.bind(res);
   res.json = (body) => {
     if (body && Object.prototype.hasOwnProperty.call(body, 'data')) {
-      body.data = redactEmails(body.data);
+      body.data = redactPII(body.data);
     }
     return originalJson(body);
   };

@@ -110,7 +110,7 @@ const AccessControlMatrix = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>🔐 {t('accessControl.title')}</h1>
+          <h1>{t('accessControl.title')}</h1>
           <p>{t('accessControl.subtitle')}</p>
         </div>
       </div>

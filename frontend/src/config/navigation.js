@@ -8,14 +8,15 @@ import {
   HiOutlineChartBar,
   HiOutlineClipboardList,
   HiOutlineTicket,
-  HiOutlineUserCircle,
   HiOutlineChat,
   HiOutlineKey,
   HiOutlineClipboardCheck,
   HiOutlineViewBoards,
   HiOutlineFolderOpen,
+  HiOutlineInbox,
+  HiOutlinePencilAlt,
 } from 'react-icons/hi';
-import { ROLES, ALL_ROLES } from './permissions';
+import { ROLES } from './permissions';
 import { canManageProjects } from '../utils/projectScope';
 
 /**
@@ -36,8 +37,14 @@ export const INTERNAL_NAV = [
       { path: '/customers', icon: HiOutlineUsers, labelKey: 'nav.customers', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
       { path: '/feedbacks', icon: HiOutlineChatAlt2, labelKey: 'nav.feedbacks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
       { path: '/tasks', icon: HiOutlineViewBoards, labelKey: 'nav.tasks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN] },
+      // Formlar (Lead Intake) — bkz. spec §4/§12: v1'de sadece super_admin+staff,
+      // ham PII taşıdığı için support/intern dışında tutuldu. Bildirim badge'i
+      // (newLeads) Faz 3'te eklenecek (bkz. Sidebar.jsx fetchPending).
+      { path: '/leads', icon: HiOutlineInbox, labelKey: 'nav.leads', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN] },
       { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN], badgeKey: 'chatEscalations' },
-      { path: '/profile', icon: HiOutlineUserCircle, labelKey: 'nav.profile', roles: ALL_ROLES },
+      // Profilim ana menüden çıkarıldı → sidebar alt bilgisindeki profil kartına
+      // taşındı (bkz. components/layout/Sidebar.jsx footer). Rota (/profile) aynen
+      // duruyor, sadece bu menü girdisi kaldırıldı.
     ],
   },
   {
@@ -71,8 +78,12 @@ export const PORTAL_NAV = [
     sectionLabelKey: 'nav.main',
     items: [
       { path: '/portal', icon: HiOutlineTicket, labelKey: 'nav.portalTickets', roles: null, end: true },
+      // Başvuru (Lead) — destek talebinden (Taleplerim) ayrı bir eksen: satış/
+      // proje başvurusu. Gönderilince admin Formlar paneline düşer.
+      { path: '/portal/apply', icon: HiOutlinePencilAlt, labelKey: 'nav.portalApply', roles: null },
       { path: '/portal/chat', icon: HiOutlineChat, labelKey: 'nav.portalChat', roles: null },
-      { path: '/portal/profile', icon: HiOutlineUserCircle, labelKey: 'nav.portalProfile', roles: null },
+      // Profilim portal menüsünden çıkarıldı → sidebar alt bilgisindeki müşteri
+      // profil kartına taşındı (staff tarafıyla aynı desen, bkz. Sidebar.jsx footer).
     ],
   },
 ];

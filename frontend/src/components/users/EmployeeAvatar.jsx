@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ASSET_BASE_URL } from '../../config/apiUrls';
 
 // TaskAvatar.jsx ile aynı palet/hash — dizin ve panoda tutarlı renk için.
@@ -18,11 +19,20 @@ function initials(name) {
 
 /** size: undefined = 40px kart avatarı, 'sm' | 'lg' | 'xl' */
 const EmployeeAvatar = ({ user, size }) => {
+  // Fotoğraf yüklenemezse (dosya silinmiş / URL var ama dosya yok) baş harflere
+  // düş — kırık resim ikonu gösterme.
+  const [imgError, setImgError] = useState(false);
   const cls = `avatar${size ? ` avatar--${size}` : ''}`;
-  if (user?.personalInfo?.avatarUrl) {
+  const avatarUrl = user?.personalInfo?.avatarUrl;
+  if (avatarUrl && !imgError) {
     return (
       <div className={cls}>
-        <img src={`${ASSET_BASE_URL}${user.personalInfo.avatarUrl}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img
+          src={`${ASSET_BASE_URL}${avatarUrl}`}
+          alt=""
+          onError={() => setImgError(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
       </div>
     );
   }

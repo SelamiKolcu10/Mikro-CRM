@@ -45,7 +45,7 @@ const PortalChat = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>💬 {t('chat.portalTitle')}</h1>
+          <h1>{t('chat.portalTitle')}</h1>
           <p>{t('chat.portalSubtitle')}</p>
         </div>
         <ConnectionStatus />

@@ -10,6 +10,44 @@ import DeveloperTree from '../components/users/DeveloperTree';
 import toast from 'react-hot-toast';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+// Sunucu tarafıyla birebir aynı liste (bkz. backend/middleware/uploadAvatar.js)
+// — istemci "image/*" kabul edip sunucunun reddettiği formatlarda kullanıcıyı
+// sessizce boşa düşürmesin.
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const AVATAR_MAX_DIM = 512;
+
+/**
+ * Yüklemeden önce büyük fotoğrafı tarayıcıda küçültür: en uzun kenarı
+ * AVATAR_MAX_DIM'e indirir ve JPEG'e sıkıştırır — telefon fotoğrafları 2MB
+ * sınırına takılmadan yüklensin diye. Zaten küçük ve limit altındaki dosyayı
+ * gereksiz yeniden kodlamaz. (Web-only: canvas/Image — mobilde ayrı bir yol
+ * gerekir; bu yardımcı bilerek izole tutuldu.)
+ */
+function downscaleAvatar(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, AVATAR_MAX_DIM / Math.max(img.width, img.height));
+      if (scale === 1 && file.size <= MAX_AVATAR_BYTES) {
+        resolve(file);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' })) : reject(new Error('encode failed'))),
+        'image/jpeg',
+        0.85,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load failed')); };
+    img.src = url;
+  });
+}
 
 /**
  * Self-servis "Profilim" sayfası — herkes kendi profiline buradan ulaşır
@@ -60,14 +98,25 @@ const Profile = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    if (file.size > MAX_AVATAR_BYTES) {
+  const handleFile = async (file) => {
+    if (!file) return;
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      toast.error(t('profile.fileWrongType'));
+      return;
+    }
+    let finalFile = file;
+    try {
+      finalFile = await downscaleAvatar(file);
+    } catch {
+      finalFile = file; // küçültme başarısızsa orijinali dene; boyut kontrolü altta yakalar
+    }
+    if (finalFile.size > MAX_AVATAR_BYTES) {
       toast.error(t('profile.fileTooLarge'));
       return;
     }
-    setPendingFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingFile(finalFile);
+    setPreviewUrl(URL.createObjectURL(finalFile));
   };
 
   const handleSavePhoto = async () => {
@@ -105,7 +154,7 @@ const Profile = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>👤 {t('profile.title')}</h1>
+          <h1>{t('profile.title')}</h1>
           <p>{t('profile.subtitle')}</p>
         </div>
       </div>
@@ -207,7 +256,7 @@ const Profile = () => {
               <button type="submit" className="btn btn-primary" disabled={savingContact}>
                 {savingContact ? t('common.loading') : t('common.save')}
               </button>
-              {contactSaved && <span className="inline-toast show">✓ {t('profile.contactSaved')}</span>}
+              {contactSaved && <span className="inline-toast show">{t('profile.contactSaved')}</span>}
             </div>
           </form>
         </section>

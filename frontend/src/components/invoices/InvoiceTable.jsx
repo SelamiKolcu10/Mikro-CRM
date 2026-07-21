@@ -1,5 +1,5 @@
 import { useLanguage } from '../../context/LanguageContext';
-import { HiOutlineEye, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineEye, HiOutlineTrash, HiOutlineDocumentText } from 'react-icons/hi';
 
 const InvoiceTable = ({ invoices, onView, onDelete, loading }) => {
   const { t } = useLanguage();
@@ -37,7 +37,7 @@ const InvoiceTable = ({ invoices, onView, onDelete, loading }) => {
   if (!invoices || invoices.length === 0) {
     return (
       <div className="table-empty">
-        <div className="table-empty-icon">🧾</div>
+        <div className="table-empty-icon"><HiOutlineDocumentText /></div>
         <p>{t('invoices.noInvoices')}</p>
         <p className="text-secondary">{t('invoices.uploadFirst')}</p>
       </div>

@@ -39,7 +39,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }) => {
       <Modal
         isOpen={isOpen}
         onClose={handleClose}
-        title={<>🔑 {t('users.userCreated')}</>}
+        title={t('users.userCreated')}
         footer={<button className="btn btn-primary" onClick={handleClose}>{t('common.close')}</button>}
       >
         <div>
@@ -52,7 +52,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }) => {
             <label className="form-label">{t('customers.temporaryPassword')}</label>
             <input type="text" className="form-input" value={result.temporaryPassword} readOnly />
           </div>
-          <span className="form-hint">⚠️ {t('customers.portalAccessWarning')}</span>
+          <span className="form-hint">{t('customers.portalAccessWarning')}</span>
         </div>
       </Modal>
     );
@@ -62,7 +62,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }) => {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={<>👤 {t('users.createUser')}</>}
+      title={t('users.createUser')}
       footer={
         <>
           <button className="btn btn-secondary" onClick={handleClose}>{t('common.cancel')}</button>
@@ -102,7 +102,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }) => {
             ))}
           </select>
         </div>
-        <span className="form-hint">💡 {t('users.createUserHint')}</span>
+        <span className="form-hint">{t('users.createUserHint')}</span>
       </form>
     </Modal>
   );

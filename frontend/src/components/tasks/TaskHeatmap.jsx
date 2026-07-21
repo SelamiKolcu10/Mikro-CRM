@@ -1,15 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import { toLocalISODate } from '../../utils/dayBucket';
 
 // ────────────────────── Helpers ──────────────────────
-
-/** Format a Date using its local calendar fields (avoids UTC day-shift from toISOString). */
-function toLocalISODate(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
 
 /**
  * Generate ISO date strings from 364 days ago through December 31 of the
@@ -98,10 +92,56 @@ const STATUS_LABEL_KEY = {
 
 // ────────────────────── HeatmapTooltip ──────────────────────
 
-const HeatmapTooltip = ({ date, entry, position, t }) => {
+const HeatmapTooltip = ({ date, entry, anchor, t }) => {
+  const ref = useRef(null);
+  // İlk kare ölçülene kadar gizli — konum hesaplanınca görünür olur (flicker yok).
+  const [style, setStyle] = useState({ left: 0, top: 0, visibility: 'hidden' });
+  const [placement, setPlacement] = useState('below');
+
+  // Portal ile document.body'ye render edildiği için position:fixed artık
+  // gerçekten viewport'a göre çalışır. Gerçek yüksekliği ölçeriz:
+  //  - Hücrenin ALTINA sığıyorsa oraya aç (imleç hücrede/üstte kalır, yazıyı
+  //    kapatmaz), yatayda hücreye ortala.
+  //  - Sığmıyorsa (harita sayfa dibinde) YANA koy — imleç hücrede kalır, tooltip
+  //    yanında açılır, böylece fare oku çıkan yazının üstüne binmez.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !anchor) return;
+    const { width, height } = el.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const m = 8;    // viewport kenar payı
+    const gap = 10; // hücre ile tooltip arası boşluk
+    const clampX = (x) => Math.max(m, Math.min(x, vw - width - m));
+
+    let left;
+    let top;
+    if (anchor.bottom + gap + height <= vh - m) {
+      top = anchor.bottom + gap;
+      left = clampX(anchor.cx - width / 2);
+      setPlacement('below');
+    } else {
+      top = Math.max(m, Math.min(anchor.top, vh - height - m));
+      if (anchor.right + gap + width <= vw - m) {
+        left = anchor.right + gap;            // hücrenin sağına
+      } else {
+        left = clampX(anchor.left - gap - width); // sığmazsa soluna
+      }
+      setPlacement('side');
+    }
+
+    setStyle({ left, top });
+  }, [date, anchor]);
+
   if (!date) return null;
   const total = entry?.total || 0;
-  const details = entry?.details || [];
+  const allDetails = entry?.details || [];
+  // Tooltip'i kompakt tut (harita sayfa dibinde; uzun kutu viewport'a
+  // sığmak için yukarı çekilince görevlerin üstüne taşıyor) — en fazla 4
+  // satır göster, gerisini "+N daha" ile özetle.
+  const MAX_ROWS = 4;
+  const details = allDetails.slice(0, MAX_ROWS);
+  const hiddenCount = total - details.length;
 
   // Format date for display: "15 Jul 2026"
   const dateObj = new Date(date + 'T00:00:00');
@@ -112,8 +152,9 @@ const HeatmapTooltip = ({ date, entry, position, t }) => {
 
   return (
     <div
-      className="heatmap-tooltip"
-      style={{ left: position.x, top: position.y }}
+      ref={ref}
+      className={`heatmap-tooltip heatmap-tooltip--${placement}`}
+      style={style}
     >
       <div className="heatmap-tooltip-header">
         <strong>
@@ -141,9 +182,9 @@ const HeatmapTooltip = ({ date, entry, position, t }) => {
               </span>
             </li>
           ))}
-          {entry && entry.total > details.length && (
+          {hiddenCount > 0 && (
             <li className="heatmap-tooltip-more">
-              +{entry.total - details.length} {t('tasks.heatmap.andMore')}
+              +{hiddenCount} {t('tasks.heatmap.andMore')}
             </li>
           )}
         </ul>
@@ -203,12 +244,19 @@ const TaskHeatmap = ({ getActivityHeatmap, department, assigneeId }) => {
   const handleCellHover = useCallback((e, date) => {
     if (!date) return;
     const rect = e.currentTarget.getBoundingClientRect();
-
-    // Center tooltip horizontally over the cell, position above it
-    const x = rect.left + rect.width / 2;
-    const y = rect.top - 8;
-
-    setTooltip({ date, entry: byDate[date], position: { x, y } });
+    // Ham hücre çapası (viewport koordinatı); nihai konumu tooltip kendi
+    // ölçülen boyutuna göre hesaplar (bkz. HeatmapTooltip).
+    setTooltip({
+      date,
+      entry: byDate[date],
+      anchor: {
+        cx: rect.left + rect.width / 2,
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+      },
+    });
   }, [byDate]);
 
   const handleCellLeave = useCallback(() => {
@@ -274,14 +322,17 @@ const TaskHeatmap = ({ getActivityHeatmap, department, assigneeId }) => {
 
       </div>
 
-      {/* Tooltip portal (outside scroll container) */}
-      {tooltip && (
+      {/* Tooltip'i document.body'ye portalla — .page-container/.page-enter gibi
+          ata elemanların position:fixed'i hapsetmesini (ve tooltip'in görevlerin
+          üstüne kaymasını) önler. */}
+      {tooltip && createPortal(
         <HeatmapTooltip
           date={tooltip.date}
           entry={tooltip.entry}
-          position={tooltip.position}
+          anchor={tooltip.anchor}
           t={t}
-        />
+        />,
+        document.body,
       )}
     </div>
   );

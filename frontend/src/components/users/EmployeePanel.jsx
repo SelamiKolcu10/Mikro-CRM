@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { HiOutlineX, HiOutlineTrash, HiOutlinePhone } from 'react-icons/hi';
+import { createPortal } from 'react-dom';
+import { HiOutlineX, HiOutlineTrash, HiOutlinePhone, HiOutlineMail } from 'react-icons/hi';
 import { FaLinkedin, FaGithub } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { ALL_ROLES, ROLE_LABELS, DEPARTMENTS, DEPARTMENT_LABELS } from '../../config/permissions';
@@ -27,8 +28,6 @@ const IconLinks = ({ user }) => {
 const EmployeePanel = ({ employee, isAdmin, onClose, onChanged }) => {
   const { t } = useLanguage();
   const panelRef = useRef(null);
-  const headerRef = useRef(null);
-  const bodyRef = useRef(null);
   const [tree, setTree] = useState(null);
 
   useEffect(() => {
@@ -38,32 +37,11 @@ const EmployeePanel = ({ employee, isAdmin, onClose, onChanged }) => {
     panelRef.current?.focus();
   }, [employee]);
 
-  // CSS flex (flex:1 + min-height:0 + overflow-y:auto) *should* be enough to
-  // make panel-body scroll on its own, ama panel açıkken içerik uzunsa
-  // kayma çalışmadığı defalarca bildirildi — o yüzden burada JS ile header'ın
-  // GERÇEK ölçülen yüksekliğine göre panel-body'ye kesin bir maxHeight/overflow
-  // basıyoruz; hangi CSS/tarayıcı tuhaflığı devredeyse onu bypass eder.
-  useEffect(() => {
-    if (!employee || !headerRef.current || !bodyRef.current) return;
-    const header = headerRef.current;
-    const body = bodyRef.current;
-
-    const applyHeight = () => {
-      const headerHeight = header.getBoundingClientRect().height;
-      body.style.maxHeight = `calc(100vh - ${headerHeight}px)`;
-      body.style.overflowY = 'auto';
-    };
-
-    applyHeight();
-    const observer = new ResizeObserver(applyHeight);
-    observer.observe(header);
-    window.addEventListener('resize', applyHeight);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', applyHeight);
-    };
-  }, [employee]);
-
+  // Kaydırma tamamen CSS'e bırakıldı: panel `max-height:90vh` + `overflow:hidden`
+  // bir modal, `.panel-body` ise `flex:1 + min-height:0 + overflow-y:auto` —
+  // içerik (async yüklenen DeveloperTree dâhil) taştığında kendiliğinden kayar.
+  // Eski JS maxHeight hack'i, ağaç API'den sonradan geldiği için gövdeyi yanlış
+  // (kısa) yüksekliğe sabitliyordu; kaldırıldı (bkz. ProjectDrawer — aynı düzen).
   useEffect(() => {
     if (!employee) return;
     const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
@@ -140,7 +118,7 @@ const EmployeePanel = ({ employee, isAdmin, onClose, onChanged }) => {
     if (!window.confirm(t('users.management.deleteConfirm').replace('{name}', employee.name))) return;
     try {
       await userService.delete(employee._id);
-      toast.success(t('common.delete') + ' ✅');
+      toast.success(t('common.delete'));
       onClose();
       onChanged();
     } catch (err) {
@@ -148,11 +126,11 @@ const EmployeePanel = ({ employee, isAdmin, onClose, onChanged }) => {
     }
   };
 
-  return (
+  return createPortal(
     <>
-      <div className="drawer-backdrop" onClick={onClose} />
-      <div className="project-drawer employee-panel" role="dialog" aria-modal="true" tabIndex={-1} ref={panelRef}>
-        <header className="panel-header" ref={headerRef}>
+      <div className="drawer-backdrop" onClick={onClose}>
+      <div className="project-drawer employee-panel" role="dialog" aria-modal="true" tabIndex={-1} ref={panelRef} onClick={(e) => e.stopPropagation()}>
+        <header className="panel-header">
           <EmployeeAvatar user={employee} size="lg" />
           <div className="panel-id">
             <h2 className="panel-name">{employee.name}</h2>
@@ -167,12 +145,17 @@ const EmployeePanel = ({ employee, isAdmin, onClose, onChanged }) => {
               <span className="dept">{employee.department ? t(DEPARTMENT_LABELS[employee.department]) : t('departments.none')}</span>
               {employee.isDepartmentLead && employee.status !== 'pending' && <span className="pill pill--accent">{t('users.directory.leadBadge')}</span>}
             </div>
+            {employee.email && (
+              <a className="panel-email" href={`mailto:${employee.email}`}>
+                <HiOutlineMail /> {employee.email}
+              </a>
+            )}
             <IconLinks user={employee} />
           </div>
           <button type="button" className="close-btn" onClick={onClose} aria-label={t('common.close')}><HiOutlineX /></button>
         </header>
 
-        <div className="panel-body" ref={bodyRef}>
+        <div className="panel-body">
           {isAdmin && (
             <>
               <h3 className="section-title">{t('users.management.title')}</h3>
@@ -220,10 +203,16 @@ const EmployeePanel = ({ employee, isAdmin, onClose, onChanged }) => {
             </>
           )}
 
-          {tree && <DeveloperTree tenureMonths={tree.tenureMonths} tenureDays={tree.tenureDays} projects={tree.projects} />}
+          {tree ? (
+            <DeveloperTree tenureMonths={tree.tenureMonths} tenureDays={tree.tenureDays} projects={tree.projects} />
+          ) : (
+            <div className="loading-spinner"><div className="spinner" /></div>
+          )}
         </div>
       </div>
-    </>
+      </div>
+    </>,
+    document.body
   );
 };
 

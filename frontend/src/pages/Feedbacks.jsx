@@ -17,6 +17,8 @@ import {
   HiOutlineSearch,
   HiOutlineChatAlt2,
   HiOutlineClock,
+  HiOutlineClipboardList,
+  HiOutlineX,
 } from 'react-icons/hi';
 
 const Feedbacks = () => {
@@ -116,7 +118,7 @@ const Feedbacks = () => {
         setModalOpen(false);
         refreshPending();
       } else {
-        toast.success((editingId ? t('common.update') : t('common.create')) + ' ✓');
+        toast.success(editingId ? t('common.update') : t('common.create'));
         setModalOpen(false);
         fetchFeedbacks();
       }
@@ -135,7 +137,7 @@ const Feedbacks = () => {
         toast.success(t('common.pendingApproval'));
         refreshPending();
       } else {
-        toast.success(t('common.delete') + ' ✓');
+        toast.success(t('common.delete'));
         fetchFeedbacks();
       }
       setDeleteId(null);
@@ -378,7 +380,7 @@ const Feedbacks = () => {
               <tr>
                 <td colSpan="7">
                   <div className="table-empty">
-                    <div className="table-empty-icon">📋</div>
+                    <div className="table-empty-icon"><HiOutlineClipboardList /></div>
                     <p>{t('common.noData')}</p>
                   </div>
                 </td>
@@ -469,7 +471,7 @@ const Feedbacks = () => {
                     style={{ position: 'absolute', top: 'var(--space-sm)', right: 'var(--space-sm)' }}
                     title="Müşteriyi Değiştir"
                   >
-                    ✕
+                    <HiOutlineX />
                   </button>
                   <div className="feedback-customer-avatar">
                     {customers.find(c => c._id === form.customer)?.name.charAt(0).toUpperCase() || '?'}
@@ -503,7 +505,7 @@ const Feedbacks = () => {
                 </select>
               )}
               <span className="form-hint">
-                💡 {t('feedbacks.autoCalculated')}
+                {t('feedbacks.autoCalculated')}
               </span>
             </div>
           )}

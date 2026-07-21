@@ -8,6 +8,7 @@ const {
   createTaskValidators,
   taskIdValidators,
   updateTaskStatusValidators,
+  updateTaskDeadlineValidators,
   assignableUsersValidators,
   workloadStatusValidators,
   activityHeatmapValidators,
@@ -20,6 +21,7 @@ const {
   getWorkloadStatus,
   createTask,
   updateTaskStatus,
+  updateTaskDeadline,
   getActivityHeatmap,
   getTaskComments,
   addTaskComment,
@@ -40,6 +42,13 @@ router.patch(
   updateTaskStatusValidators,
   handleValidationErrors,
   updateTaskStatus
+);
+router.patch(
+  '/:id/deadline',
+  taskIdValidators,
+  updateTaskDeadlineValidators,
+  handleValidationErrors,
+  updateTaskDeadline
 );
 router.get('/:id/comments', redactForIntern, taskIdValidators, handleValidationErrors, getTaskComments);
 router.post('/:id/comments', addCommentValidators, handleValidationErrors, addTaskComment);

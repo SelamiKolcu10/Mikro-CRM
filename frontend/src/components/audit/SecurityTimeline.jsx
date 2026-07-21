@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { HiOutlineShieldCheck } from 'react-icons/hi';
 import { useLanguage } from '../../context/LanguageContext';
 import TimelineEntry from './TimelineEntry';
 import ChainBreakMarker from './ChainBreakMarker';
@@ -64,7 +65,7 @@ const SecurityTimeline = ({
   if (logs.length === 0) {
     return (
       <div className="table-empty">
-        <div className="table-empty-icon">🛡️</div>
+        <div className="table-empty-icon"><HiOutlineShieldCheck /></div>
         <p>{t('auditLog.noMatchingLogs')}</p>
         {onClearFilters && (
           <button className="btn btn-secondary btn-sm" onClick={onClearFilters} style={{ marginTop: 'var(--space-sm)' }}>

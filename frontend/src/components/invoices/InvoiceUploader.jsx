@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { HiOutlineCloudUpload, HiOutlinePhotograph } from 'react-icons/hi';
+import { HiOutlineCloudUpload, HiOutlinePhotograph, HiOutlineX } from 'react-icons/hi';
 
 const InvoiceUploader = ({ onUpload, uploading }) => {
   const { t } = useLanguage();
@@ -130,7 +130,7 @@ const InvoiceUploader = ({ onUpload, uploading }) => {
                   onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
                   title={t('common.delete')}
                 >
-                  ✕
+                  <HiOutlineX />
                 </button>
               </div>
             ))}

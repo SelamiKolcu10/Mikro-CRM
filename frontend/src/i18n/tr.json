@@ -64,6 +64,7 @@
     "customers": "Müşteriler",
     "feedbacks": "Geri Bildirimler",
     "tasks": "Görevler",
+    "leads": "Formlar",
     "invoices": "Faturalar",
     "invoicesV2": "Fatura v2 (Yerli OCR)",
     "spendingReport": "Genel Harcama",
@@ -72,6 +73,7 @@
     "profile": "Profilim",
     "auditLog": "Denetim Kaydı",
     "portalTickets": "Taleplerim",
+    "portalApply": "Başvuru",
     "portalProfile": "Profilim",
     "portalBrandFallback": "Müşteri Portalı",
     "chat": "Canlı Sohbet",
@@ -160,6 +162,7 @@
     "previewHint": "Önizleme — kaydedene kadar uygulanmaz",
     "photoSaved": "Fotoğraf güncellendi",
     "fileTooLarge": "Dosya en fazla 2MB olabilir.",
+    "fileWrongType": "Yalnızca JPEG, PNG veya WebP görseli yükleyebilirsin.",
     "phone": "Telefon",
     "linkedin": "LinkedIn",
     "github": "GitHub",
@@ -267,6 +270,7 @@
     "dropzoneHint": "JPEG, PNG, WebP veya PDF — Tek seferde en fazla 20 dosya",
     "processing": "İşleniyor...",
     "processComplete": "İşleme tamamlandı",
+    "errorCount": "Hata",
     "vendor": "Satıcı",
     "vendorTax": "Vergi No",
     "invoiceNo": "Fatura No",
@@ -602,9 +606,112 @@
         "5": "Cum"
       }
     },
+    "calendar": {
+      "today": "Bugün",
+      "prevMonth": "Önceki ay",
+      "nextMonth": "Sonraki ay",
+      "weekdays": ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
+      "months": [
+        "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+      ],
+      "moreCount": "+{count} daha",
+      "noDeadlineTasks": "Tarihsiz Görevler",
+      "noDeadlineEmpty": "Tarihsiz görev yok.",
+      "clearDate": "Tarihi kaldır",
+      "moveSuccess": "Görev tarihi güncellendi."
+    },
     "tabs": {
       "board": "Aktif Pano",
+      "calendar": "Takvim",
       "history": "Görev Geçmişi"
+    }
+  },
+  "leads": {
+    "form": {
+      "title": "Bize talebinizi iletin",
+      "subtitle": "Ortalama 1 iş günü içinde dönüş yapıyoruz",
+      "typeLabel": "Talebiniz ne hakkında?",
+      "types": {
+        "quote": "Fiyat teklifi",
+        "idea": "Proje fikri",
+        "question": "Genel soru"
+      },
+      "name": "Ad soyad",
+      "namePlaceholder": "Ayşe Yılmaz",
+      "email": "E-posta",
+      "emailPlaceholder": "ayse@sirket.com",
+      "company": "Şirket",
+      "phone": "Telefon",
+      "optional": "Opsiyonel",
+      "quoteFieldsHint": "Fiyat teklifi seçildiği için görünen alanlar",
+      "budgetRange": "Bütçe aralığı",
+      "selectBudget": "Bütçe seçin",
+      "budgets": {
+        "under50k": "50.000 ₺ altı",
+        "b50to150k": "50.000 – 150.000 ₺",
+        "b150to500k": "150.000 – 500.000 ₺",
+        "over500k": "500.000 ₺ üstü",
+        "unspecified": "Belirtmek istemiyorum"
+      },
+      "timeframe": "Ne zaman başlamak istersiniz?",
+      "selectTimeframe": "Zaman seçin",
+      "timeframes": {
+        "hemen": "Hemen",
+        "withinMonth": "1 ay içinde",
+        "oneToThreeMonths": "1-3 ay içinde",
+        "unsure": "Henüz belirsiz"
+      },
+      "message": "Talebiniz",
+      "messagePlaceholder": "Ne yapmak istediğinizi kısaca anlatın",
+      "consent": "Kişisel verilerimin aydınlatma metni kapsamında işlenmesini kabul ediyorum",
+      "submit": "Talebi gönder",
+      "successTitle": "Talebiniz alındı",
+      "successBody": "En kısa sürede (ortalama 1 iş günü içinde) size dönüş yapacağız.",
+      "sendAnother": "Yeni talep gönder"
+    },
+    "portalApply": {
+      "title": "Başvuru Gönder",
+      "subtitle": "Yeni bir proje veya fiyat teklifi talebinizi buradan iletin"
+    },
+    "panel": {
+      "title": "Formlar",
+      "subtitle": "Gelen talepleri görüntüle, skorla ve takip et",
+      "empty": "Bu durumda talep yok.",
+      "corporateEmail": "kurumsal e-posta",
+      "tabs": {
+        "all": "Tümü"
+      }
+    },
+    "status": {
+      "new": "Yeni",
+      "in_review": "İncelemede",
+      "contacted": "İletişime Geçildi",
+      "quoted": "Teklif Verildi",
+      "won": "Kazanıldı",
+      "lost": "Kaybedildi"
+    },
+    "temperature": {
+      "hot": "Sıcak",
+      "warm": "Ilık",
+      "cold": "Soğuk"
+    },
+    "detail": {
+      "message": "Talep Metni",
+      "status": "Durum",
+      "assignedTo": "Atanan",
+      "unassigned": "Atanmadı",
+      "assignToMe": "Bana Ata",
+      "existingCustomer": "Mevcut müşteri",
+      "timeline": "Zaman Çizelgesi",
+      "notePlaceholder": "Ekip içi not ekle...",
+      "addNote": "Not Ekle",
+      "noEvents": "Henüz aktivite yok."
+    },
+    "timeline": {
+      "created": "talebi oluşturdu",
+      "statusChanged": "durumu değiştirdi:",
+      "assigned": "kendine atadı"
     }
   },
   "projects": {

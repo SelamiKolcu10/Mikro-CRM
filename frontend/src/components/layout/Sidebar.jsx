@@ -5,7 +5,8 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { INTERNAL_NAV, PORTAL_NAV } from '../../config/navigation';
-import { ROLES, can } from '../../config/permissions';
+import { ROLES, ROLE_LABELS, can } from '../../config/permissions';
+import EmployeeAvatar from '../users/EmployeeAvatar';
 import userService from '../../services/userService';
 import approvalService from '../../services/approvalService';
 import chatService from '../../services/chatService';
@@ -22,7 +23,7 @@ const Sidebar = () => {
   const { user, customerUser, isInternal, isCustomer } = useAuth();
   const { isOpen, close } = useSidebar();
   const { socket } = useSocket();
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
   const [chatEscalationsCount, setChatEscalationsCount] = useState(0);
@@ -149,19 +150,60 @@ const Sidebar = () => {
           ))}
         </nav>
 
-        {/* Theme Toggle Button */}
-        <div className="sidebar-footer" style={{ marginTop: 'auto', padding: 'var(--space-md)' }}>
-          <button
-            className="btn btn-secondary"
-            onClick={toggleTheme}
-            style={{ width: '100%', justifyContent: 'center' }}
-          >
-            {theme === 'dark' ? (
-              <><HiOutlineSun className="icon" /> <span>{t('nav.lightMode')}</span></>
-            ) : (
-              <><HiOutlineMoon className="icon" /> <span>{t('nav.darkMode')}</span></>
-            )}
-          </button>
+        {/* Alt bilgi: profil kartı (→ Profilim) + tema değiştir ikonu.
+            Personelde staff profili, portalda müşteri profili — ikisi de
+            aynı "sol alt köşe" deseni. Oturum yoksa (teorik) tema butonu
+            tam genişlik. */}
+        <div className="sidebar-footer">
+          {isInternal && user ? (
+            <NavLink
+              to="/profile"
+              className={({ isActive }) => `sidebar-profile ${isActive ? 'active' : ''}`}
+            >
+              <EmployeeAvatar user={user} size="sm" />
+              <span className="sidebar-profile-id">
+                <span className="sidebar-profile-name">{user.name}</span>
+                <span className="sidebar-profile-role">{t(ROLE_LABELS[user.role])}</span>
+              </span>
+            </NavLink>
+          ) : isCustomer && customerUser?.customer ? (
+            <NavLink
+              to="/portal/profile"
+              className={({ isActive }) => `sidebar-profile ${isActive ? 'active' : ''}`}
+            >
+              <EmployeeAvatar user={customerUser.customer} size="sm" />
+              <span className="sidebar-profile-id">
+                <span className="sidebar-profile-name">{customerUser.customer.name}</span>
+                <span className="sidebar-profile-role">
+                  {customerUser.customer.company || customerUser.customer.email}
+                </span>
+              </span>
+            </NavLink>
+          ) : null}
+
+          {(isInternal && user) || (isCustomer && customerUser?.customer) ? (
+            <button
+              type="button"
+              className="sidebar-theme-icon"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
+              title={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
+            >
+              {theme === 'dark' ? <HiOutlineSun /> : <HiOutlineMoon />}
+            </button>
+          ) : (
+            <button
+              className="btn btn-secondary"
+              onClick={toggleTheme}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {theme === 'dark' ? (
+                <><HiOutlineSun className="icon" /> <span>{t('nav.lightMode')}</span></>
+              ) : (
+                <><HiOutlineMoon className="icon" /> <span>{t('nav.darkMode')}</span></>
+              )}
+            </button>
+          )}
         </div>
       </aside>
     </>

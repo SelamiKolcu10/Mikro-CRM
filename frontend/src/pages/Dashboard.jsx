@@ -1,7 +1,38 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import feedbackService from '../services/feedbackService';
+import DonutChart from '../components/charts/DonutChart';
+import BarList from '../components/charts/BarList';
+import { SkeletonDashboard } from '../components/common/Skeleton';
 import { HiOutlineUsers, HiOutlineCurrencyDollar, HiOutlineExclamationCircle, HiOutlineExclamation } from 'react-icons/hi';
+
+/*
+ * Grafik renkleri tasarım.md §5'e göre varlığı izler (Premium her grafikte
+ * aynı mavi) — slotlar CSS token'ı, tema değişince kendiliğinden adımlanır.
+ */
+const PLAN_COLORS = {
+  free: 'var(--text-tertiary)',
+  starter: 'var(--viz-5)',
+  premium: 'var(--viz-1)',
+  vip: 'var(--viz-4)',
+};
+const TYPE_COLORS = {
+  bug: 'var(--color-danger)',
+  feature: 'var(--accent-primary)',
+  improvement: 'var(--viz-5)',
+};
+const PRIORITY_COLORS = {
+  critical: 'var(--color-danger)',
+  high: 'var(--color-warning)',
+  medium: 'var(--accent-primary)',
+  low: 'var(--text-tertiary)',
+};
+const STATUS_COLORS = {
+  open: 'var(--accent-primary)',
+  'in-progress': 'var(--color-warning)',
+  resolved: 'var(--color-success)',
+  closed: 'var(--text-tertiary)',
+};
 
 const Dashboard = () => {
   const { t } = useLanguage();
@@ -28,49 +59,18 @@ const Dashboard = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="loading-spinner">
-        <div className="spinner" />
-      </div>
-    );
+    return <SkeletonDashboard />;
   }
 
   if (!stats) return null;
 
-  const formatCurrency = (value) => {
-    return `$${Number(value).toLocaleString()}`;
-  };
+  const formatCurrency = (value) => `$${Number(value).toLocaleString()}`;
 
-  const planColors = { free: 'gray', starter: 'blue', premium: 'purple', vip: 'yellow' };
-  const typeColors = { bug: 'red', feature: 'purple', improvement: 'cyan' };
-  const priorityColors = { low: 'gray', medium: 'blue', high: 'yellow', critical: 'red' };
-  const statusColors = { open: 'blue', 'in-progress': 'yellow', resolved: 'green', closed: 'gray' };
-
-  const totalByGroup = (group) => Object.values(group || {}).reduce((a, b) => a + b, 0) || 1;
-
-  const renderBarChart = (data, colorMap, labelMap) => {
-    const total = totalByGroup(data);
-    const entries = Object.entries(data || {}).sort((a, b) => b[1] - a[1]);
-
-    return (
-      <div className="bar-chart">
-        {entries.map(([key, value]) => (
-          <div className="bar-row" key={key}>
-            <span className="bar-label">{labelMap?.[key] || key}</span>
-            <div className="bar-track">
-              <div
-                className={`bar-fill ${colorMap[key] || 'gray'}`}
-                style={{ width: `${Math.max((value / total) * 100, 8)}%` }}
-              >
-                {value}
-              </div>
-            </div>
-            <span className="bar-value">{Math.round((value / total) * 100)}%</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  // { key: count } → BarList item'ları, sabit slot sırasıyla
+  const toBars = (group, colorMap, labelFor, order) =>
+    (order || Object.keys(group || {}))
+      .filter((key) => group?.[key] !== undefined)
+      .map((key) => ({ label: labelFor(key), value: group[key], color: colorMap[key] || 'var(--text-tertiary)' }));
 
   const getPriorityBadgeClass = (priority) => `badge badge-${priority}`;
   const getTypeBadgeClass = (type) => `badge badge-${type}`;
@@ -93,7 +93,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-info">
             <div className="stat-label">{t('dashboard.totalCustomers')}</div>
-            <div className="stat-value">{stats.totalCustomers}</div>
+            <div className="stat-value tabular">{stats.totalCustomers}</div>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-info">
             <div className="stat-label">{t('dashboard.totalMRR')}</div>
-            <div className="stat-value">{formatCurrency(stats.totalMRR)}</div>
+            <div className="stat-value tabular">{formatCurrency(stats.totalMRR)}</div>
             <div className="stat-sub">{t('common.perMonth')}</div>
           </div>
         </div>
@@ -114,7 +114,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-info">
             <div className="stat-label">{t('dashboard.openBugs')}</div>
-            <div className="stat-value">{stats.openBugs}</div>
+            <div className="stat-value tabular">{stats.openBugs}</div>
             <div className="stat-sub">{stats.inProgressCount} {t('dashboard.activeIssues')}</div>
           </div>
         </div>
@@ -125,7 +125,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-info">
             <div className="stat-label">{t('dashboard.revenueAtRisk')}</div>
-            <div className="stat-value">{formatCurrency(stats.revenueAtRisk)}</div>
+            <div className="stat-value tabular">{formatCurrency(stats.revenueAtRisk)}</div>
             <div className="stat-sub">{t('dashboard.fromPremium')}</div>
           </div>
         </div>
@@ -134,7 +134,7 @@ const Dashboard = () => {
       {/* Top Feedbacks */}
       <div className="table-container" style={{ marginBottom: 'var(--space-xl)' }}>
         <div className="table-header">
-          <h3>🔥 {t('dashboard.topFeedbacks')}</h3>
+          <h3>{t('dashboard.topFeedbacks')}</h3>
         </div>
         <div className="top-feedback-list">
           {topFeedbacks.map((fb, idx) => (
@@ -158,14 +158,13 @@ const Dashboard = () => {
                   </span>
                 </div>
               </div>
-              <div className="top-feedback-revenue">
+              <div className="top-feedback-revenue tabular">
                 {formatCurrency(fb.revenueImpact)}{t('common.perMonth')}
               </div>
             </div>
           ))}
           {topFeedbacks.length === 0 && (
             <div className="table-empty">
-              <div className="table-empty-icon">📋</div>
               <p>{t('common.noData')}</p>
             </div>
           )}
@@ -175,42 +174,36 @@ const Dashboard = () => {
       {/* Charts Grid */}
       <div className="dashboard-grid">
         <div className="chart-card">
-          <h3>👥 {t('dashboard.planDistribution')}</h3>
-          {renderBarChart(stats.customersByPlan, planColors, {
-            free: t('customers.plans.free'), 
-            starter: t('customers.plans.starter'), 
-            premium: t('customers.plans.premium'), 
-            vip: t('customers.plans.vip')
-          })}
+          <h3>{t('dashboard.planDistribution')}</h3>
+          <DonutChart
+            caption={t('dashboard.totalCustomers')}
+            data={['free', 'starter', 'premium', 'vip'].map((plan) => ({
+              label: t(`customers.plans.${plan}`),
+              value: stats.customersByPlan?.[plan] || 0,
+              color: PLAN_COLORS[plan],
+            }))}
+          />
         </div>
 
         <div className="chart-card">
-          <h3>📋 {t('dashboard.typeDistribution')}</h3>
-          {renderBarChart(stats.byType, typeColors, {
-            bug: t('feedbacks.types.bug'),
-            feature: t('feedbacks.types.feature'),
-            improvement: t('feedbacks.types.improvement'),
-          })}
+          <h3>{t('dashboard.typeDistribution')}</h3>
+          <BarList
+            items={toBars(stats.byType, TYPE_COLORS, (k) => t(`feedbacks.types.${k}`), ['bug', 'feature', 'improvement'])}
+          />
         </div>
 
         <div className="chart-card">
-          <h3>🚦 {t('dashboard.priorityDistribution')}</h3>
-          {renderBarChart(stats.byPriority, priorityColors, {
-            critical: t('feedbacks.priorities.critical'),
-            high: t('feedbacks.priorities.high'),
-            medium: t('feedbacks.priorities.medium'),
-            low: t('feedbacks.priorities.low'),
-          })}
+          <h3>{t('dashboard.priorityDistribution')}</h3>
+          <BarList
+            items={toBars(stats.byPriority, PRIORITY_COLORS, (k) => t(`feedbacks.priorities.${k}`), ['critical', 'high', 'medium', 'low'])}
+          />
         </div>
 
         <div className="chart-card">
-          <h3>📊 {t('dashboard.statusDistribution')}</h3>
-          {renderBarChart(stats.byStatus, statusColors, {
-            open: t('feedbacks.statuses.open'),
-            'in-progress': t('feedbacks.statuses.in-progress'),
-            resolved: t('feedbacks.statuses.resolved'),
-            closed: t('feedbacks.statuses.closed'),
-          })}
+          <h3>{t('dashboard.statusDistribution')}</h3>
+          <BarList
+            items={toBars(stats.byStatus, STATUS_COLORS, (k) => t(`feedbacks.statuses.${k}`), ['open', 'in-progress', 'resolved', 'closed'])}
+          />
         </div>
       </div>
     </>

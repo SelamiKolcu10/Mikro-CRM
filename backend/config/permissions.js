@@ -95,6 +95,15 @@ const PERMISSIONS = {
     read: [ROLES.SUPER_ADMIN, ROLES.INTERN],
     write: [ROLES.SUPER_ADMIN],
   },
+  // Formlar / Lead Intake — iki katmanlı: GÖRÜNTÜLEME geniş (super_admin,
+  // staff + accountant/support/intern salt-okunur), DEĞİŞTİRME dar
+  // (yalnız super_admin+staff lead'i işler: durum/atama/not). Lead'ler ham
+  // PII (email/telefon) taşıdığından intern GET'lerinde redactForIntern
+  // devrede (bkz. routes/leadRoutes.js) — email+telefon maskelenir.
+  leads: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
 };
 
 // Resources a Super Admin can grant a runtime PermissionOverride for — kept

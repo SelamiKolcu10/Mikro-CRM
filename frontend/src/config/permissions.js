@@ -97,6 +97,12 @@ export const PERMISSIONS = {
     read: [ROLES.SUPER_ADMIN, ROLES.INTERN],
     write: [ROLES.SUPER_ADMIN],
   },
+  // Formlar / Lead Intake — bkz. backend/config/permissions.js'teki aynı gerekçe.
+  // Görüntüleme geniş (intern PII maskeli), değiştirme dar (super_admin+staff).
+  leads: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
 };
 
 // Resources a Super Admin can grant a runtime PermissionOverride for — kept

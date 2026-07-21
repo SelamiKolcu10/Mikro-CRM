@@ -106,7 +106,7 @@ const TimelineEntry = ({ log, expanded, onToggle, isUnverifiable, flash }) => {
           )}
 
           <div className="timeline-hash-line" onClick={() => copyHash(log.hash)} title={t('auditLog.hashLabel')}>
-            <HiOutlineClipboard style={{ verticalAlign: 'middle' }} /> #{log.sequence} ⛓ {shortHash(log.hash)} ← {t('auditLog.prevHashLabel')}: {shortHash(log.prevHash)}
+            <HiOutlineClipboard style={{ verticalAlign: 'middle' }} /> #{log.sequence} · {shortHash(log.hash)} ← {t('auditLog.prevHashLabel')}: {shortHash(log.prevHash)}
           </div>
         </div>
       )}

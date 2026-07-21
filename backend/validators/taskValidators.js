@@ -31,6 +31,12 @@ const updateTaskStatusValidators = [
   body('status').isIn(TASK_STATUSES).withMessage('Geçersiz durum.'),
 ];
 
+const updateTaskDeadlineValidators = [
+  param('id').isMongoId().withMessage('Geçersiz görev kimliği.'),
+  body('deadline').optional({ nullable: true }).isISO8601().withMessage('Geçersiz tarih.'),
+  body('expectedVersion').optional().isInt({ min: 0 }).withMessage('Geçersiz sürüm.'),
+];
+
 const assignableUsersValidators = [
   query('department').optional().isIn(DEPARTMENTS).withMessage('Geçersiz departman.'),
 ];
@@ -48,6 +54,7 @@ module.exports = {
   createTaskValidators,
   taskIdValidators,
   updateTaskStatusValidators,
+  updateTaskDeadlineValidators,
   assignableUsersValidators,
   workloadStatusValidators,
   activityHeatmapValidators,

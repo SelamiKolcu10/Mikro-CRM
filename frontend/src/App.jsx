@@ -20,11 +20,14 @@ import ChatDashboard from './pages/ChatDashboard';
 import AccessControlMatrix from './pages/AccessControlMatrix';
 import PendingApprovals from './pages/PendingApprovals';
 import Tasks from './pages/Tasks';
+import Leads from './pages/Leads';
 import Projects from './pages/Projects';
 import Profile from './pages/Profile';
+import LeadForm from './pages/LeadForm';
 import PortalTickets from './pages/portal/PortalTickets';
 import PortalProfile from './pages/portal/PortalProfile';
 import PortalChat from './pages/portal/PortalChat';
+import PortalApply from './pages/portal/PortalApply';
 import RoleGuard from './components/auth/RoleGuard';
 import { ROLES, ALL_ROLES } from './config/permissions';
 
@@ -90,7 +93,11 @@ const App = () => {
             }}
           />
           <Routes>
-            {/* Public */}
+            {/* Public — tamamen auth'suz, session durumundan bağımsız,
+                herkese (giriş yapmış olsa bile) aynı şekilde açılır. */}
+            <Route path="/talep" element={<LeadForm />} />
+
+            {/* Public — session yoksa göster, varsa login'e gerek kalmaz */}
             <Route
               path="/login"
               element={
@@ -111,6 +118,7 @@ const App = () => {
               }
             >
               <Route path="/portal" element={<PortalTickets />} />
+              <Route path="/portal/apply" element={<PortalApply />} />
               <Route path="/portal/profile" element={<PortalProfile />} />
               <Route path="/portal/chat" element={<PortalChat />} />
             </Route>
@@ -150,6 +158,9 @@ const App = () => {
               } />
               <Route path="/tasks" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN]}><Tasks /></RoleGuard>
+              } />
+              <Route path="/leads" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN]}><Leads /></RoleGuard>
               } />
               <Route path="/invoices" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><Invoices /></RoleGuard>

@@ -8,6 +8,11 @@
     <title>Micro CRM — Revenue-Driven Feedback Prioritization</title>
   </head>
   <body>
+    <script>
+      // Temayı React yüklenmeden uygula — login dahil ilk boyamada tutarlı olsun,
+      // varsayılan açık tema (Operations Console imzası).
+      try { if ((localStorage.getItem('theme') || 'light') === 'light') document.body.classList.add('light-theme'); } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

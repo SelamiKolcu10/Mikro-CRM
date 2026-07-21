@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { SidebarProvider } from '../../context/SidebarContext';
@@ -7,13 +7,14 @@ import { SidebarProvider } from '../../context/SidebarContext';
 // accountType internally (see config/navigation.js), so this file has
 // nothing portal-specific left to say.
 const PortalLayout = () => {
+  const location = useLocation();
   return (
     <SidebarProvider>
       <div className="app-layout">
         <Sidebar />
         <Navbar />
         <main className="main-content">
-          <div className="page-container">
+          <div className="page-container page-enter" key={location.pathname}>
             <Outlet />
           </div>
         </main>

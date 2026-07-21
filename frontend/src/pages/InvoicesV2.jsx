@@ -65,7 +65,7 @@ const InvoicesV2 = () => {
         response = await invoiceV2Service.bulkUpload(files);
         const summary = response.data.summary;
         toast.success(
-          `${t('invoices.processComplete')}: ${summary.verified} ✅ ${summary.mismatch} ⚠️ ${summary.errors} ❌`
+          `${t('invoices.processComplete')}: ${summary.verified} ${t('invoices.statuses.verified')} · ${summary.mismatch} ${t('invoices.statuses.mismatch')} · ${summary.errors} ${t('invoices.errorCount')}`
         );
         setUploadResults(response.data);
       }
@@ -92,7 +92,7 @@ const InvoicesV2 = () => {
   const handleSaveCorrection = async (id, data) => {
     try {
       await invoiceV2Service.update(id, data);
-      toast.success(t('common.update') + ' ✅');
+      toast.success(t('common.update'));
       setDetailOpen(false);
       await fetchInvoices();
     } catch (err) {
@@ -105,7 +105,7 @@ const InvoicesV2 = () => {
     if (!deleteId) return;
     try {
       await invoiceV2Service.delete(deleteId);
-      toast.success(t('common.delete') + ' ✅');
+      toast.success(t('common.delete'));
       setDeleteId(null);
       await fetchInvoices();
     } catch (err) {
@@ -118,7 +118,7 @@ const InvoicesV2 = () => {
       {/* Page Header */}
       <div className="page-header">
         <div>
-          <h1>🧾 {t('invoicesV2.title')}</h1>
+          <h1>{t('invoicesV2.title')}</h1>
           <p>{t('invoicesV2.subtitle')}</p>
         </div>
       </div>

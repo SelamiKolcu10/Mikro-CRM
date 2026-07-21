@@ -20,7 +20,7 @@ const PortalProfile = () => {
     setSavingProfile(true);
     try {
       await portalProfileService.updateProfile(profileForm);
-      toast.success('Bilgileriniz güncellendi ✅');
+      toast.success('Bilgileriniz güncellendi');
     } catch (err) {
       toast.error(err.response?.data?.error || 'Bir hata oluştu');
     } finally {
@@ -56,7 +56,7 @@ const PortalProfile = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>👤 Profilim</h1>
+          <h1>Profilim</h1>
           <p>Bilgilerinizi ve şifrenizi buradan güncelleyebilirsiniz</p>
         </div>
       </div>

@@ -61,7 +61,27 @@ const authRateLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  // Yalnızca BAŞARISIZ girişleri say — brute-force koruması aynen kalır
+  // (yanlış şifre denemeleri 15dk/20 ile sınırlı) ama doğru girişler kotayı
+  // yakmaz. Böylece çok sayıda geçerli hesaba (ör. test müşterileri) arka
+  // arkaya girmek limite takılmaz. login controller başarılı girişte 2xx,
+  // başarısızda 401 döndüğünden bu ayrım güvenilir çalışır.
+  skipSuccessfulRequests: true,
   message: { success: false, error: 'Çok fazla giriş denemesi, lütfen 15 dakika sonra tekrar deneyin.' },
 });
 
-module.exports = { applySecurity, authRateLimiter };
+/**
+ * Public lead-intake endpoint'i (POST /api/leads) için — bu, uygulamadaki
+ * ilk gerçekten anonim (auth'suz) yüzey, o yüzden global limitten (15dk/300)
+ * çok daha sıkı, dakika bazlı kendi limiti var. Honeypot + validasyonla
+ * birlikte katmanlı spam savunmasının bir parçası (bkz. spec §3).
+ */
+const leadRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 4,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Çok fazla talep gönderildi, lütfen bir dakika sonra tekrar deneyin.' },
+});
+
+module.exports = { applySecurity, authRateLimiter, leadRateLimiter };

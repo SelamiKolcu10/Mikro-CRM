@@ -64,6 +64,7 @@
     "customers": "Customers",
     "feedbacks": "Feedbacks",
     "tasks": "Tasks",
+    "leads": "Forms",
     "invoices": "Invoices",
     "invoicesV2": "Invoices v2 (Local OCR)",
     "spendingReport": "Spending Overview",
@@ -72,6 +73,7 @@
     "profile": "My Profile",
     "auditLog": "Audit Log",
     "portalTickets": "My Tickets",
+    "portalApply": "Apply",
     "portalProfile": "My Profile",
     "portalBrandFallback": "Customer Portal",
     "chat": "Live Chat",
@@ -160,6 +162,7 @@
     "previewHint": "Preview — not applied until saved",
     "photoSaved": "Photo updated",
     "fileTooLarge": "File must be under 2MB.",
+    "fileWrongType": "Only JPEG, PNG or WebP images are allowed.",
     "phone": "Phone",
     "linkedin": "LinkedIn",
     "github": "GitHub",
@@ -267,6 +270,7 @@
     "dropzoneHint": "JPEG, PNG, WebP or PDF — Up to 20 files at once",
     "processing": "Processing...",
     "processComplete": "Processing complete",
+    "errorCount": "Errors",
     "vendor": "Vendor",
     "vendorTax": "Tax Number",
     "invoiceNo": "Invoice No",
@@ -602,9 +606,112 @@
         "5": "Fri"
       }
     },
+    "calendar": {
+      "today": "Today",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      "months": [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ],
+      "moreCount": "+{count} more",
+      "noDeadlineTasks": "Undated Tasks",
+      "noDeadlineEmpty": "No undated tasks.",
+      "clearDate": "Clear date",
+      "moveSuccess": "Task date updated."
+    },
     "tabs": {
       "board": "Active Board",
+      "calendar": "Calendar",
       "history": "Task History"
+    }
+  },
+  "leads": {
+    "form": {
+      "title": "Send us your request",
+      "subtitle": "We typically respond within 1 business day",
+      "typeLabel": "What is your request about?",
+      "types": {
+        "quote": "Price quote",
+        "idea": "Project idea",
+        "question": "General question"
+      },
+      "name": "Full name",
+      "namePlaceholder": "Jane Doe",
+      "email": "Email",
+      "emailPlaceholder": "jane@company.com",
+      "company": "Company",
+      "phone": "Phone",
+      "optional": "Optional",
+      "quoteFieldsHint": "Fields shown because you selected Price quote",
+      "budgetRange": "Budget range",
+      "selectBudget": "Select budget",
+      "budgets": {
+        "under50k": "Under $50k",
+        "b50to150k": "$50k – $150k",
+        "b150to500k": "$150k – $500k",
+        "over500k": "Over $500k",
+        "unspecified": "Prefer not to say"
+      },
+      "timeframe": "When would you like to start?",
+      "selectTimeframe": "Select timeframe",
+      "timeframes": {
+        "hemen": "Immediately",
+        "withinMonth": "Within 1 month",
+        "oneToThreeMonths": "1-3 months",
+        "unsure": "Not sure yet"
+      },
+      "message": "Your request",
+      "messagePlaceholder": "Briefly describe what you'd like to do",
+      "consent": "I consent to my personal data being processed as described in the privacy notice",
+      "submit": "Send request",
+      "successTitle": "Your request has been received",
+      "successBody": "We'll get back to you soon (typically within 1 business day).",
+      "sendAnother": "Send another request"
+    },
+    "portalApply": {
+      "title": "Send an Application",
+      "subtitle": "Submit a new project or price quote request here"
+    },
+    "panel": {
+      "title": "Forms",
+      "subtitle": "View, score, and follow up on incoming requests",
+      "empty": "No requests in this status.",
+      "corporateEmail": "corporate email",
+      "tabs": {
+        "all": "All"
+      }
+    },
+    "status": {
+      "new": "New",
+      "in_review": "In Review",
+      "contacted": "Contacted",
+      "quoted": "Quoted",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "temperature": {
+      "hot": "Hot",
+      "warm": "Warm",
+      "cold": "Cold"
+    },
+    "detail": {
+      "message": "Request Message",
+      "status": "Status",
+      "assignedTo": "Assigned to",
+      "unassigned": "Unassigned",
+      "assignToMe": "Assign to Me",
+      "existingCustomer": "Existing customer",
+      "timeline": "Timeline",
+      "notePlaceholder": "Add an internal note...",
+      "addNote": "Add Note",
+      "noEvents": "No activity yet."
+    },
+    "timeline": {
+      "created": "created the request",
+      "statusChanged": "changed status:",
+      "assigned": "assigned to self"
     }
   },
   "projects": {

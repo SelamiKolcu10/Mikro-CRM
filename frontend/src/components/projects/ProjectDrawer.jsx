@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { HiOutlineX, HiOutlinePencil, HiOutlineTrash, HiOutlineDocumentText, HiOutlineUsers, HiOutlineClipboardList, HiOutlineChatAlt2, HiOutlinePlus } from 'react-icons/hi';
 import { useLanguage } from '../../context/LanguageContext';
@@ -99,10 +100,10 @@ const ProjectDrawer = ({ project, onClose, onUpdateNotes, onEditMeta, onDelete, 
     return acc;
   }, {});
 
-  return (
+  return createPortal(
     <>
-      <div className="drawer-backdrop" onClick={onClose} />
-      <div className="project-drawer" role="dialog" aria-modal="true" tabIndex={-1} ref={drawerRef}>
+      <div className="drawer-backdrop" onClick={onClose}>
+      <div className="project-drawer" role="dialog" aria-modal="true" tabIndex={-1} ref={drawerRef} onClick={(e) => e.stopPropagation()}>
         <div className="project-drawer-header">
           <h2>{project.name}</h2>
           <div className="project-drawer-header-actions">
@@ -229,6 +230,7 @@ const ProjectDrawer = ({ project, onClose, onUpdateNotes, onEditMeta, onDelete, 
           )}
         </div>
       </div>
+      </div>
 
       {/* Aynı Task, aynı TaskDetailModal, aynı yetki kuralları (canActOnTask/
           canApproveTask) — TaskBoard'daki görevden hiçbir farkı yok, sadece
@@ -252,7 +254,8 @@ const ProjectDrawer = ({ project, onClose, onUpdateNotes, onEditMeta, onDelete, 
         getAssignableUsers={NOOP_ASSIGNABLE_USERS}
         project={project}
       />
-    </>
+    </>,
+    document.body
   );
 };
 

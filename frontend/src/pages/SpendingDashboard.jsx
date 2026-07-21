@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import reportService from '../services/reportService';
+import AreaChart from '../components/charts/AreaChart';
+import { SkeletonDashboard } from '../components/common/Skeleton';
 import toast from 'react-hot-toast';
 import { HiOutlineCurrencyDollar, HiOutlineReceiptTax, HiOutlineDocumentText, HiOutlineDownload, HiOutlineTrendingUp, HiOutlineTrendingDown, HiOutlineOfficeBuilding } from 'react-icons/hi';
 
@@ -79,7 +81,7 @@ const SpendingDashboard = () => {
   };
 
   if (loading) {
-    return <div className="loading-spinner"><div className="spinner" /></div>;
+    return <SkeletonDashboard />;
   }
 
   if (!data) return null;
@@ -94,7 +96,7 @@ const SpendingDashboard = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>📊 {t('reports.title')}</h1>
+          <h1>{t('reports.title')}</h1>
           <p>{t('reports.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
@@ -180,31 +182,40 @@ const SpendingDashboard = () => {
 
       <div className="dashboard-grid">
         <div className="chart-card">
-          <h3>📅 {t('reports.byMonth')}</h3>
-          <div className="bar-chart">
-            {data.byMonth.length === 0 ? (
-              <p>{t('common.noData')}</p>
-            ) : (
-              data.byMonth.map((m) => (
-                <div className="bar-row" key={m.month}>
-                  <span className="bar-label">{formatMonth(m.month)}</span>
-                  <div className="bar-track">
-                    <div
-                      className="bar-fill purple"
-                      style={{ width: `${Math.max((m.totalSpend / maxMonthSpend) * 100, 8)}%` }}
-                    >
-                      {formatCurrency(m.totalSpend)}
+          <h3>{t('reports.byMonth')}</h3>
+          {/* ≥2 ay varsa trend alan grafiği (crosshair+tooltip); tek ay bar olarak kalır */}
+          {data.byMonth.length >= 2 ? (
+            <AreaChart
+              points={data.byMonth.map((m) => ({ label: formatMonth(m.month), value: m.totalSpend }))}
+              formatValue={formatCompactCurrency}
+              ariaLabel={t('reports.byMonth')}
+            />
+          ) : (
+            <div className="bar-chart">
+              {data.byMonth.length === 0 ? (
+                <p>{t('common.noData')}</p>
+              ) : (
+                data.byMonth.map((m) => (
+                  <div className="bar-row" key={m.month}>
+                    <span className="bar-label">{formatMonth(m.month)}</span>
+                    <div className="bar-track">
+                      <div
+                        className="bar-fill purple"
+                        style={{ width: `${Math.max((m.totalSpend / maxMonthSpend) * 100, 8)}%` }}
+                      >
+                        {formatCurrency(m.totalSpend)}
+                      </div>
                     </div>
+                    <span className="bar-value">{m.count}</span>
                   </div>
-                  <span className="bar-value">{m.count}</span>
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         <div className="chart-card">
-          <h3>🧾 {t('reports.byService')}</h3>
+          <h3>{t('reports.byService')}</h3>
           <div className="bar-chart">
             {data.byService.map((s) => (
               <div className="bar-row" key={s.service}>
@@ -248,7 +259,7 @@ const SpendingDashboard = () => {
         </div>
 
         <div className="chart-card">
-          <h3>🧮 {t('reports.byVat')}</h3>
+          <h3>{t('reports.byVat')}</h3>
           <div className="bar-chart">
             {data.byVat.length === 0 ? (
               <p>{t('reports.noVatData')}</p>

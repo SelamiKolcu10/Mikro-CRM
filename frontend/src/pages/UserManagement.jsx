@@ -75,7 +75,7 @@ const UserManagement = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>🛡️ {t('users.title')}</h1>
+          <h1>{t('users.title')}</h1>
           <p>{t('users.subtitle')}</p>
         </div>
         <PermissionGate resource="users" action="write">

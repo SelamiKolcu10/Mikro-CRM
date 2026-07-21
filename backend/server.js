@@ -43,6 +43,10 @@ app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/approvals', require('./routes/approvalRoutes'));
 app.use('/api/permission-overrides', require('./routes/permissionOverrideRoutes'));
+// Bilerek diğerlerinin arasında — bu router kendi içinde `protect` taşımıyor,
+// tek route'u (POST /) uygulamadaki ilk auth'suz yazma yüzeyi (bkz. spec
+// docs/superpowers/specs/2026-07-21-lead-intake-forms-design.md §3).
+app.use('/api/leads', require('./routes/leadRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {

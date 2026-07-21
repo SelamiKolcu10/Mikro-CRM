@@ -80,6 +80,11 @@ const taskSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    // Takvimde sürükle-bırak ile deadline taşırken iki liderin aynı görevi
+    // eşzamanlı taşıması durumunda son yazanın diğerini sessizce ezmesini
+    // önler — Mongoose eski __v ile save() çağrılırsa VersionError fırlatır,
+    // controller bunu 409'a çevirir (bkz. taskController.updateTaskDeadline).
+    optimisticConcurrency: true,
   }
 );
 

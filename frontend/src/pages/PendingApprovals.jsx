@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import approvalService from '../services/approvalService';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
-import { HiOutlineCheck, HiOutlineX, HiOutlineExclamation } from 'react-icons/hi';
+import { HiOutlineCheck, HiOutlineX, HiOutlineExclamation, HiOutlineInbox } from 'react-icons/hi';
 import PermissionGate from '../components/auth/PermissionGate';
 
 const STATUS_BADGE = {
@@ -90,7 +90,7 @@ const PendingApprovals = () => {
     <>
       <div className="page-header">
         <div>
-          <h1>🗂️ {t('approvals.title')}</h1>
+          <h1>{t('approvals.title')}</h1>
           <p>{t('approvals.subtitle')}</p>
         </div>
       </div>
@@ -180,7 +180,7 @@ const PendingApprovals = () => {
               <tr>
                 <td colSpan="6">
                   <div className="table-empty">
-                    <div className="table-empty-icon">🗂️</div>
+                    <div className="table-empty-icon"><HiOutlineInbox /></div>
                     <p>{t('approvals.noApprovals')}</p>
                   </div>
                 </td>
