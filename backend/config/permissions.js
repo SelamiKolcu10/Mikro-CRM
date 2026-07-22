@@ -113,6 +113,23 @@ const PERMISSIONS = {
     read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
     write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
+  // Ürün Kataloğu — deals ile aynı çizgi: intern hariç (fiyat hassas ciro
+  // verisi), accountant okur, staff+super_admin yazar.
+  catalog: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
+  // Teklifler — intern hariç (teklif tutarları hassas ciro verisi),
+  // accountant okur (forecast/fiyatlandırma), yazamaz.
+  quotes: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
+  // Satış Faturaları — muhasebe ve süper admin tam yetkili, staff okuyabilir.
+  invoices: {
+    read: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF],
+    write: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT],
+  },
 };
 
 // Resources a Super Admin can grant a runtime PermissionOverride for — kept

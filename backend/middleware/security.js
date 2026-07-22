@@ -84,4 +84,17 @@ const leadRateLimiter = rateLimit({
   message: { success: false, error: 'Çok fazla talep gönderildi, lütfen bir dakika sonra tekrar deneyin.' },
 });
 
-module.exports = { applySecurity, authRateLimiter, leadRateLimiter };
+/**
+ * Public teklif endpoint'leri (GET/POST /api/public/quotes/*) için rate limiter.
+ * Spam ve brute-force token tahminini engeller (1 dakikada maks 30 istek).
+ */
+const publicQuoteRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Çok fazla istek gönderildi, lütfen biraz bekleyin.' },
+});
+
+module.exports = { applySecurity, authRateLimiter, leadRateLimiter, publicQuoteRateLimiter };
+

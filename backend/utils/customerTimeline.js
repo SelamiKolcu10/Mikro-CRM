@@ -82,23 +82,46 @@ function mapFeedbacks(feedbacks = []) {
   }));
 }
 
+function mapQuoteEvents(quoteEvents = []) {
+  return quoteEvents
+    .filter((ev) => ev.quote)
+    .map((ev) => ({
+      key: `quote:${ev._id}`,
+      source: 'quote',
+      kind: `quote_${ev.type}`,
+      at: ev.createdAt,
+      actorName: ev.actorName || null,
+      note: ev.note || null,
+      data: {
+        quoteId: ev.quote._id,
+        quoteNumber: ev.quote.quoteNumber,
+        grandTotal: ev.quote.grandTotal,
+        currency: ev.quote.currency,
+        eventType: ev.type,
+      },
+      ref: { quoteId: ev.quote._id },
+    }));
+}
+
 /**
  * @param {object} sources
  * @param {Array} sources.customerEvents - CustomerEvent[] (manuel loglar + sistem olayları)
  * @param {Array} sources.dealEvents - DealEvent[], `deal` alanı populate('title') edilmiş olmalı
  * @param {Array} sources.leadEvents - LeadEvent[], `lead` alanı populate('type') edilmiş olmalı
+ * @param {Array} sources.quoteEvents - QuoteEvent[], `quote` alanı populate('quoteNumber grandTotal currency') edilmiş olmalı
  * @param {Array} sources.feedbacks - Feedback[]
  * @returns {Array} `at` alanına göre azalan sıralı birleşik timeline öğeleri
  */
-function buildTimeline({ customerEvents, dealEvents, leadEvents, feedbacks } = {}) {
+function buildTimeline({ customerEvents, dealEvents, leadEvents, quoteEvents, feedbacks } = {}) {
   const items = [
     ...mapCustomerEvents(customerEvents),
     ...mapDealEvents(dealEvents),
     ...mapLeadEvents(leadEvents),
+    ...mapQuoteEvents(quoteEvents),
     ...mapFeedbacks(feedbacks),
   ];
 
   return items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
 }
 
-module.exports = { buildTimeline };
+module.exports = { buildTimeline, mapQuoteEvents };

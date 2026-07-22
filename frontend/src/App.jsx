@@ -22,9 +22,12 @@ import PendingApprovals from './pages/PendingApprovals';
 import Tasks from './pages/Tasks';
 import Leads from './pages/Leads';
 import Deals from './pages/Deals';
+import Catalog from './pages/Catalog';
+import Quotes from './pages/Quotes';
 import Projects from './pages/Projects';
 import Profile from './pages/Profile';
 import LeadForm from './pages/LeadForm';
+import PublicQuote from './pages/PublicQuote';
 import PortalTickets from './pages/portal/PortalTickets';
 import PortalProfile from './pages/portal/PortalProfile';
 import PortalChat from './pages/portal/PortalChat';
@@ -97,6 +100,8 @@ const App = () => {
             {/* Public — tamamen auth'suz, session durumundan bağımsız,
                 herkese (giriş yapmış olsa bile) aynı şekilde açılır. */}
             <Route path="/talep" element={<LeadForm />} />
+            {/* Public — Teklif görüntüleme / onay / ret sayfası */}
+            <Route path="/q/:token" element={<PublicQuote />} />
 
             {/* Public — session yoksa göster, varsa login'e gerek kalmaz */}
             <Route
@@ -165,6 +170,12 @@ const App = () => {
               } />
               <Route path="/deals" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT]}><Deals /></RoleGuard>
+              } />
+              <Route path="/catalog" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT]}><Catalog /></RoleGuard>
+              } />
+              <Route path="/quotes" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT]}><Quotes /></RoleGuard>
               } />
               <Route path="/invoices" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><Invoices /></RoleGuard>

@@ -32,6 +32,14 @@ const EVENT_META = {
   'lead:converted': { labelKey: 'customers.timeline.leadConverted', dotClass: 'lead', chipKind: null },
 
   'feedback:feedback_created': { labelKey: 'customers.timeline.feedbackCreated', dotClass: 'feedback', chipKind: 'feedbackStatus' },
+
+  'quote:quote_created': { labelKey: 'Teklif Oluşturuldu', dotClass: 'deal', chipKind: null },
+  'quote:quote_sent': { labelKey: 'Teklif Gönderildi', dotClass: 'deal', chipKind: null },
+  'quote:quote_viewed': { labelKey: 'Teklif Müşteri Tarafından İncelendi', dotClass: 'deal', chipKind: null },
+  'quote:quote_accepted': { labelKey: 'Teklif Onaylandı', dotClass: 'deal-won', chipKind: null },
+  'quote:quote_rejected': { labelKey: 'Teklif Reddedildi', dotClass: 'deal-lost', chipKind: null },
+  'quote:quote_revised': { labelKey: 'Teklif Revize Edildi', dotClass: 'deal', chipKind: null },
+  'quote:quote_invoiced': { labelKey: 'Teklif Faturaya Dönüştürüldü', dotClass: 'deal-won', chipKind: null },
 };
 
 const DEFAULT_META = { labelKey: 'customers.timeline.unknown', dotClass: 'note', chipKind: null };

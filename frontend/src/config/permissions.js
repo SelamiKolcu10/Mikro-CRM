@@ -110,6 +110,20 @@ export const PERMISSIONS = {
     read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
     write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
   },
+  // Ürün Kataloğu — backend ile senkron. intern hariç (ciro verisi kapalı).
+  catalog: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
+  // Teklifler — backend ile senkron. intern hariç (teklif tutarları hassas).
+  quotes: {
+    read: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT],
+    write: [ROLES.SUPER_ADMIN, ROLES.STAFF],
+  },
+  invoices: {
+    read: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF],
+    write: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT],
+  },
 };
 
 // Resources a Super Admin can grant a runtime PermissionOverride for — kept

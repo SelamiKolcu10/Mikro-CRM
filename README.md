@@ -170,8 +170,14 @@ Aynı endpoint seti, `invoice-ocr-v2/` üzerinden `http://localhost:5002/api` ad
 
 ## 🔄 Değişiklik Geçmişi (Changelog)
 
-Projeye eklenen yeni özellikler, güncellemeler ve hata düzeltmeleri burada listelenecektir.
-
+- **2026-07-22** — 📜 **Teklif Motoru & Onay Akışı & Satış Faturası Entegrasyonu (P3a & P3b)** eklendi (v1.5.0)
+  - **Ürün Kataloğu (Catalog):** SKU, birim, birim fiyat, KDV oranı (%0, %1, %10, %20), stok miktarı yönetimi.
+  - **Teklif Motoru (Quote Engine):** İki kademeli kalemsel ve teklif geneli indirim (yüzde / tutar), otomatik KDV ve genel toplam hesabı, atomik sıralı numara üretimi (`TEK-2026-XXXX`).
+  - **PDF Üretim Engine (Puppeteer):** Chrome headless ile kurumsal antetli, profesyonel HTML/CSS şablonlu vector PDF üretimi (`GET /api/quotes/:id/pdf`).
+  - **Müşteri Dış Onay / Ret Sayfası (Public Token):** Kimlik doğrulamasız, token tabanlı müşteri teklif inceleme ve onay/ret portalı (`/q/:token`). `publicQuoteRateLimiter` ile güvenlik önlemi.
+  - **Onay / Revizyon Akışı & Socket.io Bildirimleri:** `QuoteEvent` audit kaydı, revizyon versiyonlama (`v1`, `v2`, ...), teklif incelendiğinde veya onaylandığında `STAFF_ROOM` socket yayını.
+  - **Satış Faturası Köprüsü (Invoice Bridge):** Onaylanan tekliflerin tek tıkla satış faturasına dönüştürülmesi (`FTR-2026-XXXX`), fatura durum takibi (taslak, kesildi, ödendi, vadesi geçti, iptal) ve PDF indirme.
+  - **Müşteri Zaman Çizelgesi (Customer Timeline) Entegrasyonu:** Teklif ve fatura yaşam döngüsü olaylarının müşteri zaman çizelgesine anlık harmanlanması.
 - **2026-07-13** — 📊 **GitHub-Style Contribution Heatmap** eklendi
   - Görev sayfasının altına 365 günlük GitHub tarzı katkı ısı haritası (contribution calendar) eklendi
   - 7×53 hafta/gün grid düzeni, ay etiketleri, haftanın günü etiketleri (Mon/Wed/Fri)

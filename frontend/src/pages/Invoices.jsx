@@ -113,6 +113,57 @@ const Invoices = () => {
     }
   };
 
+  // Tab state: 'sales' (CRM Satış Faturaları) veya 'ocr' (Gelen Alış Faturaları)
+  const [activeTab, setActiveTab] = useState('sales');
+
+  // Satış Faturaları State
+  const [salesInvoices, setSalesInvoices] = useState([]);
+  const [salesLoading, setSalesLoading] = useState(false);
+  const [salesStatusFilter, setSalesStatusFilter] = useState('');
+
+  const fetchSalesInvoices = async () => {
+    try {
+      setSalesLoading(true);
+      const res = await invoiceService.getSalesInvoices({ status: salesStatusFilter || undefined });
+      setSalesInvoices(res.data.data?.items || []);
+    } catch {
+      // sessiz
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'sales') {
+      fetchSalesInvoices();
+    }
+  }, [activeTab, salesStatusFilter]);
+
+  const handleDownloadSalesPdf = async (inv) => {
+    try {
+      const res = await invoiceService.getSalesPdf(inv._id);
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${inv.invoiceNumber}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t('common.error'));
+    }
+  };
+
+  const handleMarkPaid = async (inv) => {
+    if (!window.confirm(`${inv.invoiceNumber} faturasını 'Ödendi' olarak işaretlemek istiyor musunuz?`)) return;
+    try {
+      await invoiceService.updateSalesStatus(inv._id, 'paid');
+      toast.success('Fatura ödendi olarak işaretlendi.');
+      fetchSalesInvoices();
+    } catch (err) {
+      toast.error(err.response?.data?.error || t('common.error'));
+    }
+  };
+
   return (
     <>
       {/* Page Header */}
@@ -123,8 +174,104 @@ const Invoices = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <InvoiceStats stats={stats} />
+      {/* Tabs */}
+      <div className="invoice-tabs" style={{ display: 'flex', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
+        <button
+          type="button"
+          className={`btn ${activeTab === 'sales' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('sales')}
+        >
+          Satış Faturaları (CRM)
+        </button>
+        <button
+          type="button"
+          className={`btn ${activeTab === 'ocr' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('ocr')}
+        >
+          Gelen Faturalar (OCR)
+        </button>
+      </div>
+
+      {activeTab === 'sales' ? (
+        <div className="table-container">
+          <div className="table-header">
+            <h3>Kesilen Satış Faturaları</h3>
+            <select
+              className="form-select"
+              value={salesStatusFilter}
+              onChange={(e) => setSalesStatusFilter(e.target.value)}
+            >
+              <option value="">Tüm Durumlar</option>
+              <option value="draft">Taslak</option>
+              <option value="issued">Kesildi</option>
+              <option value="paid">Ödendi</option>
+              <option value="overdue">Vadesi Geçti</option>
+              <option value="cancelled">İptal</option>
+            </select>
+          </div>
+
+          {salesLoading ? (
+            <div className="loading-spinner"><div className="spinner" /></div>
+          ) : salesInvoices.length === 0 ? (
+            <p className="task-comment-empty">Henüz satış faturası yok. Onaylanmış bir teklifi faturaya dönüştürebilirsiniz.</p>
+          ) : (
+            <table className="catalog-table">
+              <thead>
+                <tr>
+                  <th>Fatura No</th>
+                  <th>Müşteri</th>
+                  <th>İlişkili Teklif</th>
+                  <th>Durum</th>
+                  <th className="right">Genel Toplam</th>
+                  <th>Fatura Tarihi</th>
+                  <th>Vade Tarihi</th>
+                  <th className="center">{t('common.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesInvoices.map((inv) => (
+                  <tr key={inv._id}>
+                    <td><strong>{inv.invoiceNumber}</strong></td>
+                    <td>{inv.customer?.name || inv.customer?.company || '-'}</td>
+                    <td>{inv.quote?.quoteNumber || '-'}</td>
+                    <td>
+                      <span className="quote-status-badge">
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="right">{inv.currency} {Number(inv.grandTotal || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+                    <td>{inv.issueDate ? new Date(inv.issueDate).toLocaleDateString('tr-TR') : '-'}</td>
+                    <td>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('tr-TR') : '-'}</td>
+                    <td className="center">
+                      <div className="catalog-actions" style={{ justifyContent: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleDownloadSalesPdf(inv)}
+                        >
+                          PDF
+                        </button>
+                        {inv.status === 'issued' && (
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleMarkPaid(inv)}
+                          >
+                            Ödendi
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Stats Cards */}
+          <InvoiceStats stats={stats} />
 
       {/* Upload Section */}
       <div className="table-container" style={{ marginBottom: 'var(--space-xl)' }}>
@@ -208,6 +355,8 @@ const Invoices = () => {
         title={t('invoices.deleteConfirm')}
         message={t('invoices.deleteWarning')}
       />
+        </>
+      )}
     </>
   );
 };

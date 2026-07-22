@@ -7,6 +7,8 @@ const Lead = require('../models/Lead');
 const LeadEvent = require('../models/LeadEvent');
 const Deal = require('../models/Deal');
 const DealEvent = require('../models/DealEvent');
+const Quote = require('../models/Quote');
+const QuoteEvent = require('../models/QuoteEvent');
 const auditService = require('../utils/auditService');
 const { calculatePriority } = require('../utils/revenueImpact');
 const escapeRegex = require('../utils/escapeRegex');
@@ -338,15 +340,17 @@ const getCustomerTimeline = async (req, res, next) => {
     const before = req.query.before ? new Date(req.query.before) : null;
 
     const canReadDeals = PERMISSIONS.deals.read.includes(req.user.role);
+    const canReadQuotes = PERMISSIONS.quotes.read.includes(req.user.role);
 
-    const [customerEvents, feedbacks, leadIds, dealIds] = await Promise.all([
+    const [customerEvents, feedbacks, leadIds, dealIds, quoteIds] = await Promise.all([
       CustomerEvent.find({ customer: customer._id }).sort('-createdAt').limit(TIMELINE_SOURCE_CAP),
       Feedback.find({ customer: customer._id }).sort('-createdAt').limit(TIMELINE_SOURCE_CAP),
       Lead.find({ linkedCustomer: customer._id }).distinct('_id'),
       canReadDeals ? Deal.find({ customer: customer._id }).distinct('_id') : Promise.resolve([]),
+      canReadQuotes ? Quote.find({ customer: customer._id }).distinct('_id') : Promise.resolve([]),
     ]);
 
-    const [leadEvents, dealEvents] = await Promise.all([
+    const [leadEvents, dealEvents, quoteEvents] = await Promise.all([
       LeadEvent.find({ lead: { $in: leadIds } })
         .sort('-createdAt')
         .limit(TIMELINE_SOURCE_CAP)
@@ -357,9 +361,15 @@ const getCustomerTimeline = async (req, res, next) => {
             .limit(TIMELINE_SOURCE_CAP)
             .populate('deal', 'title currency')
         : Promise.resolve([]),
+      quoteIds.length
+        ? QuoteEvent.find({ quote: { $in: quoteIds } })
+            .sort('-createdAt')
+            .limit(TIMELINE_SOURCE_CAP)
+            .populate('quote', 'quoteNumber grandTotal currency')
+        : Promise.resolve([]),
     ]);
 
-    let items = buildTimeline({ customerEvents, dealEvents, leadEvents, feedbacks });
+    let items = buildTimeline({ customerEvents, dealEvents, leadEvents, quoteEvents, feedbacks });
 
     if (before) {
       items = items.filter((item) => new Date(item.at).getTime() < before.getTime());

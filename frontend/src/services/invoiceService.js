@@ -63,6 +63,32 @@ const invoiceService = {
   getStats: () => {
     return invoiceApi.get('/invoices/stats/summary');
   },
+
+  // Sales Invoice (Satış Faturası - P3b) — main backend API
+  getSalesInvoices: (params) => {
+    const api = require('./api').default;
+    return api.get('/invoices', { params });
+  },
+  getSalesInvoice: (id) => {
+    const api = require('./api').default;
+    return api.get(`/invoices/${id}`);
+  },
+  createSalesInvoice: (data) => {
+    const api = require('./api').default;
+    return api.post('/invoices', data);
+  },
+  generateFromQuote: (quoteId) => {
+    const api = require('./api').default;
+    return api.post(`/invoices/from-quote/${quoteId}`);
+  },
+  updateSalesStatus: (id, status, paymentNotes) => {
+    const api = require('./api').default;
+    return api.patch(`/invoices/${id}/status`, { status, paymentNotes });
+  },
+  getSalesPdf: (id) => {
+    const api = require('./api').default;
+    return api.get(`/invoices/${id}/pdf`, { responseType: 'blob' });
+  },
 };
 
 export default invoiceService;
