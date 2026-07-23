@@ -67,7 +67,6 @@
     "tasks": "Tasks",
     "leads": "Forms",
     "invoices": "Invoices",
-    "invoicesV2": "Invoices v2 (Local OCR)",
     "spendingReport": "Spending Overview",
     "projects": "Projects",
     "users": "User Management",
@@ -89,7 +88,9 @@
     "darkMode": "Dark Mode",
     "openMenu": "Open Menu",
     "closeSidebar": "Close Menu",
-    "deals": "Deals"
+    "deals": "Deals",
+    "catalog": "Product Catalog",
+    "quotes": "Quotes"
   },
   "users": {
     "title": "User Management",
@@ -204,6 +205,8 @@
     "source": "Source",
     "notes": "Notes",
     "allPlans": "All Plans",
+    "allSources": "All Sources",
+    "allMrr": "All Revenue Ranges",
     "deleteConfirm": "Are you sure you want to delete this customer?",
     "deleteWarning": "This action cannot be undone. All feedbacks associated with this customer will also be deleted.",
     "grantPortalAccess": "Grant Portal Access",
@@ -223,6 +226,11 @@
       "email": "Email",
       "in-app": "In-App",
       "other": "Other"
+    },
+    "mrrRanges": {
+      "free": "Free ($0)",
+      "low": "Low ($1 - $199)",
+      "high": "High ($200+)"
     },
     "detail": {
       "timeline": "Activity Timeline",
@@ -356,10 +364,6 @@
     "noInvoices": "No invoices uploaded yet",
     "uploadFirst": "Start by uploading your first invoice"
   },
-  "invoicesV2": {
-    "title": "Invoices v2 — Local OCR (Tesseract)",
-    "subtitle": "Fully local OCR and regex-based invoice processing, zero external API dependency"
-  },
   "reports": {
     "title": "Spending Overview",
     "subtitle": "Combined spending & VAT summary from Invoices v1 and v2",
@@ -437,7 +441,7 @@
     }
   },
   "accessControl": {
-    "title": "Access Control Matrix",
+    "title": "Access Control",
     "subtitle": "Grant users temporary permissions beyond their default role",
     "user": "User",
     "grantedByRole": "Granted by role",
@@ -773,7 +777,9 @@
       "status": "Status",
       "assignedTo": "Assigned to",
       "unassigned": "Unassigned",
-      "assignToMe": "Assign to Me",
+      "assignTo": "Assign",
+      "selectAssignee": "Select person",
+      "assignedBy": "assigned by",
       "existingCustomer": "Existing customer",
       "timeline": "Timeline",
       "notePlaceholder": "Add an internal note...",
@@ -785,7 +791,7 @@
     "timeline": {
       "created": "created the request",
       "statusChanged": "changed status:",
-      "assigned": "assigned to self",
+      "assigned": "assigned",
       "converted": "converted to a deal"
     }
   },
@@ -867,7 +873,7 @@
   },
   "deals": {
     "panel": {
-      "title": "Sales Pipeline",
+      "title": "Deals",
       "subtitle": "Manage opportunities by stage and forecast revenue",
       "newDeal": "New Deal",
       "empty": "No deals yet. Start by converting a lead or adding a new deal."
@@ -932,6 +938,95 @@
       "won": "marked as won:",
       "lost": "marked as lost:",
       "assigned": "assigned an owner"
+    }
+  },
+  "catalog": {
+    "title": "Product Catalog",
+    "subtitle": "Manage your standard products and services",
+    "newProduct": "New Product",
+    "editProduct": "Edit Product",
+    "empty": "No products yet. Start by adding a product to the catalog.",
+    "created": "Product created.",
+    "archived": "Product archived.",
+    "showArchived": "Show Archived",
+    "hideArchived": "Hide Archived",
+    "archivedBadge": "Archived",
+    "archive": "Archive",
+    "archivedSection": "Archived Products",
+    "archivedEmpty": "No archived products.",
+    "salesHistory": "Sales History",
+    "salesHistoryEmpty": "No sales history yet.",
+    "salesQuote": "Quote",
+    "salesCustomer": "Customer",
+    "salesDate": "Date",
+    "salesQty": "Qty",
+    "salesTotal": "Total",
+    "salesStatus": "Status",
+    "productName": "Product Name",
+    "description": "Description",
+    "category": "Category",
+    "sku": "SKU",
+    "unitPrice": "Unit Price",
+    "taxRate": "Tax Rate",
+    "currency": "Currency",
+    "unitLabel": "Unit",
+    "unit": {
+      "piece": "Piece",
+      "hour": "Hour",
+      "month": "Month",
+      "project": "Project",
+      "license": "License"
+    }
+  },
+  "quotes": {
+    "title": "Quotes",
+    "subtitle": "Create, manage and track your customer quotes",
+    "newQuote": "New Quote",
+    "editQuote": "Edit Quote",
+    "empty": "No quotes yet. Start by creating a new quote.",
+    "created": "Quote created.",
+    "sent": "Quote sent.",
+    "revised": "Quote revised.",
+    "deleted": "Quote deleted.",
+    "number": "Quote No",
+    "customer": "Customer",
+    "selectCustomer": "Select a customer",
+    "customerRequired": "Please select a customer.",
+    "deal": "Deal",
+    "noDeal": "Without linking a deal",
+    "owner": "Owner",
+    "status": "Status",
+    "total": "Total",
+    "date": "Date",
+    "validUntil": "Valid Until",
+    "sentAt": "Sent At",
+    "currency": "Currency",
+    "items": "Items",
+    "itemsRequired": "At least one item is required.",
+    "addFromCatalog": "Add from Catalog",
+    "freeItem": "Free Line",
+    "noItems": "No items added yet.",
+    "itemName": "Product / Service",
+    "itemNamePlaceholder": "Enter item name...",
+    "qty": "Qty",
+    "price": "Unit Price",
+    "discount": "Discount",
+    "taxRate": "Tax",
+    "lineTotal": "Total",
+    "subtotal": "Subtotal",
+    "tax": "Tax Total",
+    "grandTotal": "Grand Total",
+    "notes": "Notes / Terms",
+    "createDraft": "Save Draft",
+    "send": "Send",
+    "revise": "Revise",
+    "downloadPdf": "Download PDF",
+    "statusLabel": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "expired": "Expired"
     }
   }
 }

@@ -103,7 +103,7 @@ const CatalogForm = ({ product, onSave, onClose }) => {
               <input className="form-input" type="number" min="0" max="100" value={form.taxRate} onChange={setField('taxRate')} />
             </label>
             <label className="form-group">
-              <span className="form-label">{t('catalog.unit')}</span>
+              <span className="form-label">{t('catalog.unitLabel')}</span>
               <select className="form-select" value={form.unit} onChange={setField('unit')}>
                 {PRODUCT_UNITS.map((u) => <option key={u} value={u}>{t(`catalog.unit.${u}`)}</option>)}
               </select>

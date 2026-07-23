@@ -67,7 +67,6 @@
     "tasks": "Görevler",
     "leads": "Formlar",
     "invoices": "Faturalar",
-    "invoicesV2": "Fatura v2 (Yerli OCR)",
     "spendingReport": "Genel Harcama",
     "projects": "Projeler",
     "users": "Kullanıcı Yönetimi",
@@ -89,7 +88,9 @@
     "darkMode": "Karanlık Mod",
     "openMenu": "Menüyü Aç",
     "closeSidebar": "Menüyü Kapat",
-    "deals": "Fırsatlar"
+    "deals": "Fırsatlar",
+    "catalog": "Ürün Kataloğu",
+    "quotes": "Teklifler"
   },
   "users": {
     "title": "Kullanıcı Yönetimi",
@@ -204,6 +205,8 @@
     "source": "Kaynak",
     "notes": "Notlar",
     "allPlans": "Tüm Planlar",
+    "allSources": "Tüm Kaynaklar",
+    "allMrr": "Tüm Gelir Aralıkları",
     "deleteConfirm": "Bu müşteriyi silmek istediğinize emin misiniz?",
     "deleteWarning": "Bu işlem geri alınamaz. Müşteriye ait tüm geri bildirimler de silinecektir.",
     "grantPortalAccess": "Portal Erişimi Ver",
@@ -223,6 +226,11 @@
       "email": "E-posta",
       "in-app": "Uygulama İçi",
       "other": "Diğer"
+    },
+    "mrrRanges": {
+      "free": "Ücretsiz ($0)",
+      "low": "Düşük ($1 - $199)",
+      "high": "Yüksek ($200+)"
     },
     "detail": {
       "timeline": "Aktivite Zaman Çizelgesi",
@@ -356,12 +364,8 @@
     "noInvoices": "Henüz fatura yüklenmedi",
     "uploadFirst": "İlk faturanızı yükleyerek başlayın"
   },
-  "invoicesV2": {
-    "title": "Fatura v2 — Yerli OCR (Tesseract)",
-    "subtitle": "Dış API bağımlılığı olmadan, tamamen yerel OCR ve regex tabanlı fatura işleme"
-  },
   "reports": {
-    "title": "Genel Harcama Raporu",
+    "title": "Genel Harcama",
     "subtitle": "Fatura v1 ve v2'den birleştirilmiş harcama ve KDV özeti",
     "export": "Excel/CSV İndir",
     "exportSuccess": "Rapor indirildi ✅",
@@ -437,7 +441,7 @@
     }
   },
   "accessControl": {
-    "title": "Erişim Kontrol Matrisi",
+    "title": "Erişim Kontrolü",
     "subtitle": "Kullanıcılara varsayılan rollerinin dışında geçici yetkiler tanımlayın",
     "user": "Kullanıcı",
     "grantedByRole": "Rolünden geliyor",
@@ -773,7 +777,9 @@
       "status": "Durum",
       "assignedTo": "Atanan",
       "unassigned": "Atanmadı",
-      "assignToMe": "Bana Ata",
+      "assignTo": "Atama Yap",
+      "selectAssignee": "Kişi seçin",
+      "assignedBy": "tarafından atandı",
       "existingCustomer": "Mevcut müşteri",
       "timeline": "Zaman Çizelgesi",
       "notePlaceholder": "Ekip içi not ekle...",
@@ -785,7 +791,7 @@
     "timeline": {
       "created": "talebi oluşturdu",
       "statusChanged": "durumu değiştirdi:",
-      "assigned": "kendine atadı",
+      "assigned": "atadı",
       "converted": "fırsata dönüştürdü"
     }
   },
@@ -867,9 +873,7 @@
   },
   "deals": {
     "panel": {
-      "deals": "Satış Pipeline",
-      "catalog": "Ürün Kataloğu",
-      "quotes": "Teklifler",
+      "title": "Fırsatlar",
       "subtitle": "Fırsatları aşamalara göre yönetin, ciro tahminini görün",
       "newDeal": "Yeni Fırsat",
       "empty": "Henüz fırsat yok. Bir talebi dönüştürerek ya da yeni fırsat ekleyerek başlayın."
@@ -944,9 +948,20 @@
     "empty": "Henüz ürün yok. Kataloga ürün ekleyerek başlayın.",
     "created": "Ürün oluşturuldu.",
     "archived": "Ürün arşivlendi.",
-    "showArchived": "Arşivlenenleri göster",
+    "showArchived": "Arşivlenenleri Göster",
+    "hideArchived": "Arşivi Gizle",
     "archivedBadge": "Arşiv",
     "archive": "Arşivle",
+    "archivedSection": "Arşivlenen Ürünler",
+    "archivedEmpty": "Arşivlenmiş ürün yok.",
+    "salesHistory": "Geçmiş Satışlar",
+    "salesHistoryEmpty": "Henüz satış geçmişi yok.",
+    "salesQuote": "Teklif",
+    "salesCustomer": "Müşteri",
+    "salesDate": "Tarih",
+    "salesQty": "Miktar",
+    "salesTotal": "Toplam",
+    "salesStatus": "Durum",
     "productName": "Ürün Adı",
     "description": "Açıklama",
     "category": "Kategori",
@@ -954,12 +969,14 @@
     "unitPrice": "Birim Fiyat",
     "taxRate": "KDV Oranı",
     "currency": "Para Birimi",
-    "unit": "Birim",
-    "unit.piece": "Adet",
-    "unit.hour": "Saat",
-    "unit.month": "Ay",
-    "unit.project": "Proje",
-    "unit.license": "Lisans"
+    "unitLabel": "Birim",
+    "unit": {
+      "piece": "Adet",
+      "hour": "Saat",
+      "month": "Ay",
+      "project": "Proje",
+      "license": "Lisans"
+    }
   },
   "quotes": {
     "title": "Teklifler",

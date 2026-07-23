@@ -121,6 +121,25 @@ const invoiceSchema = new mongoose.Schema(
       default: '',
       maxlength: [1000, 'Ödeme notları en fazla 1000 karakter olabilir.'],
     },
+    // ---- Resmî e-Fatura / e-Arşiv kesim durumu (GİB entegratörü) ----
+    // CRM satış faturasının (FTR-*) resmî kesim yaşam döngüsü. `status` alanı
+    // (üstteki) ödeme/CRM durumu; bu blok GİB kesim durumu — ayrı eksen.
+    // Durum makinesi: NONE → SENDING → ISSUED | FAILED. ISSUED yalnız poll ile
+    // (webhook yok). İdempotency: atomik claim (bkz. eInvoiceController).
+    eInvoice: {
+      status: { type: String, enum: ['NONE', 'SENDING', 'ISSUED', 'FAILED'], default: 'NONE' },
+      provider: { type: String, default: '' },        // hangi sağlayıcı (mock/faturaport)
+      idempotencyKey: { type: String },               // her kesim denemesi için tekil
+      providerInvoiceId: { type: String, default: null }, // ETTN / UUID
+      officialNumber: { type: String, default: null },    // GİB fatura no (poll'da dolar)
+      pdfBase64: { type: String, default: null },         // sağlayıcı base64 PDF döndüyse
+      rawResponse: { type: mongoose.Schema.Types.Mixed, default: null }, // reconciliation için HAM
+      recipientSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
+      error: { type: String, default: '' },
+      sentAt: { type: Date, default: null },
+      issuedAt: { type: Date, default: null },
+      failedAt: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,
@@ -129,5 +148,11 @@ const invoiceSchema = new mongoose.Schema(
 );
 
 invoiceSchema.index({ customer: 1, createdAt: -1 });
+// İdempotency: aynı kesim anahtarı iki kayıtta olamaz (yalnız string değerler
+// indekslenir — NONE durumundaki henüz-kesilmemişler indeks dışı).
+invoiceSchema.index(
+  { 'eInvoice.idempotencyKey': 1 },
+  { unique: true, partialFilterExpression: { 'eInvoice.idempotencyKey': { $type: 'string' } } }
+);
 
 module.exports = mongoose.model('Invoice', invoiceSchema);

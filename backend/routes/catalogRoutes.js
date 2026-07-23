@@ -15,11 +15,13 @@ const {
   getProduct,
   updateProduct,
   archiveProduct,
+  getSalesSummary,
 } = require('../controllers/catalogController');
 
 // Ürün Kataloğu — intern BİLEREK yok (deals ile aynı çizgi, ciro verisi kapalı).
 // GÖRÜNTÜLEME (accountant dahil):
 router.get('/', protect, authorize(...PERMISSIONS.catalog.read), getProducts);
+router.get('/sales-summary', protect, authorize(...PERMISSIONS.catalog.read), getSalesSummary);
 router.get('/:id', protect, authorize(...PERMISSIONS.catalog.read), catalogIdValidators, handleValidationErrors, getProduct);
 
 // DEĞİŞTİRME (yalnız super_admin + staff):

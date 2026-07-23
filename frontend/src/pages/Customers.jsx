@@ -22,7 +22,7 @@ const Customers = () => {
   const { t } = useLanguage();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('');
+  const [filters, setFilters] = useState({ plan: '', source: '', mrrRange: '' });
   const [search, setSearch] = useState('');
 
   // Customer Modal state
@@ -60,7 +60,9 @@ const Customers = () => {
   const fetchCustomers = useCallback(async () => {
     try {
       const params = { limit: 100 };
-      if (filter) params.plan = filter;
+      if (filters.plan) params.plan = filters.plan;
+      if (filters.source) params.source = filters.source;
+      if (filters.mrrRange) params.mrrRange = filters.mrrRange;
       if (search) params.search = search;
       const res = await customerService.getAll(params);
       setCustomers(res.data.data);
@@ -69,7 +71,7 @@ const Customers = () => {
     } finally {
       setLoading(false);
     }
-  }, [filter, search]);
+  }, [filters, search]);
 
   useEffect(() => {
     fetchCustomers();
@@ -216,15 +218,44 @@ const Customers = () => {
       <div className="table-container">
         <div className="table-header">
           <div className="table-filters">
-            {['', 'free', 'starter', 'premium', 'vip'].map((plan) => (
-              <button
-                key={plan}
-                className={`filter-chip ${filter === plan ? 'active' : ''}`}
-                onClick={() => setFilter(plan)}
-              >
-                {plan === '' ? t('customers.allPlans') : t(`customers.plans.${plan}`)}
-              </button>
-            ))}
+            {/* Plan filter */}
+            <select
+              className="filter-chip"
+              value={filters.plan}
+              onChange={(e) => setFilters({ ...filters, plan: e.target.value })}
+              style={{ cursor: 'pointer', minWidth: '120px' }}
+            >
+              <option value="">{t('customers.allPlans')}</option>
+              {['free', 'starter', 'premium', 'vip'].map((plan) => (
+                <option key={plan} value={plan}>{t(`customers.plans.${plan}`)}</option>
+              ))}
+            </select>
+
+            {/* Source filter */}
+            <select
+              className="filter-chip"
+              value={filters.source}
+              onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+              style={{ cursor: 'pointer', minWidth: '130px' }}
+            >
+              <option value="">{t('customers.allSources')}</option>
+              {['twitter', 'discord', 'email', 'in-app', 'other'].map((source) => (
+                <option key={source} value={source}>{t(`customers.sources.${source}`)}</option>
+              ))}
+            </select>
+
+            {/* MRR Range filter */}
+            <select
+              className="filter-chip"
+              value={filters.mrrRange}
+              onChange={(e) => setFilters({ ...filters, mrrRange: e.target.value })}
+              style={{ cursor: 'pointer', minWidth: '140px' }}
+            >
+              <option value="">{t('customers.allMrr')}</option>
+              {['free', 'low', 'high'].map((range) => (
+                <option key={range} value={range}>{t(`customers.mrrRanges.${range}`)}</option>
+              ))}
+            </select>
           </div>
           <div className="search-bar">
             <HiOutlineSearch className="search-icon" />

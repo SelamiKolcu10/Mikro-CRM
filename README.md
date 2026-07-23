@@ -77,13 +77,7 @@ Micro-CRM/
 │   ├── seed/                   # Demo veri scripti
 │   └── utils/                  # Yardımcı fonksiyonlar
 │
-├── invoice-ocr-service/        # 🧾 Bağımsız Fatura OCR Mikroservisi (v1)
-│   ├── services/               # OpenAI GPT-4o-mini & OCR entegrasyonu
-│   ├── utils/                  # KDV hesaplama motoru
-│   ├── models/                 # Fatura veri modeli
-│   ├── controllers/            # API handler'ları
-│   ├── tests/                  # Jest unit testleri
-│   └── README.md               # Bağımsız kurulum kılavuzu
+├── invoice-ocr-service/        # 🧾 (ESKİ v1 OCR — UI'dan kaldırıldı, servis kodu arşiv olarak duruyor)
 │
 ├── invoice-ocr-v2/              # 🧾 Yerli OCR Fatura Mikroservisi (v2, port 5002)
 │   ├── services/                # Tesseract.js OCR + Sharp ön-işleme + regex parser
@@ -149,11 +143,13 @@ Micro-CRM/
 }
 ```
 
-### Invoices v1 (Fatura — Bağımsız Servis, Port 5001, OpenAI)
+### Gelen Fatura OCR — Yerli Servis (Port 5002, Tesseract.js)
+
+`invoice-ocr-v2/` üzerinden `http://localhost:5002/api` adresinde çalışır. Dış API bağımlılığı yoktur, `invoicesv2` koleksiyonunu kullanır.
 
 | Method | Endpoint | Açıklama |
 |---|---|---|
-| POST | `/api/invoices/upload` | Tek fatura yükle + AI ile işle |
+| POST | `/api/invoices/upload` | Tek fatura yükle + yerel OCR ile işle |
 | POST | `/api/invoices/bulk-upload` | Toplu fatura yükle (10-20 adet) |
 | GET | `/api/invoices` | Fatura listesi (pagination + filtre) |
 | GET | `/api/invoices/:id` | Fatura detayı + KDV kırılımı |
@@ -161,22 +157,27 @@ Micro-CRM/
 | DELETE | `/api/invoices/:id` | Fatura sil |
 | GET | `/api/invoices/stats/summary` | İşleme istatistikleri |
 
-### Invoices v2 (Fatura — Bağımsız Servis, Port 5002, Yerli OCR/Tesseract.js)
+Detaylar için [invoice-ocr-v2/README.md](invoice-ocr-v2/README.md).
 
-Aynı endpoint seti, `invoice-ocr-v2/` üzerinden `http://localhost:5002/api` adresinde. Dış API bağımlılığı yoktur, `invoicesv2` koleksiyonunu kullanır. Detaylar için [invoice-ocr-v2/README.md](invoice-ocr-v2/README.md).
+> **Not:** Eski v1 OCR servisi (invoice-ocr-service, port 5001, OpenAI GPT-4o-mini) arayüzden kaldırıldı. Gelen fatura OCR'ı artık yalnızca yerli servisle yürür; satış faturaları (CRM) ana backend'in `/api/invoices` ucundadır.
 
 ### Kritik İlişki
 `Feedback.revenueImpact` ve `Feedback.priority` alanları, bağlı müşterinin `mrr` değerinden **otomatik hesaplanır**. Müşterinin planı değiştiğinde, ilişkili tüm geri bildirimler de güncellenir.
 
 ## 🔄 Değişiklik Geçmişi (Changelog)
 
-- **2026-07-22** — 📜 **Teklif Motoru & Onay Akışı & Satış Faturası Entegrasyonu (P3a & P3b)** eklendi (v1.5.0)
+- **2026-07-23** — 🎯 **Katalog, Form Atama ve Çoklu Filtre Geliştirmeleri**
+  - **Müşteriler Çoklu Filtre (Customers Multi-Filter):** Müşteriler sayfasında, geri bildirimler sayfasına benzer şekilde Plan, Kaynak ve Aylık Gelir (MRR) aralıklarına (Ücretsiz, Düşük 1-199, Yüksek 200+) göre `<select>` bazlı eşzamanlı çoklu filtreleme eklendi.
+  - **Katalog Birim Düzeltmesi:** Ürün düzenleme kısmındaki `catalog.unit.month` gibi doğrudan key yazan kısımlar i18n objesi içinde `unitLabel` olacak şekilde düzenlendi ve düzeltildi.
+  - **Arşivlenmiş Ürünler ve Satış Geçmişi:** Katalog (Catalog) sayfasında yeni ve bağımsız sekmeli (panel) görünümler eklendi. Sadece "Arşivlenenleri Göster" seçildiğinde özel arşiv paneli, ayrıca "Geçmiş Ürün Satışları" için özet bilgi paneli (satış miktarı, MRR vs.) UI'a dahil edildi.
+  - **Super Admin Form Atama:** Formlar (Leads) kısmındaki atama sistemi refactor edildi. `assignLeadToMe` endpoint'i `assignLead` yapıldı ve bir personelin kendi kendine almak yerine, sadece **Super Admin** rolündeki kullanıcıların, kişi seçici (user-picker dropdown) üzerinden lead'i dilediği ekibe ataması sağlandı.
+
+- **2026-07-16** — 📑 **Teklifler (Quotes) / Gelişmiş Tekliflendirme Modülü** (v1.5.0)
   - **Ürün Kataloğu (Catalog):** SKU, birim, birim fiyat, KDV oranı (%0, %1, %10, %20), stok miktarı yönetimi.
   - **Teklif Motoru (Quote Engine):** İki kademeli kalemsel ve teklif geneli indirim (yüzde / tutar), otomatik KDV ve genel toplam hesabı, atomik sıralı numara üretimi (`TEK-2026-XXXX`).
   - **PDF Üretim Engine (Puppeteer):** Chrome headless ile kurumsal antetli, profesyonel HTML/CSS şablonlu vector PDF üretimi (`GET /api/quotes/:id/pdf`).
   - **Müşteri Dış Onay / Ret Sayfası (Public Token):** Kimlik doğrulamasız, token tabanlı müşteri teklif inceleme ve onay/ret portalı (`/q/:token`). `publicQuoteRateLimiter` ile güvenlik önlemi.
   - **Onay / Revizyon Akışı & Socket.io Bildirimleri:** `QuoteEvent` audit kaydı, revizyon versiyonlama (`v1`, `v2`, ...), teklif incelendiğinde veya onaylandığında `STAFF_ROOM` socket yayını.
-  - **Satış Faturası Köprüsü (Invoice Bridge):** Onaylanan tekliflerin tek tıkla satış faturasına dönüştürülmesi (`FTR-2026-XXXX`), fatura durum takibi (taslak, kesildi, ödendi, vadesi geçti, iptal) ve PDF indirme.
   - **Müşteri Zaman Çizelgesi (Customer Timeline) Entegrasyonu:** Teklif ve fatura yaşam döngüsü olaylarının müşteri zaman çizelgesine anlık harmanlanması.
 - **2026-07-13** — 📊 **GitHub-Style Contribution Heatmap** eklendi
   - Görev sayfasının altına 365 günlük GitHub tarzı katkı ısı haritası (contribution calendar) eklendi

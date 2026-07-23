@@ -5,7 +5,7 @@ const { authorize } = require('../middleware/authorize');
 const { redactForIntern } = require('../middleware/redactForIntern');
 const { leadRateLimiter } = require('../middleware/security');
 const { handleValidationErrors } = require('../middleware/validate');
-const { PERMISSIONS } = require('../config/permissions');
+const { PERMISSIONS, ROLES } = require('../config/permissions');
 const {
   createLeadValidators,
   leadIdValidators,
@@ -20,7 +20,7 @@ const {
   getLeadEvents,
   updateLeadStatus,
   addLeadNote,
-  assignLeadToMe,
+  assignLead,
   convertLead,
 } = require('../controllers/leadController');
 
@@ -46,7 +46,7 @@ router.get('/', protect, authorize(...PERMISSIONS.leads.read), redactForIntern, 
 router.get('/:id/events', protect, authorize(...PERMISSIONS.leads.read), redactForIntern, leadIdValidators, handleValidationErrors, getLeadEvents);
 router.patch('/:id/status', protect, authorize(...PERMISSIONS.leads.write), updateLeadStatusValidators, handleValidationErrors, updateLeadStatus);
 router.post('/:id/notes', protect, authorize(...PERMISSIONS.leads.write), addLeadNoteValidators, handleValidationErrors, addLeadNote);
-router.patch('/:id/assign-to-me', protect, authorize(...PERMISSIONS.leads.write), leadIdValidators, handleValidationErrors, assignLeadToMe);
+router.patch('/:id/assign', protect, authorize(ROLES.SUPER_ADMIN), leadIdValidators, handleValidationErrors, assignLead);
 // Lead → Deal dönüşümü: Customer + Deal oluşturur (bkz. leadController.convertLead).
 // leads.write == deals.write == [super_admin, staff] — aynı ekip.
 router.post('/:id/convert', protect, authorize(...PERMISSIONS.leads.write), convertLeadValidators, handleValidationErrors, convertLead);

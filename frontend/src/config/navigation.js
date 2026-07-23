@@ -3,7 +3,6 @@ import {
   HiOutlineUsers,
   HiOutlineChatAlt2,
   HiOutlineDocumentText,
-  HiOutlineBeaker,
   HiOutlineShieldCheck,
   HiOutlineChartBar,
   HiOutlineClipboardList,
@@ -60,8 +59,9 @@ export const INTERNAL_NAV = [
     section: 'finance',
     sectionLabelKey: 'nav.finance',
     items: [
+      // Faturalar — satış faturaları (CRM) + gelen faturalar (yerli OCR) tek sayfada
+      // sekmeli. Eski API'li v1 OCR sayfası kaldırıldı (bkz. pages/Invoices.jsx).
       { path: '/invoices', icon: HiOutlineDocumentText, labelKey: 'nav.invoices', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
-      { path: '/invoices-v2', icon: HiOutlineBeaker, labelKey: 'nav.invoicesV2', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
       { path: '/reports/spending', icon: HiOutlineChartBar, labelKey: 'nav.spendingReport', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.INTERN] },
     ],
   },

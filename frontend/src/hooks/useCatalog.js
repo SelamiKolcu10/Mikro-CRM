@@ -3,9 +3,12 @@ import catalogService from '../services/catalogService';
 
 /**
  * Ürün Kataloğu veri/iş mantığı — useDeals.js deseni.
+ * Arşivli ürünler ve satış geçmişi ayrı state'lerde tutulur.
  */
 export function useCatalog() {
   const [products, setProducts] = useState([]);
+  const [archivedProducts, setArchivedProducts] = useState([]);
+  const [salesHistory, setSalesHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -26,6 +29,25 @@ export function useCatalog() {
     refresh();
   }, [refresh]);
 
+  const refreshArchived = useCallback(async () => {
+    try {
+      const res = await catalogService.getArchived();
+      setArchivedProducts(res.data.data);
+    } catch {
+      // Hata durumunda sessizce boş bırak
+      setArchivedProducts([]);
+    }
+  }, []);
+
+  const refreshSalesHistory = useCallback(async () => {
+    try {
+      const res = await catalogService.getSalesSummary();
+      setSalesHistory(res.data.data);
+    } catch {
+      setSalesHistory([]);
+    }
+  }, []);
+
   const createProduct = useCallback(async (payload) => {
     const res = await catalogService.create(payload);
     setProducts((prev) => [res.data.data, ...prev]);
@@ -43,5 +65,17 @@ export function useCatalog() {
     setProducts((prev) => prev.filter((p) => p._id !== id));
   }, []);
 
-  return { products, loading, error, refresh, createProduct, updateProduct, archiveProduct };
+  return {
+    products,
+    archivedProducts,
+    salesHistory,
+    loading,
+    error,
+    refresh,
+    refreshArchived,
+    refreshSalesHistory,
+    createProduct,
+    updateProduct,
+    archiveProduct,
+  };
 }

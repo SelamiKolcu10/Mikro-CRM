@@ -183,27 +183,36 @@ const addLeadNote = async (req, res, next) => {
 };
 
 /**
- * @route   PATCH /api/leads/:id/assign-to-me
- * @desc    Kısayol: mevcut kullanıcı kendine atar (basit "Bana ata" aksiyonu
- *          — spec'te modellenen assignedTo/LeadEvent 'assigned' alanları
- *          Faz 2'de kullanıma açılıyor, tam bir kişi-seçici UI'ı ileriye
- *          bırakıldı çünkü v1'de panel zaten sadece super_admin+staff'a açık,
- *          küçük bir ekip için "bana ata" pratik olarak yeterli).
+ * @route   PATCH /api/leads/:id/assign
+ * @desc    Admin (super_admin) bir lead'i belirtilen kullanıcıya atar.
+ *          Body: { assigneeId } — atanacak kullanıcının _id'si.
  */
-const assignLeadToMe = async (req, res, next) => {
+const assignLead = async (req, res, next) => {
   try {
+    const { assigneeId } = req.body;
+    if (!assigneeId) {
+      return res.status(400).json({ success: false, error: 'assigneeId gereklidir.' });
+    }
+
+    const User = require('../models/User');
+    const assignee = await User.findById(assigneeId);
+    if (!assignee) {
+      return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
+    }
+
     const lead = await Lead.findById(req.params.id);
     if (!lead) {
       return res.status(404).json({ success: false, error: 'Talep bulunamadı.' });
     }
 
-    lead.assignedTo = req.user._id;
+    lead.assignedTo = assignee._id;
     await lead.save();
     await LeadEvent.create({
       lead: lead._id,
       actor: req.user._id,
       actorName: req.user.name,
       action: 'assigned',
+      note: `→ ${assignee.name}`,
     });
     await lead.populate(LEAD_POPULATE);
 
@@ -303,6 +312,6 @@ module.exports = {
   getLeadEvents,
   updateLeadStatus,
   addLeadNote,
-  assignLeadToMe,
+  assignLead,
   convertLead,
 };

@@ -43,6 +43,13 @@ const customerSchema = new mongoose.Schema(
       default: '',
       maxlength: [500, 'Notes cannot exceed 500 characters'],
     },
+    // Resmî e-fatura için alıcı vergi/adres bilgileri (opsiyonel). Resmî Fatura
+    // Kes akışında doldurulur/güncellenir; sonraki kesimlerde ön-doldurulur.
+    taxNumber: { type: String, trim: true, default: '' }, // VKN (10) / TCKN (11)
+    taxOffice: { type: String, trim: true, default: '' },
+    address: { type: String, trim: true, default: '' },
+    city: { type: String, trim: true, default: '' },
+    district: { type: String, trim: true, default: '' },
   },
   {
     timestamps: true,

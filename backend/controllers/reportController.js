@@ -2,13 +2,16 @@ const mongoose = require('mongoose');
 const { ROLES } = require('../config/permissions');
 
 /**
- * Financial reporting reads the invoice collections directly rather than
- * calling invoice-ocr-service/invoice-ocr-v2 over HTTP. All three services
- * share the same MongoDB cluster (invoice-ocr-service → `invoices`,
- * invoice-ocr-v2 → `invoicesv2`), so a raw aggregation avoids inter-service
- * auth/network complexity for what is a read-only report. If the services
- * ever move to separate databases, swap these two aggregations for HTTP
- * calls to a `/api/invoices/summary` endpoint on each service.
+ * Financial reporting reads the invoice collection directly rather than calling
+ * invoice-ocr-v2 over HTTP — both share the same MongoDB cluster
+ * (invoice-ocr-v2 → `invoicesv2`), so a raw aggregation avoids inter-service
+ * auth/network complexity for what is a read-only report. If the service ever
+ * moves to a separate database, swap the aggregation for an HTTP call to a
+ * `/api/invoices/summary` endpoint.
+ *
+ * Kapsam: yalnızca yerli OCR (`invoicesv2`). Eski API'li v1 (`invoices`)
+ * rapordan çıkarıldı; ayrıca `invoices` koleksiyonu CRM satış faturalarını da
+ * tuttuğu için gider raporuna karışmaması istendi.
  */
 
 const EFFECTIVE_DATE = { $ifNull: ['$invoiceDate', '$createdAt'] };
@@ -149,26 +152,23 @@ const getSpendingSummary = async (req, res, next) => {
     const { dateFrom, dateTo } = req.query;
     const dateRange = buildDateRange(dateFrom, dateTo);
 
-    const [v1, v2] = await Promise.all([
-      aggregateCollection('invoices', dateRange),
-      aggregateCollection('invoicesv2', dateRange),
-    ]);
+    // Tek kaynak: yerli OCR (invoicesv2). Eski API'li v1 (`invoices` koleksiyonu)
+    // rapordan çıkarıldı — o koleksiyon CRM satış faturalarıyla da paylaşıldığı
+    // için gider toplamına karışmaması ayrıca istenen bir düzeltmeydi.
+    const v2 = await aggregateCollection('invoicesv2', dateRange);
 
     const overall = {
-      totalBase: roundToCent(v1.overall.totalBase + v2.overall.totalBase),
-      totalVat: roundToCent(v1.overall.totalVat + v2.overall.totalVat),
-      totalSpend: roundToCent(v1.overall.totalSpend + v2.overall.totalSpend),
-      count: v1.overall.count + v2.overall.count,
+      totalBase: roundToCent(v2.overall.totalBase),
+      totalVat: roundToCent(v2.overall.totalVat),
+      totalSpend: roundToCent(v2.overall.totalSpend),
+      count: v2.overall.count,
     };
 
     let trend = null;
     if (dateFrom && dateTo) {
       const previousRange = buildPreviousRange(dateFrom, dateTo);
-      const [v1Prev, v2Prev] = await Promise.all([
-        aggregateOverallOnly('invoices', previousRange),
-        aggregateOverallOnly('invoicesv2', previousRange),
-      ]);
-      const previousTotalSpend = roundToCent(v1Prev.totalSpend + v2Prev.totalSpend);
+      const v2Prev = await aggregateOverallOnly('invoicesv2', previousRange);
+      const previousTotalSpend = roundToCent(v2Prev.totalSpend);
       const changeAbsolute = roundToCent(overall.totalSpend - previousTotalSpend);
       const changePercent = previousTotalSpend > 0
         ? roundToCent((changeAbsolute / previousTotalSpend) * 100)
@@ -180,13 +180,12 @@ const getSpendingSummary = async (req, res, next) => {
       success: true,
       data: {
         overall,
-        byMonth: mergeMonthly(v1.monthly, v2.monthly),
+        byMonth: mergeMonthly(v2.monthly, []),
         byService: [
-          { service: 'v1', label: 'Fatura v1 (OpenAI)', ...v1.overall, totalBase: roundToCent(v1.overall.totalBase), totalVat: roundToCent(v1.overall.totalVat), totalSpend: roundToCent(v1.overall.totalSpend) },
           { service: 'v2', label: 'Fatura v2 (Yerli OCR)', ...v2.overall, totalBase: roundToCent(v2.overall.totalBase), totalVat: roundToCent(v2.overall.totalVat), totalSpend: roundToCent(v2.overall.totalSpend) },
         ],
-        byVendor: mergeVendors(v1.vendors, v2.vendors),
-        byVat: mergeVat(v1.vat, v2.vat),
+        byVendor: mergeVendors(v2.vendors, []),
+        byVat: mergeVat(v2.vat, []),
         trend,
         filters: { dateFrom: dateFrom || null, dateTo: dateTo || null },
       },
@@ -229,15 +228,11 @@ const exportSpendingCsv = async (req, res, next) => {
       ? [{ $addFields: { effectiveDate: EFFECTIVE_DATE } }, { $match: { effectiveDate: dateRange } }, { $project: projection }]
       : [{ $project: projection }];
 
-    const [v1Docs, v2Docs] = await Promise.all([
-      mongoose.connection.db.collection('invoices').aggregate(matchStage).toArray(),
-      mongoose.connection.db.collection('invoicesv2').aggregate(matchStage).toArray(),
-    ]);
+    const v2Docs = await mongoose.connection.db.collection('invoicesv2').aggregate(matchStage).toArray();
 
-    const rows = [
-      ...v1Docs.map((d) => ({ ...d, service: 'Fatura v1' })),
-      ...v2Docs.map((d) => ({ ...d, service: 'Fatura v2' })),
-    ].sort((a, b) => new Date(a.invoiceDate || a.createdAt) - new Date(b.invoiceDate || b.createdAt));
+    const rows = v2Docs
+      .map((d) => ({ ...d, service: 'Fatura v2' }))
+      .sort((a, b) => new Date(a.invoiceDate || a.createdAt) - new Date(b.invoiceDate || b.createdAt));
 
     const header = ['Servis', 'Satıcı', 'Vergi No', 'Fatura No', 'Fatura Tarihi', 'Matrah', 'KDV', 'Genel Toplam', 'Durum'];
     const csvEscape = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;

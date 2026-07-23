@@ -5,10 +5,11 @@ import { HiOutlineX, HiOutlineMail, HiOutlinePhone, HiOutlineUserAdd, HiOutlineB
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { LEAD_STATUSES, LEAD_STATUS_CLASS, LEAD_TEMPERATURE_CLASS } from '../../config/leads';
-import { can } from '../../config/permissions';
+import { can, ROLES } from '../../config/permissions';
 import { summarizeLead } from '../../utils/leadSummary';
 import { useLeadEvents } from '../../hooks/useLeadEvents';
 import ConvertLeadModal from '../deals/ConvertLeadModal';
+import userService from '../../services/userService';
 import toast from 'react-hot-toast';
 
 const EVENT_LABEL_KEY = {
@@ -25,7 +26,7 @@ const EVENT_LABEL_KEY = {
  * hapsediyor, document.body'ye portallanmazsa navbar altında/yanlış yerde
  * kalır — iki kez yaşandı, üçüncüsü olmasın diye burada da aynısı).
  */
-const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
+const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssign }) => {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -35,11 +36,16 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
   const [changingStatus, setChangingStatus] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
+  const [assigneeId, setAssigneeId] = useState('');
+  const [staffUsers, setStaffUsers] = useState([]);
   const { events, loading: eventsLoading, addNote, refresh: refreshEvents } = useLeadEvents(lead?._id);
+
+  const isAdmin = user?.role === ROLES.SUPER_ADMIN;
 
   useEffect(() => {
     if (!lead) return;
     setNote('');
+    setAssigneeId('');
     drawerRef.current?.focus();
   }, [lead]);
 
@@ -49,6 +55,21 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [lead, onClose]);
+
+  // Admin drawer açıldığında kullanıcı listesini yükle
+  useEffect(() => {
+    if (!isAdmin || !lead) return;
+    let cancelled = false;
+    userService.getAll({ status: 'approved' }).then((res) => {
+      if (cancelled) return;
+      // leads.write yetkili roller: super_admin + staff
+      const eligible = (res.data.data || res.data).filter(
+        (u) => u.role === ROLES.SUPER_ADMIN || u.role === ROLES.STAFF
+      );
+      setStaffUsers(eligible);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [isAdmin, lead]);
 
   if (!lead) return null;
 
@@ -68,11 +89,13 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
     }
   };
 
-  const handleAssignToMe = async () => {
+  const handleAssign = async () => {
+    if (!assigneeId) return;
     setAssigning(true);
     try {
-      await onAssignToMe(lead._id);
+      await onAssign(lead._id, assigneeId);
       refreshEvents();
+      setAssigneeId('');
     } catch (err) {
       toast.error(err.response?.data?.error || t('common.error'));
     } finally {
@@ -94,7 +117,6 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
     }
   };
 
-  const isAssignedToMe = lead.assignedTo?._id === user?._id;
   // Salt-okunur roller (accountant/support/intern) paneli görür ama durum/
   // atama/not değiştiremez — kontroller gizlenir (backend de zaten reddeder).
   const canWrite = can(user?.role, 'leads', 'write');
@@ -185,10 +207,29 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
                 ) : (
                   <span className="frac-label">{t('leads.detail.unassigned')}</span>
                 )}
-                {canWrite && !isAssignedToMe && (
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={handleAssignToMe} disabled={assigning}>
-                    <HiOutlineUserAdd /> {t('leads.detail.assignToMe')}
-                  </button>
+
+                {/* Sadece admin (super_admin) kişi seçici dropdown görebilir */}
+                {isAdmin && (
+                  <div className="lead-assign-select">
+                    <select
+                      className="form-select"
+                      value={assigneeId}
+                      onChange={(e) => setAssigneeId(e.target.value)}
+                    >
+                      <option value="">{t('leads.detail.selectAssignee')}</option>
+                      {staffUsers.map((u) => (
+                        <option key={u._id} value={u._id}>{u.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleAssign}
+                      disabled={assigning || !assigneeId}
+                    >
+                      <HiOutlineUserAdd /> {t('leads.detail.assignTo')}
+                    </button>
+                  </div>
                 )}
               </div>
             </section>
@@ -236,7 +277,7 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssignToMe }) => {
                             </span>
                           )}
                           {ev.action === 'created' && <span>{t(EVENT_LABEL_KEY.created)}</span>}
-                          {ev.action === 'assigned' && <span>{t(EVENT_LABEL_KEY.assigned)}</span>}
+                          {ev.action === 'assigned' && <span>{t(EVENT_LABEL_KEY.assigned)} {ev.note || ''}</span>}
                           {ev.action === 'converted' && <span>{t(EVENT_LABEL_KEY.converted)}</span>}
                           {ev.action === 'note_added' && <span className="lead-timeline-note">{ev.note}</span>}
                         </div>

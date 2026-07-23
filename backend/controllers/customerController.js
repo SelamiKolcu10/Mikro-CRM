@@ -25,10 +25,16 @@ const notFound = (message) => Object.assign(new Error(message), { statusCode: 40
  */
 const getCustomers = async (req, res, next) => {
   try {
-    const { plan, search, sort = '-mrr', page = 1, limit = 20 } = req.query;
+    const { plan, source, mrrRange, search, sort = '-mrr', page = 1, limit = 20 } = req.query;
 
     const filter = {};
     if (plan) filter.plan = plan;
+    if (source) filter.source = source;
+    if (mrrRange) {
+      if (mrrRange === 'free') filter.mrr = 0;
+      else if (mrrRange === 'low') filter.mrr = { $gt: 0, $lt: 200 };
+      else if (mrrRange === 'high') filter.mrr = { $gte: 200 };
+    }
     if (search) {
       // Escaped → matched as a literal substring, never as an attacker regex
       // (ReDoS guard). mongo-sanitize only strips operator KEYS, not string

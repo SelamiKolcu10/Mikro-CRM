@@ -11,7 +11,7 @@ const leadService = {
   getEvents: (id) => api.get(`/leads/${id}/events`),
   updateStatus: (id, status) => api.patch(`/leads/${id}/status`, { status }),
   addNote: (id, note) => api.post(`/leads/${id}/notes`, { note }),
-  assignToMe: (id) => api.patch(`/leads/${id}/assign-to-me`),
+  assign: (id, assigneeId) => api.patch(`/leads/${id}/assign`, { assigneeId }),
 };
 
 export default leadService;

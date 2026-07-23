@@ -42,11 +42,11 @@ export function useLeads() {
     }
   }, [leads]);
 
-  const assignToMe = useCallback(async (id) => {
-    const res = await leadService.assignToMe(id);
+  const assignTo = useCallback(async (id, assigneeId) => {
+    const res = await leadService.assign(id, assigneeId);
     setLeads((prev) => prev.map((l) => (l._id === id ? res.data.data : l)));
     return res.data.data;
   }, []);
 
-  return { leads, loading, error, refresh, updateStatus, assignToMe };
+  return { leads, loading, error, refresh, updateStatus, assignTo };
 }

@@ -7,7 +7,7 @@ const Deal = require('../models/Deal');
 const { withComputedTotals } = require('../utils/quoteTotals');
 
 const INVOICE_POPULATE = [
-  { path: 'customer', select: 'name email company' },
+  { path: 'customer', select: 'name email company taxNumber taxOffice address city district' },
   { path: 'owner', select: 'name email' },
   { path: 'deal', select: 'title' },
   { path: 'quote', select: 'quoteNumber status' },
@@ -29,7 +29,11 @@ async function generateInvoiceNumber() {
 const getInvoices = async (req, res, next) => {
   try {
     const { customer, deal, status, before, limit: rawLimit } = req.query;
-    const filter = {};
+    // `invoices` koleksiyonu geçmişte v1 OCR gider faturalarıyla paylaşıldı
+    // (aynı DB/koleksiyon, farklı şema — vendorName'li, owner'sız kayıtlar).
+    // Gerçek satış faturalarında `owner` zorunlu; sadece onları döndür ki
+    // eski OCR kayıtları satış listesine karışmasın.
+    const filter = { owner: { $exists: true } };
     if (customer) filter.customer = customer;
     if (deal) filter.deal = deal;
     if (status) filter.status = status;
@@ -226,6 +230,56 @@ const updateInvoiceStatus = async (req, res, next) => {
 };
 
 /**
+ * @route   PUT /api/invoices/:id
+ * @desc    Faturayı manuel düzenle (kalemler, tarihler, notlar, para birimi).
+ *          Kilit: 'paid' veya 'cancelled' fatura değiştirilemez (salt görünüm).
+ *          Numara/müşteri/teklif bağı/sorumlu sabit kalır. Toplamlar saklanmaz,
+ *          okumada hesaplanır (withComputedTotals) — teklif deseniyle aynı.
+ */
+const updateInvoice = async (req, res, next) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id);
+    if (!invoice) {
+      return res.status(404).json({ success: false, error: 'Fatura bulunamadı.' });
+    }
+    if (invoice.status === 'paid' || invoice.status === 'cancelled') {
+      return res.status(422).json({
+        success: false,
+        error: 'Ödenmiş veya iptal edilmiş fatura düzenlenemez.',
+      });
+    }
+
+    const { currency, issueDate, dueDate, notes, paymentNotes, items } = req.body;
+
+    if (Array.isArray(items)) {
+      // Manuel düzenlemede kullanıcının girdiği değerlere saygı — katalogdan
+      // yeniden snapshot ETME. product referansı iz olarak korunur.
+      invoice.items = items.map((item) => ({
+        product: item.productId || item.product || null,
+        name: item.name,
+        description: item.description || '',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxRate: item.taxRate !== undefined ? item.taxRate : 20,
+        discountRate: item.discountRate || 0,
+      }));
+    }
+    if (currency !== undefined) invoice.currency = currency;
+    if (issueDate !== undefined) invoice.issueDate = issueDate;
+    if (dueDate !== undefined) invoice.dueDate = dueDate;
+    if (notes !== undefined) invoice.notes = notes;
+    if (paymentNotes !== undefined) invoice.paymentNotes = paymentNotes;
+
+    await invoice.save();
+    await invoice.populate(INVOICE_POPULATE);
+
+    res.json({ success: true, data: withComputedTotals(invoice) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @route   GET /api/invoices/:id/pdf
  * @desc    Fatura PDF indirme.
  */
@@ -266,6 +320,7 @@ module.exports = {
   createInvoice,
   generateFromQuote,
   getInvoice,
+  updateInvoice,
   updateInvoiceStatus,
   getInvoicePdf,
 };

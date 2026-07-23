@@ -11,7 +11,6 @@ import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
 import Feedbacks from './pages/Feedbacks';
 import Invoices from './pages/Invoices';
-import InvoicesV2 from './pages/InvoicesV2';
 import UserManagement from './pages/UserManagement';
 import SpendingDashboard from './pages/SpendingDashboard';
 import AuditLog from './pages/AuditLog';
@@ -180,9 +179,8 @@ const App = () => {
               <Route path="/invoices" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><Invoices /></RoleGuard>
               } />
-              <Route path="/invoices-v2" element={
-                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT]}><InvoicesV2 /></RoleGuard>
-              } />
+              {/* Eski "Fatura v2" rotası tek Faturalar sayfasına birleşti */}
+              <Route path="/invoices-v2" element={<Navigate to="/invoices" replace />} />
               <Route path="/reports/spending" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.INTERN]}><SpendingDashboard /></RoleGuard>
               } />

@@ -13,7 +13,7 @@ import LeadDetailDrawer from '../components/leads/LeadDetailDrawer';
  */
 const Leads = () => {
   const { t, lang } = useLanguage();
-  const { leads, loading, error, updateStatus, assignToMe } = useLeads();
+  const { leads, loading, error, updateStatus, assignTo } = useLeads();
   const [activeStatus, setActiveStatus] = useState('all');
   const [selectedLead, setSelectedLead] = useState(null);
 
@@ -100,8 +100,8 @@ const Leads = () => {
           const updated = await updateStatus(id, status);
           setSelectedLead(updated);
         }}
-        onAssignToMe={async (id) => {
-          const updated = await assignToMe(id);
+        onAssign={async (id, assigneeId) => {
+          const updated = await assignTo(id, assigneeId);
           setSelectedLead(updated);
         }}
       />

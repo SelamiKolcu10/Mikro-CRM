@@ -128,10 +128,59 @@ const archiveProduct = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   GET /api/catalog/sales-summary
+ * @desc    Tüm ürünlerin geçmiş satış/teklif özetini döndürür — Quote
+ *          koleksiyonundaki kalemleri ürün bazında toplar. Son 50 satış
+ *          kaydını döner (tarih, müşteri, miktar, tutar, teklif durumu).
+ */
+const getSalesSummary = async (req, res, next) => {
+  try {
+    const Quote = require('../models/Quote');
+    const { QUOTE_STATUSES } = require('../config/quotes');
+
+    const quotes = await Quote.find({
+      'items.product': { $ne: null },
+    })
+      .populate('customer', 'name')
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    // Her quote'un her item'ını düz bir listeye aç — sadece katalog ürünü
+    // referanslı olanları al.
+    const sales = [];
+    for (const q of quotes) {
+      for (const item of q.items) {
+        if (!item.product) continue;
+        sales.push({
+          quoteId: q._id,
+          quoteNumber: q.quoteNumber,
+          productId: item.product,
+          productName: item.name,
+          customerName: q.customer?.name || '-',
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.quantity * item.unitPrice,
+          currency: q.currency,
+          status: q.status,
+          date: q.createdAt,
+        });
+      }
+    }
+
+    // En son 50 satış kaydı
+    res.json({ success: true, data: sales.slice(0, 50) });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProducts,
   createProduct,
   getProduct,
   updateProduct,
   archiveProduct,
+  getSalesSummary,
 };

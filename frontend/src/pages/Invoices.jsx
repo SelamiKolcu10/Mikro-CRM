@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import invoiceService from '../services/invoiceService';
+import invoiceV2Service from '../services/invoiceV2Service';
+import SalesInvoiceDrawer from '../components/invoices/SalesInvoiceDrawer';
 import InvoiceUploader from '../components/invoices/InvoiceUploader';
 import InvoiceTable from '../components/invoices/InvoiceTable';
 import InvoiceDetailModal from '../components/invoices/InvoiceDetailModal';
@@ -8,6 +10,10 @@ import InvoiceStats from '../components/invoices/InvoiceStats';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { HiOutlineSearch } from 'react-icons/hi';
+
+const SALES_STATUS_LABEL = {
+  draft: 'Taslak', issued: 'Kesildi', paid: 'Ödendi', overdue: 'Vadesi Geçti', cancelled: 'İptal',
+};
 
 const Invoices = () => {
   const { t } = useLanguage();
@@ -33,8 +39,8 @@ const Invoices = () => {
       if (statusFilter) params.status = statusFilter;
 
       const [invoicesRes, statsRes] = await Promise.all([
-        invoiceService.getAll(params),
-        invoiceService.getStats(),
+        invoiceV2Service.getAll(params),
+        invoiceV2Service.getStats(),
       ]);
 
       setInvoices(invoicesRes.data.data);
@@ -59,10 +65,10 @@ const Invoices = () => {
     try {
       let response;
       if (files.length === 1) {
-        response = await invoiceService.upload(files[0]);
+        response = await invoiceV2Service.upload(files[0]);
         toast.success(t('invoices.processComplete'));
       } else {
-        response = await invoiceService.bulkUpload(files);
+        response = await invoiceV2Service.bulkUpload(files);
         const summary = response.data.summary;
         toast.success(
           `${t('invoices.processComplete')}: ${summary.verified} ${t('invoices.statuses.verified')} · ${summary.mismatch} ${t('invoices.statuses.mismatch')} · ${summary.errors} ${t('invoices.errorCount')}`
@@ -91,7 +97,7 @@ const Invoices = () => {
   // Save manual correction
   const handleSaveCorrection = async (id, data) => {
     try {
-      await invoiceService.update(id, data);
+      await invoiceV2Service.update(id, data);
       toast.success(t('common.update'));
       setDetailOpen(false);
       await fetchInvoices();
@@ -104,7 +110,7 @@ const Invoices = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await invoiceService.delete(deleteId);
+      await invoiceV2Service.delete(deleteId);
       toast.success(t('common.delete'));
       setDeleteId(null);
       await fetchInvoices();
@@ -117,6 +123,7 @@ const Invoices = () => {
   const [activeTab, setActiveTab] = useState('sales');
 
   // Satış Faturaları State
+  const [selectedSalesInvoice, setSelectedSalesInvoice] = useState(null);
   const [salesInvoices, setSalesInvoices] = useState([]);
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesStatusFilter, setSalesStatusFilter] = useState('');
@@ -188,11 +195,12 @@ const Invoices = () => {
           className={`btn ${activeTab === 'ocr' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('ocr')}
         >
-          Gelen Faturalar (OCR)
+          Gelen Faturalar (Yerli OCR)
         </button>
       </div>
 
       {activeTab === 'sales' ? (
+        <>
         <div className="table-container">
           <div className="table-header">
             <h3>Kesilen Satış Faturaları</h3>
@@ -236,7 +244,7 @@ const Invoices = () => {
                     <td>{inv.quote?.quoteNumber || '-'}</td>
                     <td>
                       <span className="quote-status-badge">
-                        {inv.status}
+                        {SALES_STATUS_LABEL[inv.status] || inv.status}
                       </span>
                     </td>
                     <td className="right">{inv.currency} {Number(inv.grandTotal || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
@@ -244,6 +252,13 @@ const Invoices = () => {
                     <td>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('tr-TR') : '-'}</td>
                     <td className="center">
                       <div className="catalog-actions" style={{ justifyContent: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => setSelectedSalesInvoice(inv)}
+                        >
+                          İncele
+                        </button>
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
@@ -268,6 +283,13 @@ const Invoices = () => {
             </table>
           )}
         </div>
+        <SalesInvoiceDrawer
+          invoice={selectedSalesInvoice}
+          canWrite
+          onClose={() => setSelectedSalesInvoice(null)}
+          onSaved={(updated) => { setSelectedSalesInvoice(updated); fetchSalesInvoices(); }}
+        />
+        </>
       ) : (
         <>
           {/* Stats Cards */}

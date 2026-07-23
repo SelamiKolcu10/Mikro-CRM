@@ -4,7 +4,7 @@
   "description": "Revenue-driven feedback prioritization CRM for SaaS teams",
   "scripts": {
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "dev:all": "concurrently \"npm run backend\" \"npm run frontend\" \"npm run invoice-service\" \"npm run invoice-v2\"",
+    "dev:all": "concurrently \"npm run backend\" \"npm run frontend\" \"npm run invoice-v2\"",
     "backend": "cd backend && npm run dev",
     "frontend": "cd frontend && npm run dev",
     "invoice-service": "cd invoice-ocr-service && npm run dev",
