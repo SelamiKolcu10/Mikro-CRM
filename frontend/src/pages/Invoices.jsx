@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import invoiceService from '../services/invoiceService';
 import invoiceV2Service from '../services/invoiceV2Service';
@@ -17,6 +18,12 @@ const SALES_STATUS_LABEL = {
 
 const Invoices = () => {
   const { t } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Sohbet panelindeki "Fatura Geçmişi" hızlı bağlantısından gelir
+  // (/invoices?customer=<id>) — sadece CRM Satış Faturaları sekmesinde
+  // anlamlı (OCR alış faturalarının müşteriyle ilişkisi yok), client-side
+  // filtre, backend'e dokunulmuyor.
+  const customerFilter = searchParams.get('customer') || '';
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -128,6 +135,18 @@ const Invoices = () => {
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesStatusFilter, setSalesStatusFilter] = useState('');
 
+  const visibleSalesInvoices = customerFilter
+    ? salesInvoices.filter((inv) => inv.customer?._id === customerFilter)
+    : salesInvoices;
+  const filteredCustomerName = customerFilter
+    ? salesInvoices.find((inv) => inv.customer?._id === customerFilter)?.customer?.name
+    : null;
+  const clearCustomerFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('customer');
+    setSearchParams(next);
+  };
+
   const fetchSalesInvoices = async () => {
     try {
       setSalesLoading(true);
@@ -218,10 +237,23 @@ const Invoices = () => {
             </select>
           </div>
 
+          {customerFilter && (
+            <div className="invoice-customer-filter-chip">
+              {filteredCustomerName
+                ? `${filteredCustomerName} müşterisi için filtrelendi`
+                : 'Bu müşteri için filtrelendi'}
+              <button type="button" className="btn btn-ghost btn-sm" onClick={clearCustomerFilter}>Temizle</button>
+            </div>
+          )}
+
           {salesLoading ? (
             <div className="loading-spinner"><div className="spinner" /></div>
-          ) : salesInvoices.length === 0 ? (
-            <p className="task-comment-empty">Henüz satış faturası yok. Onaylanmış bir teklifi faturaya dönüştürebilirsiniz.</p>
+          ) : visibleSalesInvoices.length === 0 ? (
+            <p className="task-comment-empty">
+              {customerFilter
+                ? 'Bu müşteriye ait satış faturası yok.'
+                : 'Henüz satış faturası yok. Onaylanmış bir teklifi faturaya dönüştürebilirsiniz.'}
+            </p>
           ) : (
             <table className="catalog-table">
               <thead>
@@ -237,7 +269,7 @@ const Invoices = () => {
                 </tr>
               </thead>
               <tbody>
-                {salesInvoices.map((inv) => (
+                {visibleSalesInvoices.map((inv) => (
                   <tr key={inv._id}>
                     <td><strong>{inv.invoiceNumber}</strong></td>
                     <td>{inv.customer?.name || inv.customer?.company || '-'}</td>

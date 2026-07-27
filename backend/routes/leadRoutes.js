@@ -5,13 +5,14 @@ const { authorize } = require('../middleware/authorize');
 const { redactForIntern } = require('../middleware/redactForIntern');
 const { leadRateLimiter } = require('../middleware/security');
 const { handleValidationErrors } = require('../middleware/validate');
-const { PERMISSIONS, ROLES } = require('../config/permissions');
+const { PERMISSIONS } = require('../config/permissions');
 const {
   createLeadValidators,
   leadIdValidators,
   updateLeadStatusValidators,
   addLeadNoteValidators,
   convertLeadValidators,
+  assignLeadValidators,
 } = require('../validators/leadValidators');
 const {
   checkHoneypot,
@@ -46,7 +47,12 @@ router.get('/', protect, authorize(...PERMISSIONS.leads.read), redactForIntern, 
 router.get('/:id/events', protect, authorize(...PERMISSIONS.leads.read), redactForIntern, leadIdValidators, handleValidationErrors, getLeadEvents);
 router.patch('/:id/status', protect, authorize(...PERMISSIONS.leads.write), updateLeadStatusValidators, handleValidationErrors, updateLeadStatus);
 router.post('/:id/notes', protect, authorize(...PERMISSIONS.leads.write), addLeadNoteValidators, handleValidationErrors, addLeadNote);
-router.patch('/:id/assign', protect, authorize(ROLES.SUPER_ADMIN), leadIdValidators, handleValidationErrors, assignLead);
+// Departman ZORUNLU, kişi opsiyonel — asıl "hangi departmana atayabilir"
+// kontrolü leadController.assignLead içinde canAssignLeadToDepartment ile
+// yapılır (super_admin her departman, departman lideri sadece kendisininki).
+// Buradaki authorize sadece kaba giriş kapısı: leads.write olmayan (accountant/
+// support/intern) hiç denemesin.
+router.patch('/:id/assign', protect, authorize(...PERMISSIONS.leads.write), assignLeadValidators, handleValidationErrors, assignLead);
 // Lead → Deal dönüşümü: Customer + Deal oluşturur (bkz. leadController.convertLead).
 // leads.write == deals.write == [super_admin, staff] — aynı ekip.
 router.post('/:id/convert', protect, authorize(...PERMISSIONS.leads.write), convertLeadValidators, handleValidationErrors, convertLead);

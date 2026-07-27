@@ -5,9 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useConversation } from '../hooks/useConversation';
 import { useSlaClock } from '../hooks/useSlaClock';
-import { getSlaState } from '../utils/sla';
+import { getSlaState, formatSlaDuration } from '../utils/sla';
 import chatService from '../services/chatService';
 import feedbackService from '../services/feedbackService';
+import userService from '../services/userService';
+import { PERMISSIONS } from '../config/permissions';
 import ConnectionStatus from '../components/chat/ConnectionStatus';
 import MessageBubble from '../components/chat/MessageBubble';
 import MessageInput from '../components/chat/MessageInput';
@@ -23,9 +25,14 @@ import {
   HiOutlineSearch,
   HiOutlineClock,
   HiOutlineCode,
-  HiOutlineLightningBolt,
   HiOutlineMail,
   HiOutlineArrowLeft,
+  HiOutlineX,
+  HiExclamation,
+  HiOutlineStar,
+  HiOutlineDocumentText,
+  HiOutlineTicket,
+  HiOutlineChevronRight,
 } from 'react-icons/hi';
 
 const formatCurrency = (value) => `₺${Number(value || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 })}`;
@@ -66,10 +73,6 @@ const getAvatarColor = (id) => {
   for (let i = 0; i < str.length; i += 1) hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
   return `hsl(${hash % 360}, 55%, 45%)`;
 };
-
-// SLA tier is derived from plan — there's no separate contract/SLA record in
-// the data model, so we present a meaningful label rather than a fabricated one.
-const isPriorityPlan = (plan) => plan === 'premium' || plan === 'vip';
 
 // Coarse "avg response time" — average gap between an incoming customer
 // message and the next outgoing reply, computed from the messages already
@@ -136,6 +139,15 @@ const ChatDashboard = () => {
   const [planFilter, setPlanFilter] = useState('');
   const [slaFilter, setSlaFilter] = useState(() => searchParams.get('sla') === 'risk');
   const [convertingBug, setConvertingBug] = useState(false);
+  const [showReassign, setShowReassign] = useState(false);
+  const [reassignCandidates, setReassignCandidates] = useState([]);
+  // Masaüstünde 3. sütun (müşteri profili) artık her zaman açık değil —
+  // sohbet alanı varsayılan olarak geniş, profil sadece isteyince açılır
+  // (bkz. proje hafızası: chat 2-pane layout fikri). Mobilde zaten aynı
+  // "tıklayınca açılan ekran" davranışı vardı (mobileView==='profile'),
+  // burada masaüstü için de aynı mantığı ayrı bir state ile ekliyoruz —
+  // mobileView'a dokunmuyoruz ki mobil davranış hiç değişmesin.
+  const [showProfile, setShowProfile] = useState(false);
   const slaClockTick = useSlaClock(); // eslint-disable-line no-unused-vars -- forces periodic re-render so chips/rail/sort stay live
   // Mobile-only WhatsApp-style screen stack ('list' | 'chat' | 'profile').
   // Deliberately kept separate from selectedCustomerId — that way resizing
@@ -282,6 +294,7 @@ const ChatDashboard = () => {
   const handleSelectCustomer = async (row) => {
     setSelectedCustomerId(row.customer._id);
     setMobileView('chat');
+    setShowProfile(false);
     if (row._id) return;
     try {
       const res = await chatService.startConversation(row.customer._id);
@@ -298,6 +311,32 @@ const ChatDashboard = () => {
     try {
       const res = await chatService.assign(selectedId, userId);
       setConversations((prev) => prev.map((c) => (c._id === selectedId ? { ...c, assignedTo: res.data.data.assignedTo } : c)));
+      setShowReassign(false);
+    } catch (err) {
+      toast.error(err.response?.data?.error || t('common.error'));
+    }
+  };
+
+  // "Değiştir" tıklandığında yüklenir — chat.write rolündeki (super_admin/
+  // staff/support) onaylı kullanıcılar arasından seçim yapılır (backend
+  // assignConversation zaten keyfi bir userId kabul ediyor, burada sadece
+  // makul bir aday listesi sunuluyor).
+  const loadReassignCandidates = async () => {
+    try {
+      const res = await userService.getAll({ status: 'approved' });
+      const eligible = (res.data.data || res.data).filter((u) => PERMISSIONS.chat.write.includes(u.role));
+      setReassignCandidates(eligible);
+    } catch {
+      setReassignCandidates([]);
+    }
+  };
+
+  // Dahili not — chatService.addNote çağrısı yeterli, ekranda görünmesi
+  // backend'in STAFF_ROOM'a yaydığı mevcut 'message:new' socket olayı
+  // üzerinden gelir (bkz. hooks/useConversation.js, bu akışa hiç dokunulmadı).
+  const handleAddNote = async (body) => {
+    try {
+      await chatService.addNote(selectedId, body);
     } catch (err) {
       toast.error(err.response?.data?.error || t('common.error'));
     }
@@ -342,7 +381,7 @@ const ChatDashboard = () => {
         </div>
       </div>
 
-      <div className={`table-container chat-layout chat-layout-mobile-${mobileView}`}>
+      <div className={`table-container chat-layout chat-layout-mobile-${mobileView} ${selected && showProfile ? 'chat-layout--profile-open' : ''}`}>
         {/* Column 1 — Customer queue */}
         <div className="chat-pane chat-pane-list" style={{ borderRight: '1px solid var(--border-color)' }}>
           <div style={{ padding: 'var(--space-md)', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
@@ -465,7 +504,7 @@ const ChatDashboard = () => {
                   </button>
                   <span className={`status-pulse-dot ${connected ? 'is-online' : 'is-offline'}`} title={connected ? t('chat.connected') : t('chat.disconnected')} />
                   <div
-                    onClick={() => setMobileView('profile')}
+                    onClick={() => { setMobileView('profile'); setShowProfile(true); }}
                     style={{ cursor: 'pointer' }}
                     title={t('chat.viewProfile')}
                   >
@@ -491,132 +530,194 @@ const ChatDashboard = () => {
                 ))}
               </div>
               <PermissionGate resource="chat" action="write">
-                <MessageInput onSend={send} disabled={!selectedId} />
+                <MessageInput onSend={send} onSendNote={handleAddNote} disabled={!selectedId} />
               </PermissionGate>
             </>
           )}
         </div>
 
-        {/* Column 3 — Customer analytics cockpit */}
-        {selected ? (
-          <div className="chat-pane chat-pane-profile" style={{ padding: 'var(--space-md)', overflowY: 'auto', gap: 'var(--space-lg)' }}>
-            <div className="chat-pane-profile-header">
+        {/* Column 3 — Customer analytics cockpit (isteğe bağlı — bkz. showProfile) */}
+        {selected && showProfile && (
+          <div className="chat-pane chat-pane-profile">
+            {/* Sabit üst blok — kimlik + (varsa) SLA banner'ı. Kullanıcı notu:
+                flex-shrink:0 ile sabitlenir, altındaki gövde ayrı kaydırılır. */}
+            <div className="chat-profile-sticky">
+              <div className="chat-pane-profile-header">
+                <button
+                  type="button"
+                  className="chat-pane-back-btn"
+                  onClick={() => setMobileView('chat')}
+                  aria-label={t('chat.backToChat')}
+                >
+                  <HiOutlineArrowLeft />
+                </button>
+                <span>{selected.customer?.name}</span>
+              </div>
+
+              {/* Masaüstü kapatma butonu — mobilde .chat-pane-back-btn zaten
+                  var, bu her zaman görünür (bkz. index.css .chat-profile-close-btn). */}
               <button
                 type="button"
-                className="chat-pane-back-btn"
-                onClick={() => setMobileView('chat')}
-                aria-label={t('chat.backToChat')}
+                className="chat-profile-close-btn"
+                onClick={() => setShowProfile(false)}
+                aria-label={t('chat.closeProfile')}
               >
-                <HiOutlineArrowLeft />
+                <HiOutlineX />
               </button>
-              <span>{selected.customer?.name}</span>
-            </div>
-            <div>
-              <h3 style={{ marginBottom: 'var(--space-sm)' }}>{t('chat.customerAnalytics')}</h3>
-              <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ color: 'var(--text-secondary)' }}>{selected.customer?.company}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)' }}>
-                  <HiOutlineMail /> {selected.customer?.email}
+
+              <div className="chat-profile-identity">
+                <div className="chat-profile-identity-top">
+                  <span className="chat-profile-identity-name">{selected.customer?.name}</span>
+                  <span className={`badge badge-${selected.customer?.plan}`}>{t(`customers.plans.${selected.customer?.plan}`)}</span>
+                </div>
+                <div className="chat-profile-identity-sub">
+                  {selected.customer?.company && <span>{selected.customer.company}</span>}
+                  <span className="chat-profile-identity-email"><HiOutlineMail /> {selected.customer?.email}</span>
                 </div>
               </div>
+
+              {(() => {
+                const slaState = getSlaState(selected);
+                if (slaState.state === 'ok' || slaState.minutesRemaining === null) return null;
+                const isBreached = slaState.state === 'breached';
+                const elapsedMinutes = slaState.thresholdMinutes - slaState.minutesRemaining;
+                return (
+                  <div className={`chat-sla-banner chat-sla-banner--${slaState.state}`}>
+                    <HiExclamation />
+                    <div>
+                      <strong>
+                        {isBreached
+                          ? `${t('chat.sla.label')} ${t('chat.sla.exceeded')} · ${formatSlaDuration(Math.abs(slaState.minutesRemaining))} ${t('chat.sla.overageLabel')}`
+                          : `${t('chat.sla.riskLabel')} · ${formatSlaDuration(slaState.minutesRemaining)} ${t('chat.sla.remainingLabel')}`}
+                      </strong>
+                      <div className="chat-sla-banner-detail">
+                        {t('chat.sla.bannerDetail')
+                          .replace('{target}', formatSlaDuration(slaState.thresholdMinutes))
+                          .replace('{elapsed}', formatSlaDuration(elapsedMinutes))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-tertiary)', fontSize: '11px', textTransform: 'uppercase' }}>
-                <HiOutlineExclamationCircle /> {t('chat.openTickets')}
-              </div>
-              <div style={{ fontSize: '13px', marginTop: 2 }}>
-                {selected.totalFeedbackCount > 0
-                  ? t('chat.ticketsSummary')
-                      .replace('{open}', selected.openFeedbackCount)
-                      .replace('{resolved}', selected.totalFeedbackCount - selected.openFeedbackCount)
-                  : t('chat.noOpenTickets')}
-              </div>
-            </div>
-
-            <PermissionGate resource="chat" action="assign">
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-tertiary)', fontSize: '11px', textTransform: 'uppercase' }}>
-                  <HiOutlineUserCircle /> {t('chat.assignedTo')}
+            <div className="chat-profile-scroll">
+              <section className="chat-profile-section">
+                <div className="chat-section-label">{t('chat.thisCustomer')}</div>
+                <div className="chat-stat-grid">
+                  <div className="chat-stat-tile">
+                    <div className="chat-stat-tile-label"><HiOutlineClock /> {t('chat.avgResponseTime')}</div>
+                    <div className="chat-stat-tile-value">
+                      {avgResponseMinutes !== null ? `${avgResponseMinutes}${t('chat.minutesShort')}` : '—'}
+                    </div>
+                    {avgResponseMinutes === null && <div className="chat-stat-tile-caption">{t('chat.noResponseData')}</div>}
+                  </div>
+                  <div className="chat-stat-tile">
+                    <div className="chat-stat-tile-label"><HiOutlineExclamationCircle /> {t('chat.stats.openTickets')}</div>
+                    <div className="chat-stat-tile-value">{selected.openFeedbackCount}</div>
+                    <div className="chat-stat-tile-caption">
+                      {selected.totalFeedbackCount > 0
+                        ? t('chat.ticketsSummary')
+                            .replace('{open}', selected.openFeedbackCount)
+                            .replace('{resolved}', selected.totalFeedbackCount - selected.openFeedbackCount)
+                        : t('chat.noOpenTickets')}
+                    </div>
+                  </div>
+                  <div className="chat-stat-tile">
+                    <div className="chat-stat-tile-label"><HiOutlineCalendar /> {t('chat.stats.monthlyRevenue')}</div>
+                    <div className="chat-stat-tile-value">{formatCurrency(selected.customer?.mrr)}</div>
+                    <div className="chat-stat-tile-caption">{t('chat.customerSince')}: {formatTenure(selected.customer?.createdAt, t)}</div>
+                  </div>
+                  <div className="chat-stat-tile">
+                    <div className="chat-stat-tile-label"><HiOutlineStar /> {t('chat.stats.satisfaction')}</div>
+                    {selected.satisfactionCount > 0 ? (
+                      <>
+                        <div className="chat-stat-tile-value">{selected.satisfactionAvg}<span className="chat-stat-tile-value-suffix">/5</span></div>
+                        <div className="chat-stat-tile-caption">
+                          {t('chat.satisfaction.ratingsLabel').replace('{count}', selected.satisfactionCount)}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="chat-stat-tile-caption">{t('chat.satisfaction.none')}</div>
+                    )}
+                  </div>
                 </div>
-                <div style={{ fontSize: '13px', marginTop: 2 }}>{selected.assignedTo?.name || t('chat.unassigned')}</div>
-                {selected.assignedTo?._id === user?._id ? (
-                  <button className="btn btn-secondary btn-sm" style={{ marginTop: 6 }} onClick={() => handleAssign(null)}>
-                    {t('chat.unassign')}
-                  </button>
-                ) : (
-                  <button className="btn btn-secondary btn-sm" style={{ marginTop: 6 }} onClick={() => handleAssign(user._id)}>
-                    {t('chat.assignToMe')}
-                  </button>
-                )}
-              </div>
-            </PermissionGate>
+              </section>
 
-            {/* Financial profile */}
-            <div className="stat-card" style={{ padding: 'var(--space-md)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-tertiary)', fontSize: '11px', textTransform: 'uppercase' }}>
-                {t('chat.financialProfile')}
-              </div>
-              <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, marginTop: 4 }}>
-                {formatCurrency(selected.customer?.mrr)}<span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)' }}>{t('common.perMonth')}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)', fontSize: '12px', marginTop: 6 }}>
-                <HiOutlineCalendar /> {t('chat.customerSince')}: {formatTenure(selected.customer?.createdAt, t)}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                <HiOutlineLightningBolt style={{ color: isPriorityPlan(selected.customer?.plan) ? 'var(--color-warning)' : 'var(--text-tertiary)' }} />
-                <span style={{ fontSize: '12px', fontWeight: 600 }}>
-                  {isPriorityPlan(selected.customer?.plan) ? t('chat.slaPriority') : t('chat.slaStandard')}
-                </span>
-              </div>
-            </div>
+              <PermissionGate resource="chat" action="assign">
+                <section className="chat-profile-section">
+                  <div className="chat-section-label">{t('chat.assignedTo')}</div>
+                  <div className="chat-assigned-row">
+                    <div className="chat-assigned-info">
+                      <span className="user-avatar" style={{ width: 28, height: 28, fontSize: 11, background: getAvatarColor(selected.assignedTo?._id), backgroundImage: 'none' }}>
+                        {selected.assignedTo?.name ? getInitials(selected.assignedTo.name) : <HiOutlineUserCircle />}
+                      </span>
+                      <span>{selected.assignedTo?.name || t('chat.unassigned')}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => {
+                        if (!showReassign) loadReassignCandidates();
+                        setShowReassign((v) => !v);
+                      }}
+                    >
+                      {t('chat.changeAssignee')}
+                    </button>
+                  </div>
+                  {showReassign && (
+                    <div className="chat-reassign-picker">
+                      {user?._id && selected.assignedTo?._id !== user._id && (
+                        <button type="button" onClick={() => handleAssign(user._id)}>{t('chat.assignToMe')}</button>
+                      )}
+                      {reassignCandidates
+                        .filter((c) => c._id !== user?._id && c._id !== selected.assignedTo?._id)
+                        .map((c) => (
+                          <button key={c._id} type="button" onClick={() => handleAssign(c._id)}>{c.name}</button>
+                        ))}
+                      {selected.assignedTo && (
+                        <button type="button" className="chat-reassign-picker-danger" onClick={() => handleAssign(null)}>
+                          {t('chat.unassign')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </section>
+              </PermissionGate>
 
-            {/* Error-log diagnostics — mock display, real ticket conversion */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-tertiary)', fontSize: '11px', textTransform: 'uppercase', marginBottom: 6 }}>
-                <HiOutlineCode /> {t('chat.errorLogTitle')}
-              </div>
-              <pre
-                style={{
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: 'var(--space-sm)',
-                  fontSize: '11px',
-                  color: 'var(--color-danger)',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  margin: 0,
-                }}
-              >
-                {MOCK_ERROR_TRACE}
-              </pre>
-              <button
-                className="btn btn-danger btn-sm"
-                style={{ marginTop: 8, width: '100%' }}
-                onClick={handleConvertToBugTicket}
-                disabled={convertingBug}
-              >
-                {convertingBug ? t('common.loading') : t('chat.convertToBugTicket')}
-              </button>
-            </div>
+              {/* Error-log diagnostics — mock display, real ticket conversion */}
+              <section className="chat-profile-section">
+                <div className="chat-section-label"><HiOutlineCode /> {t('chat.errorLogTitle')}</div>
+                <pre className="chat-errorlog-pre">{MOCK_ERROR_TRACE}</pre>
+                <button
+                  className="btn btn-danger btn-sm"
+                  style={{ marginTop: 8, width: '100%' }}
+                  onClick={handleConvertToBugTicket}
+                  disabled={convertingBug}
+                >
+                  {convertingBug ? t('common.loading') : t('chat.convertToBugTicket')}
+                </button>
+              </section>
 
-            {/* Quick links */}
-            <div>
-              <div style={{ color: 'var(--text-tertiary)', fontSize: '11px', textTransform: 'uppercase', marginBottom: 6 }}>
-                {t('chat.quickLinks')}
-              </div>
-              <Link
-                to={`/feedbacks?customer=${selected.customer._id}`}
-                className="btn btn-secondary btn-sm"
-                style={{ width: '100%', justifyContent: 'flex-start', gap: 6 }}
-              >
-                <HiOutlineExclamationCircle /> {t('chat.viewCustomerTickets')}
-              </Link>
+              {/* Quick links */}
+              <section className="chat-profile-section">
+                <div className="chat-section-label">{t('chat.quickLinks')}</div>
+                <Link to={`/feedbacks?customer=${selected.customer._id}`} className="chat-quicklink-row">
+                  <span className="chat-quicklink-icon"><HiOutlineTicket /></span>
+                  <span className="chat-quicklink-text">{t('chat.viewCustomerTickets')}</span>
+                  {selected.openFeedbackCount > 0 && <span className="nav-badge">{selected.openFeedbackCount}</span>}
+                  <HiOutlineChevronRight className="chat-quicklink-chevron" />
+                </Link>
+                <Link to={`/invoices?customer=${selected.customer._id}`} className="chat-quicklink-row">
+                  <span className="chat-quicklink-icon"><HiOutlineDocumentText /></span>
+                  <span className="chat-quicklink-text">{t('chat.viewInvoiceHistory')}</span>
+                  <HiOutlineChevronRight className="chat-quicklink-chevron" />
+                </Link>
+              </section>
+
+              <div className="chat-profile-bottom-spacer" />
             </div>
           </div>
-        ) : (
-          <div className="chat-pane chat-pane-profile" />
         )}
       </div>
     </>

@@ -428,7 +428,7 @@ a:hover {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -436,31 +436,23 @@ a:hover {
   cursor: pointer;
   border: 1px solid transparent;
   position: relative;
-  overflow: hidden;
 }
 
 .nav-link:hover {
   background: var(--glass-bg-hover);
   color: var(--text-primary);
-  border-color: var(--border-color);
 }
 
+/* Tam dolgu "pill" aktif durum — sol-çizgi vurgusu yerine tüm satır yumuşak
+   mavi zeminle dolar, ikon+yazı daha koyu accent tonuna geçer. */
 .nav-link.active {
   background: var(--accent-primary-glow);
   color: var(--accent-primary-hover);
-  border-color: var(--border-color-active);
+  font-weight: 600;
 }
 
-.nav-link.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 60%;
-  background: var(--accent-primary);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+.nav-link.active .nav-icon {
+  color: var(--accent-primary-hover);
 }
 
 .nav-badge {
@@ -3384,9 +3376,16 @@ body.light-theme .heatmap-cell-0 {
   align-items: flex-start;
 }
 
+/* Takvimin tamamını saran dış çerçeve — .table-container ile aynı kart
+   dili (bkz. tasarım kararı: sayfadaki diğer içerik blokları da bu şekilde
+   çerçeveleniyor, takvim de bir "ada" gibi durmasın diye tutarlı hale getirildi). */
 .calendar-main {
   flex: 1;
   min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
 }
 
 .calendar-header {
@@ -3408,18 +3407,24 @@ body.light-theme .heatmap-cell-0 {
   font-size: var(--font-size-md);
 }
 
+/* Gün adları şeridi — ince gri metin yerine kendi zemini olan, belirgin bir
+   başlık bandı (kart içinde ayrı bir çerçeve gibi durur). */
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: var(--space-xs);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs);
 }
 
 .calendar-weekday {
   text-align: center;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: var(--space-xs) 0;
@@ -3563,6 +3568,27 @@ body.light-theme .heatmap-cell-0 {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* Bağımsız Takvim sayfası (pages/Calendar.jsx) için — tarihsiz görevler yan
+   sütun yerine grid'in altında, tam genişlik listelenir. Tasks sekmesindeki
+   varsayılan (yan yana) davranış bu sınıf verilmedikçe hiç değişmez. */
+.calendar-view--stacked {
+  flex-direction: column;
+}
+
+.calendar-view--stacked .calendar-side {
+  width: 100%;
+}
+
+.calendar-view--stacked .calendar-undated-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.calendar-view--stacked .calendar-undated-list .calendar-pill {
+  white-space: normal;
+  max-width: 220px;
 }
 
 @media (max-width: 900px) {
@@ -3902,13 +3928,21 @@ body.light-theme .heatmap-cell-0 {
   }
 }
 
-/* ---- Chat Dashboard (3-pane layout) ---- */
+/* ---- Chat Dashboard (2-pane varsayılan, profil isteğe bağlı 3. sütun) ----
+   Sohbet alanı varsayılan olarak geniş (liste + tek sohbet sütunu); müşteri
+   profiline (isim/avatar) tıklanınca 3. sütun açılır (bkz. ChatDashboard.jsx
+   showProfile state). Mobilde alttaki media query zaten kendi grid'ini
+   (1fr, slide-in stack) uyguluyor, bu değişikliğe dokunmadı. */
 .chat-layout {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 320px;
+  grid-template-columns: 300px minmax(0, 1fr);
   height: 70vh;
   overflow: hidden;
   position: relative;
+}
+
+.chat-layout--profile-open {
+  grid-template-columns: 300px minmax(0, 1fr) 320px;
 }
 
 .chat-pane {
@@ -3984,6 +4018,408 @@ body.light-theme .heatmap-cell-0 {
   .chat-pane-profile-header {
     display: flex;
   }
+}
+
+/* ---- Chat Dashboard: sağ panel (müşteri analitiği) yeniden tasarımı ----
+   Kullanıcı notu: kimlik+SLA banner'ı flex-shrink:0 ile sabit, gövde ayrı
+   kaydırılır (flex:1; overflow-y:auto); dış kabuk overflow:hidden ki köşe
+   yuvarlaklığı kayarken bozulmasın. */
+.chat-pane-profile {
+  padding: 0;
+  overflow: hidden;
+}
+
+.chat-profile-sticky {
+  position: relative;
+  flex-shrink: 0;
+  padding: var(--space-md) var(--space-md) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Masaüstünde profil paneli isteğe bağlı bir sütun olduğu için her zaman
+   görünür bir kapatma butonu gerekir (mobildeki .chat-pane-back-btn sadece
+   <768px'te görünür, bu her genişlikte). */
+.chat-profile-close-btn {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chat-profile-close-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.chat-profile-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  /* İnce scrollbar — kullanıcı notu (Firefox + WebKit) */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color-hover) transparent;
+}
+
+.chat-profile-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chat-profile-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-profile-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color-hover);
+  border-radius: var(--radius-full);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+.chat-profile-identity {
+  padding: var(--space-sm) 0 var(--space-md);
+}
+
+.chat-profile-identity-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.chat-profile-identity-name {
+  font-weight: 700;
+  font-size: var(--font-size-md);
+}
+
+.chat-profile-identity-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.chat-profile-identity-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chat-sla-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.chat-sla-banner svg {
+  color: var(--color-danger);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.chat-sla-banner--warning,
+.chat-sla-banner--critical {
+  background: var(--color-warning-soft);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.chat-sla-banner--warning svg,
+.chat-sla-banner--critical svg {
+  color: var(--color-warning);
+}
+
+.chat-sla-banner-detail {
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  margin-top: 2px;
+}
+
+.chat-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-sm);
+}
+
+.chat-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.chat-stat-tile {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.chat-stat-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.chat-stat-tile-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.chat-stat-tile-value-suffix {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.chat-stat-tile-caption {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.chat-assigned-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.chat-assigned-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.chat-reassign-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.chat-reassign-picker button {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 8px var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-family);
+}
+
+.chat-reassign-picker button:hover {
+  background: var(--glass-bg-hover);
+}
+
+.chat-reassign-picker-danger {
+  color: var(--color-danger) !important;
+}
+
+.chat-errorlog-pre {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  font-size: 11px;
+  color: var(--color-danger);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* Hızlı Bağlantılar — kart değil, kenarlıklı satır (kullanıcı notu: yoğun
+   listelerde kart yığını gereksiz gürültü yaratıyor). */
+.chat-quicklink-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.chat-quicklink-row:last-child {
+  margin-bottom: 0;
+}
+
+.chat-quicklink-row:hover {
+  border-color: var(--border-color-hover);
+  background: var(--glass-bg-hover);
+}
+
+.chat-quicklink-icon {
+  display: flex;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.chat-quicklink-text {
+  flex: 1;
+}
+
+.chat-quicklink-chevron {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* Son bölümün altına ekstra boşluk — kullanıcı notu: son öğe kenara
+   yapışmasın. */
+.chat-profile-bottom-spacer {
+  height: var(--space-lg);
+  flex-shrink: 0;
+}
+
+/* ---- Chat message input (staff + portal ortak bileşen) ---- */
+.chat-message-input {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-top: 1px solid var(--border-color);
+  align-items: flex-end;
+}
+
+.chat-message-input.is-note-mode {
+  background: var(--color-warning-soft);
+}
+
+.chat-note-toggle-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chat-note-toggle-btn.active {
+  background: var(--color-warning);
+  border-color: var(--color-warning);
+  color: #1a1a1a;
+}
+
+/* Dahili not balonu — müşteriden gizli, tam genişlik, sol/sağ hizalama yok. */
+.chat-note-bubble {
+  width: 100%;
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: var(--color-warning-soft);
+  border-radius: var(--radius-md);
+}
+
+.chat-note-bubble-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-warning);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.chat-note-bubble-author {
+  margin-left: auto;
+  font-weight: 500;
+  text-transform: none;
+  color: var(--text-tertiary);
+  letter-spacing: normal;
+}
+
+.chat-note-bubble-body {
+  margin-top: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---- Portal: CSAT yıldız değerlendirme widget'ı ---- */
+.chat-rating-widget {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 6px var(--space-md);
+  border-top: 1px solid var(--border-color);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.chat-rating-widget-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.chat-rating-star-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--color-warning);
+  font-size: 18px;
+  display: flex;
+  line-height: 1;
+}
+
+.chat-rating-star-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---- Invoices: müşteri filtre chip'i (chat quick-link'ten gelir) ---- */
+.invoice-customer-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 6px var(--space-md);
+  background: var(--glass-bg-hover);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-md);
 }
 
 /* ============================================================

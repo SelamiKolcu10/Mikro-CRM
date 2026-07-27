@@ -65,6 +65,20 @@ const conversationSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    // Müşteri portalından gönderilen CSAT puanları — tek bir "şu anki puan"
+    // değil, zaman içindeki geçmiş (bkz. utils/satisfaction.js:computeSatisfaction,
+    // panelde "son N değerlendirme ortalaması" olarak gösterilir). Ayrı bir
+    // koleksiyona çıkarılmadı — hacim küçük (müşteri başına birkaç puan),
+    // Lead.score'daki gibi tek seferlik bir hesap değil, bu yüzden dizi.
+    satisfactionRatings: {
+      type: [
+        {
+          score: { type: Number, min: 1, max: 5, required: true },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );

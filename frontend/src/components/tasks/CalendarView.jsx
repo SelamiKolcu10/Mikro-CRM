@@ -122,7 +122,7 @@ const DatePickerModal = ({ task, onClose, onSave }) => {
  * süzülmüş — TaskBoard'un aldığı aynı filteredTasks); bu bileşen sadece
  * görüntüleme + etkileşim (mobil port hedefiyle tutarlı).
  */
-const CalendarView = ({ tasks, onUpdateDeadline }) => {
+const CalendarView = ({ tasks, onUpdateDeadline, stacked = false }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [cursor, setCursor] = useState(() => {
@@ -204,7 +204,7 @@ const CalendarView = ({ tasks, onUpdateDeadline }) => {
   const weekdayLabels = t('tasks.calendar.weekdays');
 
   return (
-    <div className="calendar-view">
+    <div className={`calendar-view ${stacked ? 'calendar-view--stacked' : ''}`}>
       <div className="calendar-main">
         <div className="calendar-header">
           <div className="calendar-nav">

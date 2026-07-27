@@ -3,6 +3,7 @@ import { HiOutlineInbox } from 'react-icons/hi';
 import { useLeads } from '../hooks/useLeads';
 import { useLanguage } from '../context/LanguageContext';
 import { LEAD_STATUSES, LEAD_STATUS_CLASS, LEAD_TEMPERATURE_CLASS } from '../config/leads';
+import { DEPARTMENTS, DEPARTMENT_LABELS } from '../config/permissions';
 import { summarizeLead } from '../utils/leadSummary';
 import LeadDetailDrawer from '../components/leads/LeadDetailDrawer';
 
@@ -15,6 +16,7 @@ const Leads = () => {
   const { t, lang } = useLanguage();
   const { leads, loading, error, updateStatus, assignTo } = useLeads();
   const [activeStatus, setActiveStatus] = useState('all');
+  const [activeDepartment, setActiveDepartment] = useState('all');
   const [selectedLead, setSelectedLead] = useState(null);
 
   if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
@@ -23,7 +25,8 @@ const Leads = () => {
   const counts = { all: leads.length };
   LEAD_STATUSES.forEach((s) => { counts[s] = leads.filter((l) => l.status === s).length; });
 
-  const visibleLeads = activeStatus === 'all' ? leads : leads.filter((l) => l.status === activeStatus);
+  const byStatus = activeStatus === 'all' ? leads : leads.filter((l) => l.status === activeStatus);
+  const visibleLeads = activeDepartment === 'all' ? byStatus : byStatus.filter((l) => l.assignedDepartment === activeDepartment);
 
   return (
     <div className="page-container">
@@ -54,6 +57,26 @@ const Leads = () => {
         ))}
       </div>
 
+      <div className="task-tabs lead-department-filters">
+        <button
+          type="button"
+          className={`filter-chip ${activeDepartment === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveDepartment('all')}
+        >
+          {t('leads.panel.filters.allDepartments')}
+        </button>
+        {DEPARTMENTS.map((department) => (
+          <button
+            key={department}
+            type="button"
+            className={`filter-chip ${activeDepartment === department ? 'active' : ''}`}
+            onClick={() => setActiveDepartment(department)}
+          >
+            {t(DEPARTMENT_LABELS[department])}
+          </button>
+        ))}
+      </div>
+
       {visibleLeads.length === 0 ? (
         <div className="lead-empty-state">
           <HiOutlineInbox />
@@ -77,6 +100,9 @@ const Leads = () => {
                 <div className="lead-row-summary">{summarizeLead(lead, t)}</div>
               </div>
               <div className="lead-row-meta">
+                {lead.assignedDepartment && (
+                  <span className="pill pill-department">{t(DEPARTMENT_LABELS[lead.assignedDepartment])}</span>
+                )}
                 <span className={`lead-status-badge ${LEAD_STATUS_CLASS[lead.status]}`}>
                   {t(`leads.status.${lead.status}`)}
                 </span>
@@ -100,8 +126,8 @@ const Leads = () => {
           const updated = await updateStatus(id, status);
           setSelectedLead(updated);
         }}
-        onAssign={async (id, assigneeId) => {
-          const updated = await assignTo(id, assigneeId);
+        onAssign={async (id, department, assigneeId) => {
+          const updated = await assignTo(id, department, assigneeId);
           setSelectedLead(updated);
         }}
       />

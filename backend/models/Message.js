@@ -13,9 +13,13 @@ const messageSchema = new mongoose.Schema(
       ref: 'Conversation',
       required: true,
     },
+    // 'note' — staff-only dahili not, sohbet akışına gömülü ama müşteriye ASLA
+    // gösterilmez (bkz. portalChatController.getMyMessages filtresi +
+    // socket/index.js: not olayı yalnızca STAFF_ROOM'a yayınlanır, müşteri
+    // soketi hiçbir zaman o odaya katılmaz).
     senderType: {
       type: String,
-      enum: ['internal', 'customer'],
+      enum: ['internal', 'customer', 'note'],
       required: true,
     },
     sender: {

@@ -65,6 +65,7 @@
     "customers": "Müşteriler",
     "feedbacks": "Geri Bildirimler",
     "tasks": "Görevler",
+    "calendar": "Takvim",
     "leads": "Formlar",
     "invoices": "Faturalar",
     "spendingReport": "Genel Harcama",
@@ -82,7 +83,11 @@
     "approvals": "Onay Kuyruğu",
     "menu": "Menü",
     "main": "Ana Menü",
+    "sales": "Satış",
+    "support": "Destek",
+    "planning": "Planlama",
     "finance": "Finans",
+    "analysis": "Analiz",
     "admin": "Yönetim",
     "lightMode": "Aydınlık Mod",
     "darkMode": "Karanlık Mod",
@@ -398,7 +403,6 @@
     "selectConversation": "Görüntülemek için bir sohbet seçin",
     "customerInfo": "Müşteri Bilgileri",
     "customerSince": "Müşterimiz olalı",
-    "openTickets": "Destek Talepleri",
     "noOpenTickets": "Hiç talep yok",
     "ticketsSummary": "{open} açık · {resolved} çözüldü",
     "assignedTo": "Atanan",
@@ -418,15 +422,32 @@
     "backToList": "Sohbet listesine dön",
     "backToChat": "Sohbete dön",
     "viewProfile": "Müşteri profilini görüntüle",
-    "customerAnalytics": "Müşteri Analitiği",
-    "financialProfile": "Finansal Profil",
-    "slaPriority": "Öncelikli Destek",
-    "slaStandard": "Standart Destek",
+    "closeProfile": "Profili kapat",
+    "thisCustomer": "Bu Müşteri",
+    "minutesShort": "dk",
     "errorLogTitle": "Hata Günlüğü Teşhisi",
     "convertToBugTicket": "Bug Ticket'a Çevir",
     "bugTicketCreated": "Bug ticket oluşturuldu",
     "quickLinks": "Hızlı Bağlantılar",
     "viewCustomerTickets": "Bu Müşterinin Taleplerini Gör",
+    "viewInvoiceHistory": "Fatura Geçmişini Gör",
+    "changeAssignee": "Değiştir",
+    "internalNote": "Dahili Not",
+    "noteModeOn": "Not modu açık — normal mesaja dönmek için tıklayın",
+    "noteModeOff": "Dahili not olarak ekle (müşteri göremez)",
+    "notePlaceholder": "Dahili not yazın — müşteri bunu göremez...",
+    "addNote": "Not Ekle",
+    "rateUs": "Bizi değerlendirin",
+    "ratingSubmitted": "Değerlendirmeniz için teşekkürler!",
+    "stats": {
+      "openTickets": "Açık Talep",
+      "monthlyRevenue": "Aylık Gelir",
+      "satisfaction": "Memnuniyet"
+    },
+    "satisfaction": {
+      "ratingsLabel": "son {count} değerlendirme",
+      "none": "Henüz değerlendirme yok"
+    },
     "sla": {
       "label": "SLA",
       "exceeded": "Aşıldı",
@@ -437,7 +458,11 @@
       "toastEscalated": "SLA ihlali",
       "bannerCount": "{count} görüşme SLA'yı aştı",
       "bannerOldest": "en eskisi: {name} (+{time})",
-      "bannerCta": "Sohbete git →"
+      "bannerCta": "Sohbete git →",
+      "riskLabel": "SLA Riski",
+      "overageLabel": "gecikme",
+      "remainingLabel": "kaldı",
+      "bannerDetail": "Hedef {target}, mevcut bekleme {elapsed}"
     }
   },
   "accessControl": {
@@ -699,9 +724,13 @@
     },
     "tabs": {
       "board": "Aktif Pano",
-      "calendar": "Takvim",
       "history": "Görev Geçmişi"
     }
+  },
+  "calendar": {
+    "title": "Takvim",
+    "subtitle": "Görev teslim tarihlerini aylık görünümde takip edin",
+    "addEvent": "+ Etkinlik"
   },
   "leads": {
     "form": {
@@ -757,6 +786,9 @@
       "corporateEmail": "kurumsal e-posta",
       "tabs": {
         "all": "Tümü"
+      },
+      "filters": {
+        "allDepartments": "Tüm Departmanlar"
       }
     },
     "status": {
@@ -775,9 +807,11 @@
     "detail": {
       "message": "Talep Metni",
       "status": "Durum",
+      "assignedDepartment": "Departman",
       "assignedTo": "Atanan",
       "unassigned": "Atanmadı",
       "assignTo": "Atama Yap",
+      "selectDepartment": "Departman seçin",
       "selectAssignee": "Kişi seçin",
       "assignedBy": "tarafından atandı",
       "existingCustomer": "Mevcut müşteri",

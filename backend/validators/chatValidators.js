@@ -28,9 +28,20 @@ const startConversationValidators = [
   body('customerId').isMongoId().withMessage('Geçersiz müşteri kimliği.'),
 ];
 
+// Not metni de mesajla aynı gerekçeyle .escape() kullanmıyor (bkz. yukarıdaki not).
+const addNoteValidators = [
+  body('body').trim().isLength({ min: 1, max: 2000 }).withMessage('Not 1-2000 karakter olmalıdır.'),
+];
+
+const submitRatingValidators = [
+  body('score').isInt({ min: 1, max: 5 }).withMessage('Puan 1-5 arasında olmalıdır.'),
+];
+
 module.exports = {
   sendMessageValidators,
   conversationIdValidators,
   assignConversationValidators,
   startConversationValidators,
+  addNoteValidators,
+  submitRatingValidators,
 };

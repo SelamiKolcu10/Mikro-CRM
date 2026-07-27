@@ -19,6 +19,7 @@ import ChatDashboard from './pages/ChatDashboard';
 import AccessControlMatrix from './pages/AccessControlMatrix';
 import PendingApprovals from './pages/PendingApprovals';
 import Tasks from './pages/Tasks';
+import Calendar from './pages/Calendar';
 import Leads from './pages/Leads';
 import Deals from './pages/Deals';
 import Catalog from './pages/Catalog';
@@ -160,6 +161,9 @@ const App = () => {
               } />
               <Route path="/feedbacks" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN]}><Feedbacks /></RoleGuard>
+              } />
+              <Route path="/calendar" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN]}><Calendar /></RoleGuard>
               } />
               <Route path="/tasks" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN]}><Tasks /></RoleGuard>

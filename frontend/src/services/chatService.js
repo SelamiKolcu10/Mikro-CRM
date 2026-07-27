@@ -6,6 +6,7 @@ const chatService = {
   startConversation: (customerId) => api.post('/chat/conversations/start', { customerId }),
   getMessages: (conversationId) => api.get(`/chat/conversations/${conversationId}/messages`),
   sendMessage: (conversationId, body, clientId) => api.post(`/chat/conversations/${conversationId}/messages`, { body, clientId }),
+  addNote: (conversationId, body) => api.post(`/chat/conversations/${conversationId}/notes`, { body }),
   markRead: (conversationId) => api.patch(`/chat/conversations/${conversationId}/read`),
   assign: (conversationId, userId) => api.patch(`/chat/conversations/${conversationId}/assign`, { userId }),
 };

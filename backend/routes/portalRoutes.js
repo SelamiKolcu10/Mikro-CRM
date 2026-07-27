@@ -2,7 +2,7 @@ const express = require('express');
 const { updateProfile, changePassword } = require('../controllers/portalAuthController');
 const { getMyFeedbacks, getMyFeedback, createMyFeedback } = require('../controllers/portalFeedbackController');
 const { getMyLeads } = require('../controllers/portalLeadController');
-const { getMyMessages, sendMyMessage, markMyRead } = require('../controllers/portalChatController');
+const { getMyMessages, sendMyMessage, markMyRead, submitRating } = require('../controllers/portalChatController');
 const { protectPortal } = require('../middleware/portalAuth');
 const { handleValidationErrors } = require('../middleware/validate');
 const {
@@ -10,7 +10,7 @@ const {
   changePasswordValidators,
   createTicketValidators,
 } = require('../validators/portalValidators');
-const { sendMessageValidators } = require('../validators/chatValidators');
+const { sendMessageValidators, submitRatingValidators } = require('../validators/chatValidators');
 
 const router = express.Router();
 
@@ -29,5 +29,6 @@ router.get('/leads', protectPortal, getMyLeads);
 router.get('/chat/messages', protectPortal, getMyMessages);
 router.post('/chat/messages', protectPortal, sendMessageValidators, handleValidationErrors, sendMyMessage);
 router.patch('/chat/read', protectPortal, markMyRead);
+router.post('/chat/rating', protectPortal, submitRatingValidators, handleValidationErrors, submitRating);
 
 module.exports = router;

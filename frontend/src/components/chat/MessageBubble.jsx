@@ -1,10 +1,27 @@
-import { HiOutlineRefresh, HiOutlineExclamationCircle } from 'react-icons/hi';
+import { HiOutlineRefresh, HiOutlineExclamationCircle, HiOutlineLockClosed } from 'react-icons/hi';
 import { useLanguage } from '../../context/LanguageContext';
 
 const formatTime = (iso) => new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
 const MessageBubble = ({ message, isMine, onRetry }) => {
   const { t } = useLanguage();
+
+  // Dahili not — müşteriden gizli, tam genişlik, sol/sağ hizalama yok (bkz.
+  // backend/controllers/chatController.js:addNote güvenlik notu). Bu bileşen
+  // PortalChat.jsx'te de kullanılıyor ama portal REST/socket akışı bu tipi
+  // hiç döndürmediği için orada asla senderType:'note' gelmez.
+  if (message.senderType === 'note') {
+    return (
+      <div className="chat-note-bubble">
+        <div className="chat-note-bubble-header">
+          <HiOutlineLockClosed />
+          <span>{t('chat.internalNote')}</span>
+          <span className="chat-note-bubble-author">{message.senderName} · {formatTime(message.createdAt)}</span>
+        </div>
+        <div className="chat-note-bubble-body">{message.body}</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 'var(--space-sm)' }}>

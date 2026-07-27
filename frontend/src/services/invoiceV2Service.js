@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { INVOICE_V2_API_URL } from '../config/apiUrls';
+import { tokenStorage } from '../platform/tokenStorage';
 
 // Dedicated API instance for Invoice OCR v2 Service — Yerli OCR / Tesseract.js (port 5002)
 const invoiceV2Api = axios.create({
@@ -11,8 +12,8 @@ const invoiceV2Api = axios.create({
 
 // This service requires auth (super_admin/accountant only) — attach the same
 // JWT the main backend issues, since all three services share JWT_SECRET.
-invoiceV2Api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('micro-crm-token');
+invoiceV2Api.interceptors.request.use(async (config) => {
+  const token = await tokenStorage.get();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

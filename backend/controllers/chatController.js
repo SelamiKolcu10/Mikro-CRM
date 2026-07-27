@@ -3,6 +3,7 @@ const Message = require('../models/Message');
 const Feedback = require('../models/Feedback');
 const Customer = require('../models/Customer');
 const { getIO, STAFF_ROOM, conversationRoom } = require('../socket');
+const { computeSatisfaction } = require('../utils/satisfaction');
 
 const MESSAGE_HISTORY_LIMIT = 200;
 const PREVIEW_LENGTH = 120;
@@ -44,15 +45,25 @@ const getConversations = async (req, res, next) => {
     const data = customers
       .map((customer) => {
         const conversation = conversationByCustomer.get(customer._id.toString());
+        const { avg: satisfactionAvg, count: satisfactionCount } = computeSatisfaction(
+          conversation?.satisfactionRatings
+        );
         return {
           _id: conversation?._id || null,
           customer: customer.toObject(),
           assignedTo: conversation?.assignedTo || null,
           lastMessageAt: conversation?.lastMessageAt || null,
           lastMessagePreview: conversation?.lastMessagePreview || '',
+          // getSlaState (frontend/src/utils/sla.js) bu alana bakarak "müşteri
+          // yanıt bekliyor mu" kararını verir — eksik bırakılırsa liste
+          // satırlarındaki SLA rengi/countdown hep 'ok' görünür (var olan bir
+          // eksiklik, bu turda SLA banner'ının çalışması için düzeltildi).
+          lastMessageSenderType: conversation?.lastMessageSenderType || null,
           unreadByInternal: conversation?.unreadByInternal || 0,
           openFeedbackCount: openCountMap.get(customer._id.toString()) || 0,
           totalFeedbackCount: totalCountMap.get(customer._id.toString()) || 0,
+          satisfactionAvg,
+          satisfactionCount,
         };
       })
       .sort((a, b) => {
@@ -197,6 +208,43 @@ const sendMessage = async (req, res, next) => {
 };
 
 /**
+ * @route   POST /api/chat/conversations/:id/notes
+ * @desc    Dahili not — müşteriden gizli, staff-only. Bilerek sendMessage'dan
+ *          ayrı: Conversation'ın lastMessageAt/lastMessagePreview/
+ *          unreadByCustomer/lastMessageSenderType alanlarına DOKUNMAZ (bir
+ *          not yanıt değildir, SLA saatini sıfırlamamalı ve müşteri
+ *          tarafında hiçbir iz bırakmamalı). Socket: conversationRoom yerine
+ *          BİLEREK sadece STAFF_ROOM'a yayınlanır — müşteri soketi
+ *          conversationRoom'a otomatik join oluyor (bkz. socket/index.js),
+ *          STAFF_ROOM'a ise sadece internal hesaplar katılıyor. REST
+ *          tarafında da portalChatController.getMyMessages bu senderType'ı
+ *          filtreler — iki bağımsız katman.
+ */
+const addNote = async (req, res, next) => {
+  try {
+    const exists = await Conversation.exists({ _id: req.params.id });
+    if (!exists) {
+      return res.status(404).json({ success: false, error: 'Sohbet bulunamadı.' });
+    }
+
+    const note = await Message.create({
+      conversation: req.params.id,
+      senderType: 'note',
+      sender: req.user._id,
+      senderName: req.user.name,
+      body: req.body.body,
+    });
+
+    const io = getIO();
+    io.to(STAFF_ROOM).emit('message:new', note.toObject());
+
+    res.status(201).json({ success: true, data: note });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @route   PATCH /api/chat/conversations/:id/read
  */
 const markRead = async (req, res, next) => {
@@ -237,4 +285,4 @@ const assignConversation = async (req, res, next) => {
   }
 };
 
-module.exports = { getConversations, getEscalations, startConversation, getMessages, sendMessage, markRead, assignConversation };
+module.exports = { getConversations, getEscalations, startConversation, getMessages, sendMessage, addNote, markRead, assignConversation };

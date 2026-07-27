@@ -9,6 +9,7 @@ const {
   conversationIdValidators,
   assignConversationValidators,
   startConversationValidators,
+  addNoteValidators,
 } = require('../validators/chatValidators');
 const { ROLES, PERMISSIONS } = require('../config/permissions');
 const {
@@ -17,6 +18,7 @@ const {
   startConversation,
   getMessages,
   sendMessage,
+  addNote,
   markRead,
   assignConversation,
 } = require('../controllers/chatController');
@@ -34,6 +36,9 @@ router.get('/conversations', authorize(...PERMISSIONS.chat.read), redactForInter
 router.post('/conversations/start', authorize(...PERMISSIONS.chat.write), startConversationValidators, handleValidationErrors, startConversation);
 router.get('/conversations/:id/messages', authorize(...PERMISSIONS.chat.read), redactForIntern, conversationIdValidators, handleValidationErrors, getMessages);
 router.post('/conversations/:id/messages', authorize(...PERMISSIONS.chat.write), conversationIdValidators, sendMessageValidators, handleValidationErrors, sendMessage);
+// Dahili not — mesaj yazma ile aynı yetki grubu (bkz. chatController.addNote
+// dokümantasyonu, güvenlik sınırı orada + portalChatController'da).
+router.post('/conversations/:id/notes', authorize(...PERMISSIONS.chat.write), conversationIdValidators, addNoteValidators, handleValidationErrors, addNote);
 router.patch('/conversations/:id/read', authorize(...PERMISSIONS.chat.write), conversationIdValidators, handleValidationErrors, markRead);
 router.patch(
   '/conversations/:id/assign',

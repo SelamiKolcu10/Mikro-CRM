@@ -42,8 +42,8 @@ export function useLeads() {
     }
   }, [leads]);
 
-  const assignTo = useCallback(async (id, assigneeId) => {
-    const res = await leadService.assign(id, assigneeId);
+  const assignTo = useCallback(async (id, department, assigneeId) => {
+    const res = await leadService.assign(id, department, assigneeId);
     setLeads((prev) => prev.map((l) => (l._id === id ? res.data.data : l)));
     return res.data.data;
   }, []);

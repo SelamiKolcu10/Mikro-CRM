@@ -65,6 +65,7 @@
     "customers": "Customers",
     "feedbacks": "Feedbacks",
     "tasks": "Tasks",
+    "calendar": "Calendar",
     "leads": "Forms",
     "invoices": "Invoices",
     "spendingReport": "Spending Overview",
@@ -82,7 +83,11 @@
     "approvals": "Approvals Queue",
     "menu": "Menu",
     "main": "Main Menu",
+    "sales": "Sales",
+    "support": "Support",
+    "planning": "Planning",
     "finance": "Finance",
+    "analysis": "Analysis",
     "admin": "Administration",
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode",
@@ -398,7 +403,6 @@
     "selectConversation": "Select a conversation to view it",
     "customerInfo": "Customer Info",
     "customerSince": "Customer since",
-    "openTickets": "Support Tickets",
     "noOpenTickets": "No tickets",
     "ticketsSummary": "{open} open · {resolved} resolved",
     "assignedTo": "Assigned to",
@@ -418,15 +422,32 @@
     "backToList": "Back to chat list",
     "backToChat": "Back to chat",
     "viewProfile": "View customer profile",
-    "customerAnalytics": "Customer Analytics",
-    "financialProfile": "Financial Profile",
-    "slaPriority": "Priority Support",
-    "slaStandard": "Standard Support",
+    "closeProfile": "Close profile",
+    "thisCustomer": "This Customer",
+    "minutesShort": "m",
     "errorLogTitle": "Error Log Diagnostics",
     "convertToBugTicket": "Convert to Bug Ticket",
     "bugTicketCreated": "Bug ticket created",
     "quickLinks": "Quick Links",
     "viewCustomerTickets": "View This Customer's Tickets",
+    "viewInvoiceHistory": "View Invoice History",
+    "changeAssignee": "Change",
+    "internalNote": "Internal Note",
+    "noteModeOn": "Note mode on — click to return to a normal message",
+    "noteModeOff": "Add as an internal note (customer can't see this)",
+    "notePlaceholder": "Write an internal note — the customer can't see this...",
+    "addNote": "Add Note",
+    "rateUs": "Rate us",
+    "ratingSubmitted": "Thanks for your rating!",
+    "stats": {
+      "openTickets": "Open Tickets",
+      "monthlyRevenue": "Monthly Revenue",
+      "satisfaction": "Satisfaction"
+    },
+    "satisfaction": {
+      "ratingsLabel": "last {count} ratings",
+      "none": "No ratings yet"
+    },
     "sla": {
       "label": "SLA",
       "exceeded": "Exceeded",
@@ -437,7 +458,11 @@
       "toastEscalated": "SLA breach",
       "bannerCount": "{count} conversations breached SLA",
       "bannerOldest": "oldest: {name} (+{time})",
-      "bannerCta": "Go to chat →"
+      "bannerCta": "Go to chat →",
+      "riskLabel": "SLA Risk",
+      "overageLabel": "overdue",
+      "remainingLabel": "left",
+      "bannerDetail": "Target {target}, current wait {elapsed}"
     }
   },
   "accessControl": {
@@ -699,9 +724,13 @@
     },
     "tabs": {
       "board": "Active Board",
-      "calendar": "Calendar",
       "history": "Task History"
     }
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Track task deadlines in a monthly view",
+    "addEvent": "+ Event"
   },
   "leads": {
     "form": {
@@ -757,6 +786,9 @@
       "corporateEmail": "corporate email",
       "tabs": {
         "all": "All"
+      },
+      "filters": {
+        "allDepartments": "All Departments"
       }
     },
     "status": {
@@ -775,9 +807,11 @@
     "detail": {
       "message": "Request Message",
       "status": "Status",
+      "assignedDepartment": "Department",
       "assignedTo": "Assigned to",
       "unassigned": "Unassigned",
       "assignTo": "Assign",
+      "selectDepartment": "Select department",
       "selectAssignee": "Select person",
       "assignedBy": "assigned by",
       "existingCustomer": "Existing customer",

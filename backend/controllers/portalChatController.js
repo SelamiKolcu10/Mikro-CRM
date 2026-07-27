@@ -22,7 +22,11 @@ async function findOrCreateConversation(customerId) {
 const getMyMessages = async (req, res, next) => {
   try {
     const conversation = await findOrCreateConversation(req.customerId);
-    const messages = await Message.find({ conversation: conversation._id })
+    // senderType:'note' asla döndürülmez — dahili notlar müşteriden gizlidir
+    // (bkz. chatController.addNote, güvenlik sınırının REST ayağı; socket
+    // ayağı için socket/index.js + chatController.addNote'daki STAFF_ROOM-only
+    // yayın notuna bakınız).
+    const messages = await Message.find({ conversation: conversation._id, senderType: { $ne: 'note' } })
       .sort({ createdAt: -1 })
       .limit(MESSAGE_HISTORY_LIMIT);
 
@@ -83,6 +87,25 @@ const sendMyMessage = async (req, res, next) => {
 };
 
 /**
+ * @route   POST /api/portal/chat/rating
+ * @desc    Müşteri, sohbeti istediği an 1-5 arası puanlar (CSAT). Ayrı bir
+ *          yazma yolu — mesaj/not değil, Conversation'ın SLA/unread
+ *          alanlarına dokunmaz. Zaman içindeki geçmiş korunur (bkz.
+ *          Conversation.satisfactionRatings + utils/satisfaction.js), tek
+ *          bir "şu anki puan" olarak üzerine yazılmaz.
+ */
+const submitRating = async (req, res, next) => {
+  try {
+    const conversation = await findOrCreateConversation(req.customerId);
+    conversation.satisfactionRatings.push({ score: req.body.score });
+    await conversation.save();
+    res.status(201).json({ success: true, data: { received: true } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @route   PATCH /api/portal/chat/read
  */
 const markMyRead = async (req, res, next) => {
@@ -98,4 +121,4 @@ const markMyRead = async (req, res, next) => {
   }
 };
 
-module.exports = { getMyMessages, sendMyMessage, markMyRead };
+module.exports = { getMyMessages, sendMyMessage, markMyRead, submitRating };

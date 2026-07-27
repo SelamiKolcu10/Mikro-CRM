@@ -1,6 +1,7 @@
 const { body, param } = require('express-validator');
 const { LEAD_TYPES, BUDGET_RANGES, TIMEFRAMES, LEAD_STATUSES } = require('../config/leads');
 const { DEAL_CURRENCIES } = require('../config/deals');
+const { DEPARTMENTS } = require('../config/permissions');
 
 // Deliberately NOT using express-validator's .escape() here — same rationale
 // as validators/taskValidators.js: name/company/message render as plain JSX
@@ -50,4 +51,10 @@ const convertLeadValidators = [
   body('ownerId').optional({ checkFalsy: true }).isMongoId().withMessage('Geçersiz sorumlu kimliği.'),
 ];
 
-module.exports = { createLeadValidators, leadIdValidators, updateLeadStatusValidators, addLeadNoteValidators, convertLeadValidators };
+const assignLeadValidators = [
+  param('id').isMongoId().withMessage('Geçersiz talep kimliği.'),
+  body('department').isIn(DEPARTMENTS).withMessage('Geçerli bir departman seçilmelidir.'),
+  body('assigneeId').optional({ checkFalsy: true }).isMongoId().withMessage('Geçersiz kullanıcı kimliği.'),
+];
+
+module.exports = { createLeadValidators, leadIdValidators, updateLeadStatusValidators, addLeadNoteValidators, convertLeadValidators, assignLeadValidators };

@@ -6,18 +6,19 @@ import { ROLES } from '../config/permissions';
 import TaskBoard from '../components/tasks/TaskBoard';
 import TaskHistory from '../components/tasks/TaskHistory';
 import TaskHeatmap from '../components/tasks/TaskHeatmap';
-import CalendarView from '../components/tasks/CalendarView';
 import TaskFilterBar from '../components/tasks/TaskFilterBar';
 import CreateTaskModal from '../components/tasks/CreateTaskModal';
 import toast from 'react-hot-toast';
 
-const TABS = ['board', 'calendar', 'history'];
+// Takvim artık kendi sayfası (bkz. pages/Calendar.jsx, sidebar → Planlama) —
+// burada ayrıca bir sekme olarak tekrarlanmıyor.
+const TABS = ['board', 'history'];
 const INITIAL_FILTERS = { department: '', assigneeId: '', projectId: '', onlyMine: false };
 
 const Tasks = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { tasks, loading, error, createTask, updateTaskStatus, updateTaskDeadline, getAssignableUsers, getActivityHeatmap } = useTasks();
+  const { tasks, loading, error, createTask, updateTaskStatus, getAssignableUsers, getActivityHeatmap } = useTasks();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('board');
   const [filters, setFilters] = useState(INITIAL_FILTERS);
@@ -74,7 +75,6 @@ const Tasks = () => {
       />
 
       {activeTab === 'board' && <TaskBoard tasks={filteredTasks} onStatusChange={handleStatusChange} />}
-      {activeTab === 'calendar' && <CalendarView tasks={filteredTasks} onUpdateDeadline={updateTaskDeadline} />}
       {activeTab === 'history' && <TaskHistory tasks={filteredTasks} />}
 
       {/* Always visible — listens to the same page-level department/member filters */}

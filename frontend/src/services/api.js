@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { API_URL } from '../config/apiUrls';
+import { tokenStorage } from '../platform/tokenStorage';
+import { authRedirect } from '../platform/authRedirect';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -8,10 +10,12 @@ const api = axios.create({
   },
 });
 
-// Request interceptor — attach JWT token to every request
+// Request interceptor — attach JWT token to every request. Async because the
+// token seam is async (localStorage on web, secure storage on native); axios
+// awaits the returned config, so web behaviour is unchanged.
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('micro-crm-token');
+  async (config) => {
+    const token = await tokenStorage.get();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,16 +32,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('micro-crm-token');
-      // Redirect to login only if not already there
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    } else if (
-      error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED' &&
-      window.location.pathname !== '/force-password-change'
-    ) {
-      window.location.href = '/force-password-change';
+      tokenStorage.remove();
+      authRedirect.toLogin();
+    } else if (error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED') {
+      authRedirect.toPasswordChange();
     }
     return Promise.reject(error);
   }

@@ -5,11 +5,12 @@ import { HiOutlineX, HiOutlineMail, HiOutlinePhone, HiOutlineUserAdd, HiOutlineB
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { LEAD_STATUSES, LEAD_STATUS_CLASS, LEAD_TEMPERATURE_CLASS } from '../../config/leads';
-import { can, ROLES } from '../../config/permissions';
+import { can, DEPARTMENTS, DEPARTMENT_LABELS } from '../../config/permissions';
+import { assignableDepartmentsFor } from '../../utils/leadScope';
 import { summarizeLead } from '../../utils/leadSummary';
 import { useLeadEvents } from '../../hooks/useLeadEvents';
 import ConvertLeadModal from '../deals/ConvertLeadModal';
-import userService from '../../services/userService';
+import taskService from '../../services/taskService';
 import toast from 'react-hot-toast';
 
 const EVENT_LABEL_KEY = {
@@ -36,15 +37,20 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssign }) => {
   const [changingStatus, setChangingStatus] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
+  const [assignDepartment, setAssignDepartment] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
-  const [staffUsers, setStaffUsers] = useState([]);
+  const [departmentUsers, setDepartmentUsers] = useState([]);
   const { events, loading: eventsLoading, addNote, refresh: refreshEvents } = useLeadEvents(lead?._id);
 
-  const isAdmin = user?.role === ROLES.SUPER_ADMIN;
+  // super_admin tüm departmanlara, departman lideri sadece kendisininkine
+  // atayabilir (bkz. utils/leadScope.js — backend/utils/leadScope.js'in aynası).
+  const assignableDepartments = assignableDepartmentsFor(user, DEPARTMENTS);
+  const canAssign = assignableDepartments.length > 0;
 
   useEffect(() => {
     if (!lead) return;
     setNote('');
+    setAssignDepartment('');
     setAssigneeId('');
     drawerRef.current?.focus();
   }, [lead]);
@@ -56,20 +62,22 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssign }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [lead, onClose]);
 
-  // Admin drawer açıldığında kullanıcı listesini yükle
+  // Departman seçilince o departmanın (onaylı) üyelerini yükle — kişi seçimi
+  // kaskad ikinci adım (bkz. CreateTaskModal.jsx ile aynı desen).
   useEffect(() => {
-    if (!isAdmin || !lead) return;
+    setAssigneeId('');
+    if (!assignDepartment) {
+      setDepartmentUsers([]);
+      return;
+    }
     let cancelled = false;
-    userService.getAll({ status: 'approved' }).then((res) => {
-      if (cancelled) return;
-      // leads.write yetkili roller: super_admin + staff
-      const eligible = (res.data.data || res.data).filter(
-        (u) => u.role === ROLES.SUPER_ADMIN || u.role === ROLES.STAFF
-      );
-      setStaffUsers(eligible);
-    }).catch(() => {});
+    taskService.getAssignableUsers(assignDepartment).then((res) => {
+      if (!cancelled) setDepartmentUsers(res.data.data || []);
+    }).catch(() => {
+      if (!cancelled) setDepartmentUsers([]);
+    });
     return () => { cancelled = true; };
-  }, [isAdmin, lead]);
+  }, [assignDepartment]);
 
   if (!lead) return null;
 
@@ -90,10 +98,10 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssign }) => {
   };
 
   const handleAssign = async () => {
-    if (!assigneeId) return;
+    if (!assignDepartment) return;
     setAssigning(true);
     try {
-      await onAssign(lead._id, assigneeId);
+      await onAssign(lead._id, assignDepartment, assigneeId || null);
       refreshEvents();
       setAssigneeId('');
     } catch (err) {
@@ -202,30 +210,46 @@ const LeadDetailDrawer = ({ lead, onClose, onStatusChange, onAssign }) => {
               )}
 
               <div className="lead-detail-assign">
-                {lead.assignedTo ? (
-                  <span className="frac-label">{t('leads.detail.assignedTo')}: <strong>{lead.assignedTo.name}</strong></span>
+                {lead.assignedDepartment ? (
+                  <span className="frac-label">
+                    {t('leads.detail.assignedDepartment')}: <strong>{t(DEPARTMENT_LABELS[lead.assignedDepartment])}</strong>
+                    {lead.assignedTo && <> · {t('leads.detail.assignedTo')}: <strong>{lead.assignedTo.name}</strong></>}
+                  </span>
                 ) : (
                   <span className="frac-label">{t('leads.detail.unassigned')}</span>
                 )}
 
-                {/* Sadece admin (super_admin) kişi seçici dropdown görebilir */}
-                {isAdmin && (
+                {/* super_admin her departmana, departman lideri sadece kendisininkine
+                    atama yapabilir (assignableDepartments boşsa hiç gösterilmez) */}
+                {canAssign && (
                   <div className="lead-assign-select">
                     <select
                       className="form-select"
-                      value={assigneeId}
-                      onChange={(e) => setAssigneeId(e.target.value)}
+                      value={assignDepartment}
+                      onChange={(e) => setAssignDepartment(e.target.value)}
                     >
-                      <option value="">{t('leads.detail.selectAssignee')}</option>
-                      {staffUsers.map((u) => (
-                        <option key={u._id} value={u._id}>{u.name}</option>
+                      <option value="">{t('leads.detail.selectDepartment')}</option>
+                      {assignableDepartments.map((d) => (
+                        <option key={d} value={d}>{t(DEPARTMENT_LABELS[d])}</option>
                       ))}
                     </select>
+                    {assignDepartment && (
+                      <select
+                        className="form-select"
+                        value={assigneeId}
+                        onChange={(e) => setAssigneeId(e.target.value)}
+                      >
+                        <option value="">{t('leads.detail.selectAssignee')}</option>
+                        {departmentUsers.map((u) => (
+                          <option key={u._id} value={u._id}>{u.name}</option>
+                        ))}
+                      </select>
+                    )}
                     <button
                       type="button"
                       className="btn btn-secondary btn-sm"
                       onClick={handleAssign}
-                      disabled={assigning || !assigneeId}
+                      disabled={assigning || !assignDepartment}
                     >
                       <HiOutlineUserAdd /> {t('leads.detail.assignTo')}
                     </button>

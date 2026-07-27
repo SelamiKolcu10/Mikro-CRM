@@ -142,9 +142,13 @@ const Sidebar = () => {
         <nav className="sidebar-nav">
           {visibleGroups.map((group, idx) => (
             <Fragment key={group.section}>
-              <span className="sidebar-label" style={idx > 0 ? { marginTop: 'var(--space-lg)' } : undefined}>
-                {t(group.sectionLabelKey)}
-              </span>
+              {/* Başlıksız gruplar (ör. tek başına "Genel Bakış") için etiket
+                  hiç render edilmez — bkz. config/navigation.js sectionLabelKey:''. */}
+              {group.sectionLabelKey && (
+                <span className="sidebar-label" style={idx > 0 ? { marginTop: 'var(--space-lg)' } : undefined}>
+                  {t(group.sectionLabelKey)}
+                </span>
+              )}
               {group.items.map(renderLink)}
             </Fragment>
           ))}

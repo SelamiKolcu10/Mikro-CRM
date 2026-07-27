@@ -16,6 +16,7 @@ import {
   HiOutlinePencilAlt,
   HiOutlineTrendingUp,
   HiOutlineCube,
+  HiOutlineCalendar,
 } from 'react-icons/hi';
 import { ROLES } from './permissions';
 import { canManageProjects } from '../utils/projectScope';
@@ -31,25 +32,49 @@ import { canManageProjects } from '../utils/projectScope';
  */
 export const INTERNAL_NAV = [
   {
+    // Başlıksız ilk grup (bkz. components/layout/Sidebar.jsx — sectionLabelKey
+    // boşsa grup etiketi hiç render edilmez) — referans tasarımdaki gibi
+    // "Genel Bakış" tek başına, herhangi bir kategori altında değil.
     section: 'main',
-    sectionLabelKey: 'nav.main',
+    sectionLabelKey: '',
     items: [
       { path: '/', icon: HiOutlineViewGrid, labelKey: 'nav.dashboard', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF] },
+    ],
+  },
+  {
+    section: 'sales',
+    sectionLabelKey: 'nav.sales',
+    items: [
       { path: '/customers', icon: HiOutlineUsers, labelKey: 'nav.customers', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
+      // Satış Pipeline — Formlar'ın (lead) doğal devamı: nitelikli lead → Deal.
+      // intern yok (ciro verisi kapalı, bkz. config/permissions.js deals).
+      { path: '/deals', icon: HiOutlineTrendingUp, labelKey: 'nav.deals', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT] },
+      // Teklifler — teklif tutarları hassas, intern hariç.
+      { path: '/quotes', icon: HiOutlineDocumentText, labelKey: 'nav.quotes', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT] },
+      // Ürün Kataloğu — deals ile aynı çizgi (ciro verisi, intern hariç).
+      { path: '/catalog', icon: HiOutlineCube, labelKey: 'nav.catalog', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT] },
+    ],
+  },
+  {
+    section: 'support',
+    sectionLabelKey: 'nav.support',
+    items: [
       { path: '/feedbacks', icon: HiOutlineChatAlt2, labelKey: 'nav.feedbacks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN] },
-      { path: '/tasks', icon: HiOutlineViewBoards, labelKey: 'nav.tasks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN] },
       // Formlar (Lead Intake) — bkz. spec §4/§12: v1'de sadece super_admin+staff,
       // ham PII taşıdığı için support/intern dışında tutuldu. Bildirim badge'i
       // (newLeads) Faz 3'te eklenecek (bkz. Sidebar.jsx fetchPending).
       { path: '/leads', icon: HiOutlineInbox, labelKey: 'nav.leads', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT, ROLES.SUPPORT, ROLES.INTERN] },
-      // Satış Pipeline — Formlar'ın (lead) doğal devamı: nitelikli lead → Deal.
-      // intern yok (ciro verisi kapalı, bkz. config/permissions.js deals).
-      { path: '/deals', icon: HiOutlineTrendingUp, labelKey: 'nav.deals', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT] },
-      // Ürün Kataloğu — deals ile aynı çizgi (ciro verisi, intern hariç).
-      { path: '/catalog', icon: HiOutlineCube, labelKey: 'nav.catalog', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT] },
-      // Teklifler — teklif tutarları hassas, intern hariç.
-      { path: '/quotes', icon: HiOutlineDocumentText, labelKey: 'nav.quotes', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.ACCOUNTANT] },
       { path: '/chat', icon: HiOutlineChat, labelKey: 'nav.chat', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN], badgeKey: 'chatEscalations' },
+    ],
+  },
+  {
+    section: 'planning',
+    sectionLabelKey: 'nav.planning',
+    items: [
+      // Görevler ile aynı veri/rol kapsamı — takvim, Task.deadline'ın başka
+      // bir görünümü, ayrı bir backend kavramı değil (bkz. pages/Calendar.jsx).
+      { path: '/calendar', icon: HiOutlineCalendar, labelKey: 'nav.calendar', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN] },
+      { path: '/tasks', icon: HiOutlineViewBoards, labelKey: 'nav.tasks', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.INTERN] },
       // Profilim ana menüden çıkarıldı → sidebar alt bilgisindeki profil kartına
       // taşındı (bkz. components/layout/Sidebar.jsx footer). Rota (/profile) aynen
       // duruyor, sadece bu menü girdisi kaldırıldı.
@@ -62,17 +87,23 @@ export const INTERNAL_NAV = [
       // Faturalar — satış faturaları (CRM) + gelen faturalar (yerli OCR) tek sayfada
       // sekmeli. Eski API'li v1 OCR sayfası kaldırıldı (bkz. pages/Invoices.jsx).
       { path: '/invoices', icon: HiOutlineDocumentText, labelKey: 'nav.invoices', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT] },
+    ],
+  },
+  {
+    section: 'analysis',
+    sectionLabelKey: 'nav.analysis',
+    items: [
       { path: '/reports/spending', icon: HiOutlineChartBar, labelKey: 'nav.spendingReport', roles: [ROLES.SUPER_ADMIN, ROLES.ACCOUNTANT, ROLES.INTERN] },
+      // Dev Lead koşulu düz rol dizisiyle ifade edilemez — `roles` sadece
+      // kaba filtre (staff, dev-lead olmasa da bu diziyi geçer), asıl karar
+      // `visible()`'da (bkz. Sidebar.jsx'teki genişletilmiş filtre).
+      { path: '/projects', icon: HiOutlineFolderOpen, labelKey: 'nav.projects', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF], visible: canManageProjects },
     ],
   },
   {
     section: 'admin',
     sectionLabelKey: 'nav.admin',
     items: [
-      // Dev Lead koşulu düz rol dizisiyle ifade edilemez — `roles` sadece
-      // kaba filtre (staff, dev-lead olmasa da bu diziyi geçer), asıl karar
-      // `visible()`'da (bkz. Sidebar.jsx'teki genişletilmiş filtre).
-      { path: '/projects', icon: HiOutlineFolderOpen, labelKey: 'nav.projects', roles: [ROLES.SUPER_ADMIN, ROLES.STAFF], visible: canManageProjects },
       { path: '/users', icon: HiOutlineShieldCheck, labelKey: 'nav.users', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN], badgeKey: 'pendingUsers' },
       { path: '/access-control', icon: HiOutlineKey, labelKey: 'nav.accessControl', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN] },
       { path: '/approvals', icon: HiOutlineClipboardCheck, labelKey: 'nav.approvals', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN], badgeKey: 'pendingApprovals' },

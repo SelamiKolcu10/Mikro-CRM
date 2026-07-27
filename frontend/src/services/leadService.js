@@ -11,7 +11,9 @@ const leadService = {
   getEvents: (id) => api.get(`/leads/${id}/events`),
   updateStatus: (id, status) => api.patch(`/leads/${id}/status`, { status }),
   addNote: (id, note) => api.post(`/leads/${id}/notes`, { note }),
-  assign: (id, assigneeId) => api.patch(`/leads/${id}/assign`, { assigneeId }),
+  // assigneeId opsiyonel — sadece departmana atama da geçerli (bkz.
+  // LeadDetailDrawer kaskad seçici: departman zorunlu, kişi opsiyonel).
+  assign: (id, department, assigneeId) => api.patch(`/leads/${id}/assign`, { department, assigneeId: assigneeId || undefined }),
 };
 
 export default leadService;

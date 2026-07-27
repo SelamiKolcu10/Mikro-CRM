@@ -4,10 +4,22 @@ const Customer = require('../models/Customer');
 const Deal = require('../models/Deal');
 const DealEvent = require('../models/DealEvent');
 const { scoreLead, isCorporateEmail } = require('../utils/leadScoring');
+const { canAssignLeadToDepartment } = require('../utils/leadScope');
 const { DEAL_STAGE_PROBABILITY } = require('../config/deals');
+const { DEPARTMENTS } = require('../config/permissions');
 const { withComputedFields: withDealComputedFields, DEAL_POPULATE } = require('./dealController');
 
 const ANONYMOUS_ACTOR_NAME = 'Web Formu';
+
+// LeadEvent.note salt bir snapshot metni (bkz. models/LeadEvent.js) — panel
+// i18n'i olmadığı için burada TR sabit etiket kullanılır, frontend'deki
+// DEPARTMENT_LABELS (i18n key) ile KARIŞTIRILMAMALI, bu sadece timeline metni.
+const DEPARTMENT_LABEL_TR = {
+  development: 'Geliştirme',
+  design: 'Tasarım',
+  hr: 'İK',
+  marketing: 'Pazarlama',
+};
 
 const LEAD_POPULATE = [
   { path: 'assignedTo', select: 'name email' },
@@ -184,20 +196,23 @@ const addLeadNote = async (req, res, next) => {
 
 /**
  * @route   PATCH /api/leads/:id/assign
- * @desc    Admin (super_admin) bir lead'i belirtilen kullanıcıya atar.
- *          Body: { assigneeId } — atanacak kullanıcının _id'si.
+ * @desc    İki katmanlı atama: departman ZORUNLU (talep o departmanın
+ *          havuzuna düşer), kişi (assigneeId) OPSİYONEL (havuzdan biri
+ *          talebi üstlenir). Kişi verilirse o departmanın ÜYESİ olmak
+ *          zorunda — assignedTo/assignedDepartment tutarsız kalamaz.
+ *          Yetki: super_admin her departmana, departman lideri SADECE
+ *          kendi departmanına atayabilir (bkz. utils/leadScope.js —
+ *          taskScope.js ile aynı desen).
+ *          Body: { department, assigneeId? }.
  */
 const assignLead = async (req, res, next) => {
   try {
-    const { assigneeId } = req.body;
-    if (!assigneeId) {
-      return res.status(400).json({ success: false, error: 'assigneeId gereklidir.' });
+    const { department, assigneeId } = req.body;
+    if (!department || !DEPARTMENTS.includes(department)) {
+      return res.status(400).json({ success: false, error: 'Geçerli bir departman seçilmelidir.' });
     }
-
-    const User = require('../models/User');
-    const assignee = await User.findById(assigneeId);
-    if (!assignee) {
-      return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
+    if (!canAssignLeadToDepartment(req.user, department)) {
+      return res.status(403).json({ success: false, error: 'Bu departmana atama yapma yetkiniz yok.' });
     }
 
     const lead = await Lead.findById(req.params.id);
@@ -205,14 +220,29 @@ const assignLead = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'Talep bulunamadı.' });
     }
 
-    lead.assignedTo = assignee._id;
+    let assignee = null;
+    if (assigneeId) {
+      const User = require('../models/User');
+      assignee = await User.findById(assigneeId);
+      if (!assignee) {
+        return res.status(404).json({ success: false, error: 'Kullanıcı bulunamadı.' });
+      }
+      if (assignee.department !== department) {
+        return res.status(400).json({ success: false, error: 'Seçilen kişi bu departmanın üyesi değil.' });
+      }
+    }
+
+    lead.assignedDepartment = department;
+    lead.assignedTo = assignee ? assignee._id : null;
     await lead.save();
+
+    const departmentLabel = DEPARTMENT_LABEL_TR[department] || department;
     await LeadEvent.create({
       lead: lead._id,
       actor: req.user._id,
       actorName: req.user.name,
       action: 'assigned',
-      note: `→ ${assignee.name}`,
+      note: assignee ? `→ ${departmentLabel} / ${assignee.name}` : `→ ${departmentLabel}`,
     });
     await lead.populate(LEAD_POPULATE);
 

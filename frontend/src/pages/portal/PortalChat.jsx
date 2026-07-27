@@ -5,12 +5,17 @@ import portalChatService from '../../services/portalChatService';
 import ConnectionStatus from '../../components/chat/ConnectionStatus';
 import MessageBubble from '../../components/chat/MessageBubble';
 import MessageInput from '../../components/chat/MessageInput';
+import { HiStar, HiOutlineStar } from 'react-icons/hi';
 import toast from 'react-hot-toast';
+
+const STAR_VALUES = [1, 2, 3, 4, 5];
 
 const PortalChat = () => {
   const { t } = useLanguage();
   const [conversationId, setConversationId] = useState(null);
   const [resolving, setResolving] = useState(true);
+  const [hoverStar, setHoverStar] = useState(0);
+  const [submittingRating, setSubmittingRating] = useState(false);
   const scrollRef = useRef(null);
 
   // A customer has exactly one conversation, lazily created server-side —
@@ -37,6 +42,22 @@ const PortalChat = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
+  // Her zaman erişilebilir, sessiz bir widget — periyodik açılan bir modal
+  // değil. Bir yıldıza tıklayınca anında gönderilir, ayrı bir submit butonu
+  // yok (bkz. backend/controllers/portalChatController.js:submitRating).
+  const handleRate = async (score) => {
+    if (submittingRating) return;
+    setSubmittingRating(true);
+    try {
+      await portalChatService.submitRating(score);
+      toast.success(t('chat.ratingSubmitted'));
+    } catch {
+      toast.error(t('common.error'));
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
   if (resolving) {
     return <div className="loading-spinner"><div className="spinner" /></div>;
   }
@@ -59,6 +80,24 @@ const PortalChat = () => {
           {messages.map((m) => (
             <MessageBubble key={m._id} message={m} isMine={m.senderType === 'customer'} onRetry={retry} />
           ))}
+        </div>
+        <div className="chat-rating-widget">
+          <span className="chat-rating-widget-label">{t('chat.rateUs')}</span>
+          <div className="chat-rating-widget-stars" onMouseLeave={() => setHoverStar(0)}>
+            {STAR_VALUES.map((v) => (
+              <button
+                key={v}
+                type="button"
+                className="chat-rating-star-btn"
+                disabled={submittingRating}
+                onMouseEnter={() => setHoverStar(v)}
+                onClick={() => handleRate(v)}
+                aria-label={`${v}/5`}
+              >
+                {v <= hoverStar ? <HiStar /> : <HiOutlineStar />}
+              </button>
+            ))}
+          </div>
         </div>
         <MessageInput onSend={send} />
       </div>

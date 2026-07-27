@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { LEAD_TYPES, BUDGET_RANGES, TIMEFRAMES, LEAD_STATUSES, LEAD_TEMPERATURES } = require('../config/leads');
+const { DEPARTMENTS } = require('../config/permissions');
 
 /**
  * Public talep formundan gelen ham kayıt — bkz. docs/superpowers/specs/
@@ -46,6 +47,16 @@ const leadSchema = new mongoose.Schema(
     score: { type: Number, default: 0 },
     temperature: { type: String, enum: LEAD_TEMPERATURES, default: 'cold' },
     status: { type: String, enum: { values: LEAD_STATUSES, message: 'Geçersiz durum.' }, default: 'new' },
+    // Departman zorunlu ilk katman, kişi (assignedTo) opsiyonel ikinci katman —
+    // "Geliştirme departmanına düştü ama henüz kimseye özel atanmadı" durumu
+    // geçerli bir ara durumdur (bkz. leadController.assignLead). assignedTo
+    // dolu olduğunda her zaman assignedDepartment ile TUTARLI olmak zorunda
+    // (o kişinin User.department'ı) — bu kural şemada değil, controller'da.
+    assignedDepartment: {
+      type: String,
+      enum: { values: DEPARTMENTS, message: 'Geçersiz departman.' },
+      default: null,
+    },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     // Email eşleşirse otomatik bağlanır (bkz. §8) — yeni Customer oluşturmaz,
     // sadece referans kurar.
@@ -68,5 +79,6 @@ const leadSchema = new mongoose.Schema(
 leadSchema.index({ status: 1, createdAt: -1 });
 leadSchema.index({ temperature: 1 });
 leadSchema.index({ email: 1 });
+leadSchema.index({ assignedDepartment: 1 });
 
 module.exports = mongoose.model('Lead', leadSchema);
