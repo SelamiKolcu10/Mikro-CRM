@@ -50,7 +50,37 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  /**
+   * Parola değiştirme — hem zorunlu ilk-giriş kapısı (ForcePasswordChangeScreen)
+   * hem de profildeki gönüllü değişiklik buradan geçer.
+   *
+   * Yeni token'ı saklamak ZORUNLU: backend değişiklikte `bumpTokenVersion()`
+   * çağırıyor (çalınmış bir token parola değişince ölsün diye), yani elimizdeki
+   * eski token o an geçersiz hale geliyor. Saklamazsak bir sonraki istek 401
+   * alır ve kullanıcı sebepsiz yere giriş ekranına düşer.
+   */
+  const changePassword = async (currentPassword, newPassword) => {
+    const res = await authService.changePassword(currentPassword, newPassword);
+    const token = res.data.data?.token;
+    if (token) await tokenStorage.set(token);
+    // Zorunlu değiştirme kapısı bu bayrağa bakıyor — temizlenince RootNavigator
+    // uygulamanın geri kalanını mount eder.
+    setSession((s) => (s ? { ...s, mustChangePassword: false } : s));
+  };
+
   const logout = async () => {
+    // Önce sunucuya haber ver: tokenVersion artar ve bu hesap için üretilmiş
+    // BÜTÜN token'lar anında ölür. Sadece cihazdan silmek yetmez — JWT
+    // durumsuzdur, kopyalanmış bir token çıkıştan sonra da geçerli kalırdı.
+    //
+    // Hata bilerek yutuluyor: telefonda çevrimdışı olmak sıradan bir durum ve
+    // kullanıcının çıkış yapabilmesi ağa bağlı OLMAMALI.
+    try {
+      await authService.logout();
+    } catch {
+      /* yerel oturum yine de kapatılır */
+    }
+
     await tokenStorage.remove();
     setSession(null);
     // Lookup önbelleği ZORUNLU boşaltılır: farklı kullanıcı farklı yetki
@@ -60,7 +90,18 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ session, loading, login, logout, isAuthenticated: !!session }}
+      value={{
+        session,
+        loading,
+        login,
+        logout,
+        changePassword,
+        isAuthenticated: !!session,
+        // Geçici parolayla girilmiş oturum: `protect` arkasındaki HER istek
+        // 403 PASSWORD_CHANGE_REQUIRED döner, o yüzden navigator uygulamanın
+        // geri kalanını hiç açmaz (bkz. App.js RootNavigator).
+        mustChangePassword: !!session?.mustChangePassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

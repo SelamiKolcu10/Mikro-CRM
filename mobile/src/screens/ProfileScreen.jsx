@@ -13,7 +13,6 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import userService from '../services/userService';
-import authService from '../services/authService';
 import EditContactModal from '../components/EditContactModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import ProgressRing from '../components/ProgressRing';
@@ -62,7 +61,7 @@ function InfoRow({ icon, title, subtitle, onPress, danger }) {
  * backend/utils/developerTree.js). Bunlar okuma anında hesaplanır.
  */
 export default function ProfileScreen() {
-  const { session, logout } = useAuth();
+  const { session, logout, changePassword: applyPasswordChange } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -137,9 +136,13 @@ export default function ProfileScreen() {
 
   const changePassword = async (current, next) => {
     try {
-      await authService.changePassword(current, next);
+      // AuthContext üzerinden: backend parola değişince tokenVersion'ı
+      // bump'ladığı için eski token o an ölüyor; context dönen yeni token'ı
+      // saklıyor. Doğrudan authService çağrılsaydı bir sonraki istek 401 alıp
+      // kullanıcıyı sebepsiz giriş ekranına atardı.
+      await applyPasswordChange(current, next);
       setShowPassword(false);
-      Alert.alert('Şifre değişti', 'Yeni şifrenizle giriş yapabilirsiniz.');
+      Alert.alert('Şifre değişti', 'Yeni şifreniz aktif, oturumunuz açık kaldı.');
     } catch (err) {
       Alert.alert('Değiştirilemedi', err.response?.data?.error || 'Şifre değiştirilemedi.');
     }

@@ -24,15 +24,22 @@ const NotificationContext = createContext({
  * ile "sohbeti okuyabilir" ayrı), o yüzden burada rol kontrolü yok.
  */
 export const NotificationProvider = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, mustChangePassword } = useAuth();
   const { socket } = useSocket();
+
+  // Zorunlu parola değiştirme kapısı açıkken `protect` arkasındaki her istek
+  // 403 döner — bildirim çekmenin anlamı yok. Daha önemlisi: bayrak temizlenince
+  // `ready` false→true olur ve efekt YENİDEN çalışır. Sadece `isAuthenticated`e
+  // bağlı kalsaydı o değer hiç değişmediği için kapıdan geçildikten sonra
+  // bildirimler bir daha çekilmez, çan boş kalırdı.
+  const ready = isAuthenticated && !mustChangePassword;
 
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!ready) return;
     setLoading(true);
     try {
       const res = await notificationService.getAll({ limit: 30 });
@@ -43,18 +50,18 @@ export const NotificationProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [ready]);
 
   // Oturum açılınca çek, kapanınca temizle (bir sonraki kullanıcı öncekinin
   // bildirimlerini görmesin).
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!ready) {
       setItems([]);
       setUnreadCount(0);
       return;
     }
     refresh();
-  }, [isAuthenticated, refresh]);
+  }, [ready, refresh]);
 
   useEffect(() => {
     if (!socket) return undefined;

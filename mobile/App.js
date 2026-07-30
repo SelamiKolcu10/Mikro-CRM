@@ -11,6 +11,7 @@ import { NotificationProvider } from './src/context/NotificationContext';
 import DrawerContent from './src/navigation/DrawerContent';
 import HomeTabs from './src/navigation/HomeTabs';
 import LoginScreen from './src/screens/LoginScreen';
+import ForcePasswordChangeScreen from './src/screens/ForcePasswordChangeScreen';
 import PlaceholderScreen from './src/screens/PlaceholderScreen';
 import SpendingScreen from './src/screens/SpendingScreen';
 import ProjectsStack from './src/navigation/ProjectsStack';
@@ -120,7 +121,7 @@ function AuthNavigator() {
 }
 
 function RootNavigator() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, mustChangePassword, loading } = useAuth();
 
   if (loading) {
     return (
@@ -130,7 +131,16 @@ function RootNavigator() {
     );
   }
 
-  return isAuthenticated ? <AppDrawer /> : <AuthNavigator />;
+  if (!isAuthenticated) return <AuthNavigator />;
+
+  // Geçici parolayla girilmiş oturumda uygulamanın geri kalanı MOUNT EDİLMEZ:
+  // `protect` arkasındaki her istek 403 PASSWORD_CHANGE_REQUIRED döneceği için
+  // sekmeler açılsa bile hepsi boş/hatalı görünürdü. Web'deki PasswordGate ile
+  // aynı yaklaşım. Ekran parolayı değiştirince bayrak temizlenir ve burası
+  // kendiliğinden AppDrawer'a geçer.
+  if (mustChangePassword) return <ForcePasswordChangeScreen />;
+
+  return <AppDrawer />;
 }
 
 export default function App() {
