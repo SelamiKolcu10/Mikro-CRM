@@ -979,7 +979,7 @@ git commit -m "feat: make Access Control Matrix checkboxes read-only for intern"
 
 - [ ] **Step 1: Full live walkthrough**
 
-With both `backend` and `frontend` running (`npm run dev` in each, or root `npm run dev:all`), log in as an existing intern user with a known password (e.g. `salih10@gmail.com` / `12345678`, department `hr`, per the demo data already seeded) and walk through:
+With both `backend` and `frontend` running (`npm run dev` in each, or root `npm run dev:all`), log in as an existing intern user from your local seed data (department `hr`) and walk through:
 
 1. **Sidebar:** confirm these items are now visible: Müşteriler, Geri Bildirimler, Görevler, Canlı Sohbet, Genel Harcama, Kullanıcı Yönetimi, Erişim Kontrol Matrisi, Onaylar, Denetim Kaydı. Confirm **Faturalar** and **Faturalar v2** are **not** in the sidebar, and typing `/invoices` directly in the URL bar redirects away (via `RoleGuard`).
 2. **Kullanıcı Yönetimi (`/users`):** every user's email column shows `******`. No "Yeni Kullanıcı Ekle" button. Role and Departman columns show plain text (not dropdowns). Lider column shows `✓`/`—` (not a checkbox). No approve/reject/delete icons on any row.

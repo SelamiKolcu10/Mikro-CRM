@@ -115,9 +115,19 @@ export default function UsersScreen({ navigation }) {
 
   const handleCreate = async (payload) => {
     try {
-      await userService.create(payload);
+      const res = await userService.create(payload);
       setShowNew(false);
       load();
+      // Geçici parola yalnızca bu yanıtta döner, bir daha okunamaz — kullanıcıya
+      // burada göstermezsek hesap kullanılamaz hale gelir (web'deki
+      // CreateUserModal ile aynı gerekçe).
+      const { email, temporaryPassword } = res.data.data;
+      Alert.alert(
+        'Kullanıcı oluşturuldu',
+        `E-posta: ${email}\nGeçici parola: ${temporaryPassword}\n\n` +
+          'Bu parola bir daha gösterilmeyecek. Kullanıcıya güvenli bir kanaldan iletin; ' +
+          'ilk girişinde parolasını değiştirmesi istenecek.'
+      );
     } catch (err) {
       Alert.alert('Oluşturulamadı', err.response?.data?.error || 'Kullanıcı oluşturulamadı.');
     }

@@ -52,6 +52,12 @@ Uygulama şu adreslerde çalışacak:
 - **Backend:** http://localhost:5000
 
 ### Demo Giriş Bilgileri
+
+> ⚠️ Aşağıdakiler **yalnızca yerel `npm run seed` verisidir.** Hiçbir canlı
+> ortamda geçerli değildir ve olmamalıdır — dağıtımda `seed` çalıştırmayın.
+> Yönetici arayüzünden oluşturulan hesaplar tek kullanımlık rastgele bir
+> parola alır ve ilk girişte değiştirmek zorundadır. Bkz. [SECURITY.md](SECURITY.md).
+
 - **E-posta:** admin@microcrm.com
 - **Şifre:** admin123
 

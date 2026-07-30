@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const User = require('../models/User');
 const { ALL_ROLES, ROLES } = require('../config/permissions');
 const auditService = require('../utils/auditService');
@@ -10,20 +11,23 @@ const { buildDeveloperTree } = require('../utils/developerTree');
 // existing, already-reviewed account via updateUserRole.
 const CREATABLE_ROLES = ALL_ROLES.filter((r) => r !== ROLES.SUPER_ADMIN);
 
-// Yeni oluşturulan personel hesaplarının varsayılan şifresi. Kullanıcının
-// tercihi (bkz. istek): rastgele geçici şifre + zorunlu ilk-giriş değiştirme
-// yerine herkese aynı, bilinen şifre ver ve zorunlu değiştirmeyi kapat.
-// NOT: Bu bir kolaylık/dev tercihi — gerçek çok-kullanıcılı bir dağıtımda
-// paylaşılan sabit şifre güvenlik açığıdır; canlıya çıkışta gözden geçirilmeli.
-const DEFAULT_USER_PASSWORD = 'selami10';
+// Her yeni personel hesabı için TEK KULLANIMLIK rastgele geçici şifre.
+// Daha önce burada herkese aynı sabit şifre vardı; depo public olduğu için o
+// şifre kodu okuyan herkes tarafından bilinebiliyordu (hesap ele geçirme).
+// customerController.grantPortalAccess ile birebir aynı desen — 9 rastgele
+// byte, base64url ile 12 karakter. Şifre yanıtta BİR KEZ döner (createUser
+// altındaki `temporaryPassword`), personele repo/e-posta dışı bir kanaldan
+// iletilir; frontend bunu oluşturma modalında gösterir.
+const generateTemporaryPassword = () => crypto.randomBytes(9).toString('base64url');
 
 /**
  * @route   POST /api/users
  * @desc    Super admin creates a staff account directly — no public
  *          registration exists. Created accounts are 'approved' immediately
- *          (the admin creating them IS the approval) and get the shared
- *          default password (DEFAULT_USER_PASSWORD), no forced first-login
- *          password change.
+ *          (the admin creating them IS the approval) and get a one-time
+ *          random temporary password which MUST be changed on first login
+ *          (mustChangePassword — enforced by middleware/authMiddleware.js,
+ *          exit path is PATCH /api/auth/change-password).
  */
 const createUser = async (req, res, next) => {
   try {
@@ -42,7 +46,7 @@ const createUser = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Bu e-posta ile kayıtlı bir kullanıcı zaten var.' });
     }
 
-    const temporaryPassword = DEFAULT_USER_PASSWORD;
+    const temporaryPassword = generateTemporaryPassword();
 
     const user = await User.create({
       name,
@@ -52,7 +56,7 @@ const createUser = async (req, res, next) => {
       status: 'approved',
       approvedBy: req.user._id,
       approvedAt: new Date(),
-      mustChangePassword: false,
+      mustChangePassword: true,
     });
 
     await auditService.record({

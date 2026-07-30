@@ -14,8 +14,11 @@ const userService = {
     cachedRequest(cacheKey('users', params), () => api.get('/users', { params }), TTL.users),
   getById: (id) => api.get(`/users/${id}`),
 
-  // Parola gönderilmez: backend sabit bir başlangıç parolası atar
-  // (DEFAULT_USER_PASSWORD) — rol super_admin olamaz (CREATABLE_ROLES).
+  // Parola gönderilmez: backend tek kullanımlık rastgele bir geçici parola
+  // üretir ve yanıtta `data.temporaryPassword` olarak BİR KEZ döner — çağıran
+  // ekran bunu kullanıcıya göstermeli, yoksa parola bir daha okunamaz.
+  // Hesap ilk girişte parolasını değiştirmek zorundadır (mustChangePassword).
+  // Rol super_admin olamaz (CREATABLE_ROLES).
   create: async (payload) => {
     const res = await api.post('/users', payload);
     invalidate('users');
