@@ -1,0 +1,146 @@
+name: Güvenlik
+
+# Üç tetikleyici: her push/PR'da hızlı geri bildirim, haftalık koşu ise
+# "kod değişmedi ama dünya değişti" durumunu yakalar — yeni yayımlanan bir
+# CVE mevcut bağımlılıkları bir gecede savunmasız hale getirebilir.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1' # her pazartesi 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Depoya secret sızmış mı? Bu depo PUBLIC olduğu için en kritik kontrol bu.
+  # ---------------------------------------------------------------------------
+  gizli-veri-taramasi:
+    name: Secret taraması (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # gitleaks yalnız son commit'e değil GEÇMİŞE de bakmalı — bir secret
+          # eklenip sonraki commit'te silinmiş olabilir, dosyadan silmek onu
+          # geçmişten kaldırmaz.
+          fetch-depth: 0
+
+      # Resmi `gitleaks/gitleaks-action` yerine OSS binary doğrudan
+      # çalıştırılıyor. Gerekçe: action lisans koşulludur (public depo ve
+      # kişisel hesapta ücretsiz, organizasyon/private'ta GITLEAKS_LICENSE
+      # ister). Depo bir gün private yapılır ya da bir organizasyona taşınırsa
+      # bu adım sessizce kırılırdı; docker imajında böyle bir bağ yok.
+      #
+      # --redact ŞART: bu deponun Actions logları herkese açık. Redaksiyon
+      # olmadan yakalanan secret'ın kendisi log'a basılır, yani sızıntıyı
+      # duyuran mekanizma sızıntıyı büyütür.
+      - name: gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+            detect --source=/repo --redact --verbose --no-banner
+
+  # ---------------------------------------------------------------------------
+  # Statik analiz — enjeksiyon, eksik yetkilendirme, güvensiz kalıplar.
+  # ---------------------------------------------------------------------------
+  statik-analiz:
+    name: Statik analiz (Semgrep)
+    runs-on: ubuntu-latest
+    # ⚠️ ŞİMDİLİK BLOKLAMIYOR — ilk triyajdan sonra bu satırı SİLİN.
+    #
+    # Gerekçe: bu kural setlerinin bu depoda ne bulacağı henüz görülmedi.
+    # `p/secrets`in seed verisindeki demo parolaları (backend/seed/seedData.js
+    # içindeki admin123/staff123) yakalaması çok olası — bunlar bilinen ve
+    # kabul edilen değerler, ama triyaj edilmeden CI'ı kırmaları kimseye
+    # bir şey öğretmez, sadece "kırmızıyı yoksay" alışkanlığı yaratır.
+    #
+    # İzlenecek yol: ilk koşudan sonra Security → Code scanning sekmesindeki
+    # bulguları gözden geçirin, gerçek olanları düzeltin, gerçek olmayanları
+    # `# nosemgrep: <kural-id>` yorumuyla veya .semgrepignore ile susturun,
+    # sonra bu `continue-on-error` satırını kaldırıp kapıyı bloklayıcı yapın.
+    continue-on-error: true
+    # SARIF'i Security sekmesine yazmak için gerekli — üstteki global
+    # `contents: read` tek başına bu adımı 403 ile reddettirir.
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Bilerek `container:` KULLANILMIYOR: bir container job'ında GitHub kendi
+      # Node runtime'ını imaja mount eder, semgrep imajı Alpine (musl) tabanlı
+      # olduğu için o binary çalışmaz ve `actions/checkout` daha başlarken
+      # patlar. Docker'ı adım içinde çağırmak bu sorunu tamamen atlatıyor
+      # (gitleaks adımıyla da aynı desen).
+      #
+      # `semgrep ci` Semgrep bulut hesabı ister; `semgrep scan` bağımsız çalışır.
+      # Kural setleri açıkça listeleniyor (`--config=auto` yerine) ki koşudan
+      # koşuya hangi kuralların çalıştığı öngörülebilir kalsın.
+      - name: Semgrep taraması
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep \
+            semgrep scan \
+              --config=p/javascript \
+              --config=p/nodejs \
+              --config=p/react \
+              --config=p/owasp-top-ten \
+              --config=p/secrets \
+              --exclude=node_modules \
+              --exclude=dist \
+              --exclude='*.min.js' \
+              --sarif --output=semgrep.sarif \
+              --error
+
+      # Bulgular tarama başarısız olsa da yüklenmeli, yoksa PR'da neyin
+      # kırıldığını görmek için log okumak gerekir.
+      - name: Bulguları Security sekmesine yükle
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------------
+  # Bağımlılık açıkları. SECURITY.md'de gerekçesi yazılı bulgular hariç tutulur;
+  # kararı scripts/audit-check.js verir (bkz. oradaki ALLOWLIST).
+  # ---------------------------------------------------------------------------
+  bagimlilik-taramasi:
+    name: Bağımlılık açıkları (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # Kasıtlı olarak `npm ci` YOK: `npm audit` package-lock.json'dan çalışır,
+      # bağımlılıkları kurmak gerekmez. Beş çalışma alanını kurmak koşuyu
+      # dakikalarca uzatır ve hiçbir şey kazandırmaz.
+      - name: Açık kontrolü
+        run: node scripts/audit-check.js
+
+  # ---------------------------------------------------------------------------
+  # Bilinen açıklı paketler için ikinci kaynak (OSV veritabanı). npm advisory
+  # veritabanıyla birebir örtüşmez — biri diğerinin kaçırdığını yakalayabilir.
+  # Bloklamaz: allowlist'i olmadığı için kabul edilen bulgularda da kırmızı
+  # yanar; amacı bilgi vermek.
+  # ---------------------------------------------------------------------------
+  osv-taramasi:
+    name: OSV taraması (bilgilendirme)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        with:
+          scan-args: |-
+            --lockfile=backend/package-lock.json
+            --lockfile=invoice-ocr-v2/package-lock.json
+            --lockfile=invoice-ocr-service/package-lock.json
+            --lockfile=frontend/package-lock.json
+            --lockfile=mobile/package-lock.json
