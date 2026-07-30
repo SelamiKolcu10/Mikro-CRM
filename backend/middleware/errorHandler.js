@@ -27,10 +27,25 @@ const errorHandler = (err, req, res, next) => {
       .join(', ');
   }
 
+  const isDev = process.env.NODE_ENV === 'development';
+
+  // Beklenmeyen (500) hatalarda ham err.message istemciye GİTMEZ: Mongoose'un
+  // iç mesajları, dosya yolları, sürücü/bağlantı detayları saldırgana altyapı
+  // haritası verir. Yukarıda sınıflandırılan hatalar (CastError, duplicate
+  // key, ValidationError) zaten 4xx'e indiği için kullanıcıya dönmeye devam
+  // eder — gizlenen yalnız gerçekten beklenmeyen olanlar.
+  //
+  // Sunucu tarafında tam hatayı yine de logluyoruz, yoksa 500'leri ayıklamak
+  // imkânsız hale gelir.
+  if (statusCode >= 500) {
+    console.error('[errorHandler]', err);
+    if (!isDev) message = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+  }
+
   res.status(statusCode).json({
     success: false,
     error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(isDev && { stack: err.stack }),
   });
 };
 

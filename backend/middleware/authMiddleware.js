@@ -26,6 +26,19 @@ const protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Portal ve personel token'ları aynı JWT_SECRET ile imzalanıyor, ayrımı
+    // yalnız `aud` yapıyor. middleware/portalAuth.js ve middleware/identify.js
+    // bunu zaten kontrol ediyordu; burada eksikti. Pratikte sömürülebilir
+    // değildi (portal token'ın id'si CustomerUser'a ait, User.findById boş
+    // döner) ama audience kontrolünü tek bir yerde atlamak, kimlik ayrımını
+    // koleksiyon ayrımının yan etkisine bırakmak demek — açıkça doğrula.
+    if (decoded.aud !== 'internal') {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized — invalid token audience',
+      });
+    }
+
     // Attach user to request (exclude password)
     req.user = await User.findById(decoded.id);
 

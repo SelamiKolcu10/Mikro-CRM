@@ -235,7 +235,20 @@ const exportSpendingCsv = async (req, res, next) => {
       .sort((a, b) => new Date(a.invoiceDate || a.createdAt) - new Date(b.invoiceDate || b.createdAt));
 
     const header = ['Servis', 'Satıcı', 'Vergi No', 'Fatura No', 'Fatura Tarihi', 'Matrah', 'KDV', 'Genel Toplam', 'Durum'];
-    const csvEscape = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+    // Excel/LibreOffice/Sheets bir hücre = + - @ (veya sekme/CR) ile
+    // başlıyorsa onu FORMÜL olarak yorumlar. `vendorName`/`invoiceNumber` gibi
+    // alanlar yüklenen faturanın OCR çıktısından geliyor, yani saldırgan
+    // kontrolünde olabilir — hazırlanmış bir fatura, raporu açan muhasebecinin
+    // makinesinde formül çalıştırabilir (CSV injection). Tırnak içine almak
+    // bunu ENGELLEMEZ; hücrenin başına tek tırnak koymak formülü etkisiz
+    // metne çevirir. Tırnak ikilemesi ise ayrı bir konu (CSV alan kaçışı).
+    const csvEscape = (val) => {
+      const str = String(val ?? '');
+      // `-` bilerek sınıfın SONUNDA: ortada olsaydı `+`–`@` aralığı olur,
+      // rakamları da kapsar ve her tutar hücresi bozulurdu.
+      const safe = /^[=+@\t\r-]/.test(str) ? `'${str}` : str;
+      return `"${safe.replace(/"/g, '""')}"`;
+    };
     const lines = [header.map(csvEscape).join(',')];
 
     for (const row of rows) {

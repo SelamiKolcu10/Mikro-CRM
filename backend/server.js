@@ -28,7 +28,23 @@ app.use(express.json({ limit: '1mb' }));
 
 // Yüklenen profil fotoğrafları — statik, herkese açık (avatar zaten görünür
 // olması gereken bir görsel, ayrı bir auth katmanı gerektirmiyor).
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+//
+// helmet varsayılan olarak `Cross-Origin-Resource-Policy: same-origin`
+// gönderir; frontend ayrı bir origin'de (5173) çalıştığı için tarayıcı
+// <img src="http://localhost:5000/uploads/..."> isteğini bloklar ve avatarlar
+// web'de sessizce kırılır (mobil RN bu başlığı uygulamadığı için orada
+// görünür). Bu başlığı SADECE bu yol için gevşetiyoruz — API yanıtları
+// same-origin korumasını aynen koruyor. Görseller zaten magic-byte ile
+// doğrulanıyor (middleware/fileSignature.js) ve helmet'in global
+// X-Content-Type-Options: nosniff başlığı burada da geçerli.
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(path.join(__dirname, 'uploads'))
+);
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
