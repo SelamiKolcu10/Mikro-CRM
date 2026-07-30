@@ -121,6 +121,16 @@ const userSchema = new mongoose.Schema(
     // ("X aydır katkı sağlıyor") buradan hesaplanır. Üyelikten çıkarılınca
     // silinmez (geçmiş kaydı korunur); "hâlâ ekipte mi" sorusu her zaman
     // Project.teamMembers'ın GÜNCEL haline bakılarak ayrıca doğrulanır.
+    // Hangi bildirim türlerinde e-posta istendiği. Alan yoksa/undefined ise
+    // varsayılan "istiyor" kabul edilir (bkz. services/mailService.js
+    // wantsEmail) — böylece mevcut kullanıcılara migration gerekmiyor.
+    // Sistem içi bildirimi kapatmaz, YALNIZ e-postayı etkiler.
+    emailPreferences: {
+      taskAssigned: { type: Boolean, default: true },
+      taskStatusChanged: { type: Boolean, default: true },
+      taskComment: { type: Boolean, default: true },
+      approvalDecided: { type: Boolean, default: true },
+    },
     projectHistory: [
       {
         project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },

@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DrawerActions } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -26,7 +27,8 @@ import ChatScreen from '../screens/ChatScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import CustomerProfileScreen from '../screens/CustomerProfileScreen';
 import CustomerInvoicesScreen from '../screens/CustomerInvoicesScreen';
-import PlaceholderScreen from '../screens/PlaceholderScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import NotificationBell from '../components/NotificationBell';
 import { colors, font, space } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -55,9 +57,15 @@ const stackScreenOptions = {
 };
 
 // A stack root shows the hamburger; pushed screens get the default back arrow.
+// The bell sits on stack ROOTS only — on a pushed detail screen the header
+// already carries a back arrow and a title, and a badge there would compete
+// with the screen's own actions.
 const rootOptions = (title) => ({ navigation }) => ({
   title,
   headerLeft: () => <HamburgerButton navigation={navigation} />,
+  headerRight: () => (
+    <NotificationBell onPress={() => navigation.navigate('Notifications')} />
+  ),
 });
 
 function HomeStack() {
@@ -124,9 +132,8 @@ function SettingsStack() {
     <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen
         name="SettingsHome"
-        component={PlaceholderScreen}
-        initialParams={{ title: 'Ayarlar' }}
-        options={rootOptions('Ayarlar')}
+        component={ProfileScreen}
+        options={rootOptions('Profilim')}
       />
     </Stack.Navigator>
   );
@@ -137,19 +144,30 @@ const TAB_ICON = {
   Müşteriler: 'people',
   Satış: 'trending-up',
   Formlar: 'file-tray',
-  Ayarlar: 'settings',
+  Ayarlar: 'person',
 };
 
 // The bottom-tab shell. Each tab is a stack, so the bottom bar stays visible
 // even when drilling into detail screens (e.g. a quote's detail).
 export default function HomeTabs() {
+  // Sabit bir `height` vermek, React Navigation'ın alt güvenli alan için
+  // eklediği boşluğu eziyordu — Android'de gezinme çubuğu sekme
+  // etiketlerinin üzerine biniyordu. Yüksekliği insets ile topluyoruz.
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 62, paddingTop: 6 },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          height: 62 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: insets.bottom,
+        },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarIcon: ({ color, focused }) => (
           <Ionicons name={focused ? TAB_ICON[route.name] : `${TAB_ICON[route.name]}-outline`} size={22} color={color} />
@@ -160,7 +178,10 @@ export default function HomeTabs() {
       <Tab.Screen name="Müşteriler" component={CustomersStack} />
       <Tab.Screen name="Satış" component={SalesStack} />
       <Tab.Screen name="Formlar" component={FormsStack} />
-      <Tab.Screen name="Ayarlar" component={SettingsStack} />
+      {/* Rota adı "Ayarlar" kalıyor — DrawerContent ve App.js bu adla
+          eşleşiyor; değiştirilirse çekmece yönlendirmesi kırılır. Kullanıcıya
+          görünen etiket ise ekranın içeriğine göre "Profil". */}
+      <Tab.Screen name="Ayarlar" component={SettingsStack} options={{ tabBarLabel: 'Profil' }} />
     </Tab.Navigator>
   );
 }

@@ -1,6 +1,7 @@
 const PendingApproval = require('../models/PendingApproval');
 const User = require('../models/User');
 const auditService = require('../utils/auditService');
+const notificationService = require('../services/notificationService');
 const { RESOURCE_MODEL } = require('../middleware/authorizeOrQueue');
 const {
   executeCreateCustomer,
@@ -59,12 +60,21 @@ const DISPATCH = {
   },
 };
 
+/**
+ * Talebi sonuçlandırır. approveRequest'in beş ayrı çıkışı (approved + üç
+ * conflict yolu) ve rejectRequest hep buradan geçtiği için bildirim kancası
+ * da burada — her çıkışa tek tek eklenirse biri kaçar.
+ */
 async function markReviewed(pending, status, reviewerId, note) {
   pending.status = status;
   pending.reviewedBy = reviewerId;
   pending.reviewedAt = new Date();
   if (note) pending.rejectionReason = note;
   await pending.save();
+
+  const reviewer = reviewerId ? await User.findById(reviewerId).select('name') : null;
+  await notificationService.approvalDecided({ approval: pending, decidedByUser: reviewer });
+
   return pending;
 }
 

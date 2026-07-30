@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
 import { tokenStorage } from '../platform/tokenStorage';
+import { clearLookupCache } from '../utils/lookupCache';
 import { setOnUnauthorized } from '../services/api';
 
 const AuthContext = createContext();
@@ -52,6 +53,9 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await tokenStorage.remove();
     setSession(null);
+    // Lookup önbelleği ZORUNLU boşaltılır: farklı kullanıcı farklı yetki
+    // demek, önceki oturumun listeleri yenisine sızmamalı.
+    clearLookupCache();
   };
 
   return (

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { clearLookupCache } from '../utils/lookupCache';
 
 const AuthContext = createContext();
 
@@ -51,6 +52,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('micro-crm-token');
     setToken(null);
     setSession(null);
+    // Lookup önbelleği ZORUNLU olarak boşaltılır: farklı kullanıcı farklı
+    // yetki demek, önceki oturumun gördüğü listeler yenisine sızmamalı
+    // (bkz. utils/lookupCache.js).
+    clearLookupCache();
   };
 
   // After a password change, the backend issues a fresh token (cleared

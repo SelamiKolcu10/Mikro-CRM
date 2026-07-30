@@ -17,6 +17,11 @@ export const API_URL =
 export const SOCKET_URL =
   process.env.EXPO_PUBLIC_SOCKET_URL || API_URL.replace(/\/api\/?$/, '');
 
+// Yüklenen dosyalar (avatarlar) /api altında değil, sunucunun kökünden
+// servis ediliyor — API yanıtları "/uploads/avatars/x.jpg" gibi göreli yol
+// döndüğü için başına bu kök ekleniyor.
+export const FILES_URL = API_URL.replace(/\/api\/?$/, '');
+
 // Gelen fatura OCR'ı ayrı bir mikroserviste çalışıyor (invoice-ocr-v2, port
 // 5002) — ana backend'le aynı JWT_SECRET'i paylaştığı için aynı token geçerli.
 export const INVOICE_V2_API_URL =

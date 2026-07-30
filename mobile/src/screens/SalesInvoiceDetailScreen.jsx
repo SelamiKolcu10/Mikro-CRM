@@ -10,8 +10,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import invoiceService from '../services/invoiceService';
-import { invoiceStatusMeta } from '../config/invoices';
+import EInvoiceModal from '../components/EInvoiceModal';
+import { useAuth } from '../context/AuthContext';
+import { invoiceStatusMeta, eInvoiceStatusMeta, canWriteInvoices } from '../config/invoices';
 import { formatMoney, formatDate } from '../utils/format';
+import { downloadAndSharePdf } from '../utils/downloadPdf';
 import { colors, radius, space, font } from '../theme';
 
 function Row({ label, value }) {
@@ -24,12 +27,21 @@ function Row({ label, value }) {
 }
 
 /**
- * Satış faturası detayı — salt-okunur; tek yazma aksiyonu "Ödendi" işareti.
- * Fatura oluşturma/revize akışı web panelinde kalıyor.
+ * Satış faturası detayı — "Ödendi" işareti, PDF indirme ve resmî e-Fatura
+ * kesimi. Fatura oluşturma/revize akışı web panelinde kalıyor.
  */
 export default function SalesInvoiceDetailScreen({ route, navigation }) {
+  const { session } = useAuth();
+  const canWrite = canWriteInvoices(session?.role);
+
   const [invoice, setInvoice] = useState(route.params.invoice);
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  // Resmî e-Fatura durumu, faturanın ödeme durumundan ayrı tutuluyor.
+  const [ei, setEi] = useState(route.params.invoice?.eInvoice || { status: 'NONE' });
+  const [eiBusy, setEiBusy] = useState(false);
+  const [showEiForm, setShowEiForm] = useState(false);
 
   useEffect(() => {
     navigation.setOptions({ title: invoice.invoiceNumber || 'Fatura' });
@@ -37,6 +49,8 @@ export default function SalesInvoiceDetailScreen({ route, navigation }) {
 
   const st = invoiceStatusMeta(invoice.status);
   const currency = invoice.currency;
+  const eiSt = eInvoiceStatusMeta(ei.status);
+  const eiHasPdf = ei.hasPdf ?? !!ei.pdfBase64;
 
   const markPaid = () => {
     Alert.alert(
@@ -60,6 +74,49 @@ export default function SalesInvoiceDetailScreen({ route, navigation }) {
         },
       ]
     );
+  };
+
+  // ---- PDF ----
+  const downloadPdf = async (request, filename) => {
+    setPdfBusy(true);
+    try {
+      await downloadAndSharePdf(request, filename);
+    } catch (err) {
+      Alert.alert('PDF alınamadı', err.response?.data?.error || 'Dosya indirilemedi.');
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  // ---- Resmî e-Fatura akışı ----
+  // Gönderim anında onaylanmaz: issue SENDING bırakır, ISSUED'a geçiş refresh
+  // (poll) ile kesinleşir — web'deki akışın aynısı.
+  const refreshEi = async (silent = false) => {
+    setEiBusy(true);
+    try {
+      const res = await invoiceService.refreshEInvoice(invoice._id);
+      setEi(res.data.data.eInvoice);
+    } catch (err) {
+      if (!silent) {
+        Alert.alert('Güncellenemedi', err.response?.data?.error || 'Durum güncellenemedi.');
+      }
+    } finally {
+      setEiBusy(false);
+    }
+  };
+
+  const submitEInvoice = async (recipient) => {
+    setEiBusy(true);
+    try {
+      const res = await invoiceService.issueEInvoice(invoice._id, recipient);
+      setEi(res.data.data.eInvoice);
+      setShowEiForm(false);
+      refreshEi(true); // onayı bir kez otomatik yokla
+    } catch (err) {
+      Alert.alert('Kesim başarısız', err.response?.data?.error || 'Resmî kesim başarısız.');
+    } finally {
+      setEiBusy(false);
+    }
   };
 
   return (
@@ -127,6 +184,80 @@ export default function SalesInvoiceDetailScreen({ route, navigation }) {
         </>
       )}
 
+      {/* Resmî e-Fatura (GİB) — faturanın ödeme durumundan ayrı eksen, o yüzden
+          "Ödendi"/"İptal" faturalarda da görünür. */}
+      <Text style={styles.sectionLabel}>RESMÎ E-FATURA (GİB)</Text>
+      <View style={styles.card}>
+        <View style={styles.eiStatusRow}>
+          <View style={[styles.chip, { backgroundColor: eiSt.bg }]}>
+            <Text style={[styles.chipText, { color: eiSt.fg }]}>{eiSt.label}</Text>
+          </View>
+          {!!ei.officialNumber && (
+            <Text style={styles.eiOfficial} numberOfLines={1}>No: {ei.officialNumber}</Text>
+          )}
+        </View>
+
+        {ei.status === 'SENDING' && (
+          <Text style={styles.eiHint}>Onay için durumu yenileyin.</Text>
+        )}
+        {ei.status === 'FAILED' && !!ei.error && (
+          <Text style={styles.eiError}>{ei.error}</Text>
+        )}
+
+        {canWrite && (
+          <View style={styles.eiActions}>
+            {(ei.status === 'NONE' || ei.status === 'FAILED') && (
+              <TouchableOpacity
+                style={[styles.eiPrimaryBtn, eiBusy && styles.disabled]}
+                onPress={() => setShowEiForm(true)}
+                disabled={eiBusy}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="document-text-outline" size={18} color="#fff" />
+                <Text style={styles.eiPrimaryText}>
+                  {ei.status === 'FAILED' ? 'Tekrar Kes (E-Fatura)' : 'Resmî Fatura Kes (E-Fatura)'}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {ei.status === 'SENDING' && (
+              <TouchableOpacity
+                style={[styles.secondaryBtn, eiBusy && styles.disabled]}
+                onPress={() => refreshEi()}
+                disabled={eiBusy}
+                activeOpacity={0.85}
+              >
+                {eiBusy ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <>
+                    <Ionicons name="refresh-outline" size={18} color={colors.primary} />
+                    <Text style={styles.secondaryText}>Durumu Yenile</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+
+            {eiHasPdf && (
+              <TouchableOpacity
+                style={[styles.secondaryBtn, pdfBusy && styles.disabled]}
+                onPress={() =>
+                  downloadPdf(
+                    () => invoiceService.getEInvoicePdf(invoice._id),
+                    `efatura-${invoice.invoiceNumber}.pdf`
+                  )
+                }
+                disabled={pdfBusy}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="download-outline" size={18} color={colors.primary} />
+                <Text style={styles.secondaryText}>E-Fatura PDF</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      </View>
+
       {invoice.status === 'issued' && (
         <TouchableOpacity
           style={[styles.paidBtn, busy && styles.disabled]}
@@ -145,9 +276,34 @@ export default function SalesInvoiceDetailScreen({ route, navigation }) {
         </TouchableOpacity>
       )}
 
-      <Text style={styles.footNote}>
-        PDF indirme ve e-Fatura kesimi şimdilik web panelinde.
-      </Text>
+      <TouchableOpacity
+        style={[styles.secondaryBtn, styles.pdfBtn, pdfBusy && styles.disabled]}
+        onPress={() =>
+          downloadPdf(
+            () => invoiceService.getSalesPdf(invoice._id),
+            `${invoice.invoiceNumber}.pdf`
+          )
+        }
+        disabled={pdfBusy}
+        activeOpacity={0.85}
+      >
+        {pdfBusy ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <>
+            <Ionicons name="download-outline" size={18} color={colors.primary} />
+            <Text style={styles.secondaryText}>PDF İndir</Text>
+          </>
+        )}
+      </TouchableOpacity>
+
+      <EInvoiceModal
+        visible={showEiForm}
+        invoice={invoice}
+        busy={eiBusy}
+        onSubmit={submitEInvoice}
+        onClose={() => setShowEiForm(false)}
+      />
     </ScrollView>
   );
 }
@@ -202,5 +358,23 @@ const styles = StyleSheet.create({
   paidText: { color: '#fff', fontSize: font.md, fontWeight: '700' },
   disabled: { opacity: 0.6 },
 
-  footNote: { fontSize: font.xs, color: colors.textFaint, textAlign: 'center', marginTop: space.lg },
+  eiStatusRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  eiOfficial: { flex: 1, fontSize: font.xs, color: colors.textMuted },
+  eiHint: { fontSize: font.xs, color: colors.textMuted, marginTop: space.sm },
+  eiError: { fontSize: font.xs, color: colors.danger, marginTop: space.sm, lineHeight: 18 },
+
+  eiActions: { gap: space.sm, marginTop: space.md },
+  eiPrimaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm,
+    backgroundColor: colors.primary, borderRadius: radius.md, height: 46,
+  },
+  eiPrimaryText: { color: '#fff', fontSize: font.sm, fontWeight: '700' },
+
+  secondaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm,
+    backgroundColor: colors.surface, borderRadius: radius.md, height: 46,
+    borderWidth: 1.5, borderColor: colors.border,
+  },
+  secondaryText: { color: colors.primary, fontSize: font.sm, fontWeight: '700' },
+  pdfBtn: { marginTop: space.md },
 });

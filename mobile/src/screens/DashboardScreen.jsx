@@ -19,17 +19,22 @@ const FEEDBACKS = [
   { rank: 4, title: 'API istek limiti çok kısıtlayıcı', tags: ['İyileştirme', 'VIP', 'Kritik'], revenue: '$299/ay' },
 ];
 
+// Alan adı bilerek `count` — `value` DEĞİL. Aşağıda bu sayılar inline style
+// içinde kullanılıyor (flex, width) ve Reanimated'in babel plugin'i bir style
+// prop'unda gördüğü her `.value` erişimini tip kontrolü yapmadan shared value
+// sanıp render'a console.warn enjekte ediyor. Düz sayı olmaları fark etmiyor;
+// isim `value` olduğu sürece uyarı geri gelir.
 const PLAN_DISTRIBUTION = [
-  { label: 'Ücretsiz', value: 3, color: chartColors[0] },
-  { label: 'Başlangıç', value: 3, color: chartColors[1] },
-  { label: 'Premium', value: 3, color: chartColors[2] },
-  { label: 'VIP', value: 6, color: chartColors[3] },
+  { label: 'Ücretsiz', count: 3, color: chartColors[0] },
+  { label: 'Başlangıç', count: 3, color: chartColors[1] },
+  { label: 'Premium', count: 3, color: chartColors[2] },
+  { label: 'VIP', count: 6, color: chartColors[3] },
 ];
 
 const TYPE_DISTRIBUTION = [
-  { label: 'Hata', value: 6, color: colors.danger },
-  { label: 'Özellik', value: 7, color: colors.primary },
-  { label: 'İyileştirme', value: 4, color: colors.success },
+  { label: 'Hata', count: 6, color: colors.danger },
+  { label: 'Özellik', count: 7, color: colors.primary },
+  { label: 'İyileştirme', count: 4, color: colors.success },
 ];
 
 function Card({ children, style }) {
@@ -41,8 +46,8 @@ function SectionTitle({ children }) {
 }
 
 export default function DashboardScreen() {
-  const maxType = Math.max(...TYPE_DISTRIBUTION.map((t) => t.value));
-  const planTotal = PLAN_DISTRIBUTION.reduce((s, p) => s + p.value, 0);
+  const maxType = Math.max(...TYPE_DISTRIBUTION.map((t) => t.count));
+  const planTotal = PLAN_DISTRIBUTION.reduce((s, p) => s + p.count, 0);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -105,7 +110,7 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.stackBar}>
           {PLAN_DISTRIBUTION.map((p) => (
-            <View key={p.label} style={{ flex: p.value, backgroundColor: p.color }} />
+            <View key={p.label} style={{ flex: p.count, backgroundColor: p.color }} />
           ))}
         </View>
         <View style={styles.planLegend}>
@@ -113,7 +118,7 @@ export default function DashboardScreen() {
             <View key={p.label} style={styles.planLegendItem}>
               <View style={[styles.legendDot, { backgroundColor: p.color }]} />
               <Text style={styles.legendLabel}>{p.label}</Text>
-              <Text style={styles.legendValue}>{p.value}</Text>
+              <Text style={styles.legendValue}>{p.count}</Text>
             </View>
           ))}
         </View>
@@ -126,9 +131,9 @@ export default function DashboardScreen() {
           <View key={t.label} style={styles.barRow}>
             <Text style={styles.barLabel}>{t.label}</Text>
             <View style={styles.barTrack}>
-              <View style={[styles.barFill, { width: `${(t.value / maxType) * 100}%`, backgroundColor: t.color }]} />
+              <View style={[styles.barFill, { width: `${(t.count / maxType) * 100}%`, backgroundColor: t.color }]} />
             </View>
-            <Text style={styles.barValue}>{t.value}</Text>
+            <Text style={styles.barValue}>{t.count}</Text>
           </View>
         ))}
       </Card>

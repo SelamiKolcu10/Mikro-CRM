@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { NAV_GROUPS, ROLE_LABELS } from '../config/navigation';
@@ -26,6 +27,50 @@ const TAB_OF = {
   Chat: { tab: 'Formlar', screen: 'Chat' },
 };
 
+// TAB_OF'un tersi: "sekme/ekran" → menü öğesi adı.
+const ITEM_BY_SCREEN = Object.entries(TAB_OF).reduce((acc, [name, t]) => {
+  acc[`${t.tab}/${t.screen}`] = name;
+  return acc;
+}, {});
+
+const firstItemOfTab = (tab) =>
+  Object.entries(TAB_OF).find(([, t]) => t.tab === tab)?.[0] || null;
+
+/**
+ * Menüde hangi öğenin vurgulanacağı.
+ *
+ * Sekmeli ekranların hepsi tek bir 'Home' çekmece rotasının içinde yaşıyor,
+ * dolayısıyla çekmecenin kendi aktif rotası hep 'Home' — nerede olduğumuzu
+ * anlamak için iç içe duruma inmek gerekiyor: çekmece → sekmeler → o sekmenin
+ * stack'i.
+ *
+ * Detay ekranlarında (ör. Müşteriler → Müşteri Profili) o ekranın menüde
+ * karşılığı yoktur; bu yüzden stack'te geriye doğru yürüyüp menüde karşılığı
+ * olan ilk ekranı buluyoruz — böylece detaydayken de sekmenin kendi öğesi
+ * vurgulu kalıyor.
+ */
+function activeItemName(state) {
+  const route = state.routes[state.index];
+  if (route.name !== 'Home') return route.name;
+
+  // Nested `state` ilgili navigator ilk kez render edilene kadar undefined
+  // olur; o an henüz hiçbir yere gezinilmemiş demektir.
+  const tabState = route.state;
+  if (!tabState) return 'Dashboard';
+
+  const tabRoute = tabState.routes[tabState.index ?? 0];
+  const tab = tabRoute?.name;
+  const stackState = tabRoute?.state;
+  if (!stackState) return firstItemOfTab(tab);
+
+  const visited = stackState.routes.slice(0, (stackState.index ?? 0) + 1).reverse();
+  for (const r of visited) {
+    const hit = ITEM_BY_SCREEN[`${tab}/${r.name}`];
+    if (hit) return hit;
+  }
+  return firstItemOfTab(tab);
+}
+
 function goToItem(navigation, item) {
   const t = TAB_OF[item.name];
   if (!t) {
@@ -48,8 +93,9 @@ function goToItem(navigation, item) {
 // config so a new item/role only ever changes config/navigation.js.
 export default function DrawerContent(props) {
   const { session, logout } = useAuth();
+  const insets = useSafeAreaInsets();
   const role = session?.role;
-  const activeName = props.state.routeNames[props.state.index];
+  const activeName = activeItemName(props.state);
 
   const groups = NAV_GROUPS
     .map((g) => ({ ...g, items: g.items.filter((i) => !i.roles || i.roles.includes(role)) }))
@@ -65,7 +111,14 @@ export default function DrawerContent(props) {
 
   return (
     <View style={styles.flex}>
-      <DrawerContentScrollView {...props} contentContainerStyle={styles.scroll}>
+      {/* DrawerContentScrollView kendi contentContainerStyle'ında paddingTop
+          olarak üst güvenli alanı veriyor; kendi stilimiz onun ÜZERİNE
+          bindiği için paddingTop'u ezip logoyu durum çubuğunun altına
+          sokuyordu. Insets'i burada elle topluyoruz. */}
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + space.sm }]}
+      >
         {/* Brand */}
         <View style={styles.brand}>
           <View style={styles.logo}>
@@ -79,10 +132,7 @@ export default function DrawerContent(props) {
           <View key={group.section} style={styles.group}>
             {!!group.label && <Text style={styles.sectionLabel}>{group.label}</Text>}
             {group.items.map((item) => {
-              // Tab items route into the "Home" tabs so the bottom bar stays
-              // visible; the rest are their own drawer screens.
-              const active =
-                item.name === activeName || (activeName === 'Home' && item.name === 'Dashboard');
+              const active = item.name === activeName;
               return (
                 <TouchableOpacity
                   key={item.name}
@@ -105,8 +155,10 @@ export default function DrawerContent(props) {
         ))}
       </DrawerContentScrollView>
 
-      {/* Footer: profile + logout */}
-      <View style={styles.footer}>
+      {/* Footer: profile + logout. ScrollView'in DIŞINDA olduğu için alt
+          güvenli alanı ayrıca almalı — yoksa Android gezinme çubuğu profil
+          satırının üzerine biniyor. */}
+      <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>
         </View>

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_URL } from '../config/apiUrls';
 import { tokenStorage } from '../platform/tokenStorage';
 import { authRedirect } from '../platform/authRedirect';
+import { clearLookupCache } from '../utils/lookupCache';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -33,6 +34,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       tokenStorage.remove();
+      // Oturum düştü — önbellekteki listeler bir sonraki kullanıcıya
+      // sızmamalı (logout ile aynı gerekçe, bkz. utils/lookupCache.js).
+      clearLookupCache();
       authRedirect.toLogin();
     } else if (error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED') {
       authRedirect.toPasswordChange();

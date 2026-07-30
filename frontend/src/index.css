@@ -6534,3 +6534,222 @@ body.light-theme .heatmap-cell-0 {
   min-width: 180px;
   font-size: 0.85rem;
 }
+
+/* ============================================================
+   Bildirim çanı (Navbar) — components/layout/NotificationBell.jsx
+   Panel absolute konumlanır; Navbar .page-container/.page-enter DIŞINDA
+   olduğu için o kabın transform'una hapsolmaz (modallerde portal gerekmişti,
+   burada gerekmiyor).
+   ============================================================ */
+.notif-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notif-btn {
+  position: relative;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 17px;
+  text-align: center;
+  border: 2px solid var(--bg-secondary);
+}
+
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 60;
+  overflow: hidden;
+}
+
+.notif-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notif-panel-title {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.notif-read-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.notif-read-all:hover {
+  color: var(--accent-primary-hover);
+}
+
+.notif-list {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  cursor: pointer;
+}
+
+.notif-item:hover {
+  background: var(--bg-hover);
+}
+
+.notif-item--unread {
+  background: var(--accent-primary-glow);
+}
+
+.notif-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.notif-icon--task { background: var(--color-info-soft); color: var(--color-info); }
+.notif-icon--approval { background: var(--color-success-soft); color: var(--color-success); }
+.notif-icon--quote { background: var(--color-warning-soft); color: var(--color-warning); }
+
+.notif-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.notif-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.notif-message {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.notif-time {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.notif-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--accent-primary);
+}
+
+/* ============================================================
+   Mail Gönderimleri (pages/MailLogs.jsx)
+   ============================================================ */
+.maillog-mode {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.maillog-mode--live {
+  background: var(--color-success-soft);
+}
+
+.maillog-mode > svg {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  margin-top: 1px;
+}
+
+.maillog-mode > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.maillog-mode span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.maillog-mode code {
+  background: var(--bg-tertiary);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.maillog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.maillog-preview-frame {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+}

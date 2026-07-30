@@ -41,3 +41,19 @@ export const OCR_MAX_FILES = 20;
 // listeye erişebilir (accountant'ın sohbet yetkisi yok), staff/support/intern
 // istek atarsa 403 alır — bu yüzden profil ekranında bağlantı gizlenir.
 export const canReadInvoices = (role) => ['super_admin', 'accountant'].includes(role);
+
+// Fatura yazma yetkisi — backend config/permissions.js `invoices.write` aynası.
+// Resmî fatura kesme de bu yetkiye bağlı.
+export const canWriteInvoices = (role) => ['super_admin', 'accountant'].includes(role);
+
+// Resmî e-Fatura (GİB) durumları — satış faturasının `status` alanından AYRI
+// bir eksen: buradaki "Kesildi" GİB'e iletildi demek, tahsil edildi demek
+// değil. Backend Invoice modelinin eInvoice.status enum'ının aynası.
+export const EINVOICE_STATUS = {
+  NONE: { label: 'Kesilmedi', bg: '#EEF1F4', fg: colors.textMuted },
+  SENDING: { label: 'Gönderiliyor…', bg: colors.warnSoft, fg: '#B45309' },
+  ISSUED: { label: 'Kesildi (GİB)', bg: colors.successSoft, fg: colors.success },
+  FAILED: { label: 'Hata', bg: colors.dangerSoft, fg: colors.danger },
+};
+
+export const eInvoiceStatusMeta = (s) => EINVOICE_STATUS[s] || EINVOICE_STATUS.NONE;

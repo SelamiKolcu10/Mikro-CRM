@@ -13,6 +13,11 @@ const CHAT_ROLES = new Set(PERMISSIONS.chat.read);
 const STAFF_ROOM = 'staff-chat';
 const conversationRoom = (conversationId) => `conversation:${conversationId}`;
 
+// Kişiye özel oda — bildirimler buraya yayınlanır. STAFF_ROOM'dan bağımsız:
+// oraya yalnız sohbet yetkisi olanlar girer, buraya oturumu olan HER personel
+// girer (bkz. aşağıdaki bağlantı kapısı notu).
+const userRoom = (userId) => `user:${userId}`;
+
 let io = null;
 
 /**
@@ -21,9 +26,19 @@ let io = null;
  * invoice microservices do — the socket is itself a *read* channel (room
  * members receive `message:new` pushes), so a revoked/de-provisioned account
  * must be denied here too, not just on the REST write path. Verifying
- * tokenVersion + live status/role at connect time means a fired employee, a
- * chat-demoted user, or a revoked token can no longer keep receiving live
- * customer messages for the token's remaining lifetime.
+ * tokenVersion + live status at connect time means a fired employee or a
+ * revoked token can no longer keep receiving live pushes for the token's
+ * remaining lifetime.
+ *
+ * "Bağlanabilir" ile "sohbeti okuyabilir" AYRI iki karardır. Bağlantı, oturumu
+ * olan her onaylı personele açıktır — çünkü soket artık yalnız sohbet kanalı
+ * değil, kişiye özel bildirim kanalı da (bkz. userRoom). Sohbet yetkisi
+ * `socket.data.canChat` olarak taşınır ve SADECE STAFF_ROOM'a ve konuşma
+ * odalarına katılımı belirler.
+ *
+ * Bu ayrım olmadan `accountant` sokete hiç bağlanamıyordu; oysa
+ * tasks.getAssignableUsers role bakmadığı için bir muhasebeci pekâlâ görev
+ * atanan kişi olabiliyor — yani kendisine ait bildirimi asla alamıyordu.
  */
 async function authenticateSocket(socket, next) {
   try {
@@ -36,12 +51,12 @@ async function authenticateSocket(socket, next) {
       const live = await User.findById(decoded.id).select('role status tokenVersion').lean();
       if (!live || live.status !== 'approved') return next(new Error('Not authorized'));
       if ((decoded.tokenVersion || 0) !== (live.tokenVersion || 0)) return next(new Error('Not authorized — token revoked'));
-      // Role comes from the live document, never the token — a chat demotion
-      // is effective immediately.
-      if (!CHAT_ROLES.has(live.role)) return next(new Error('Not authorized — chat not permitted for this role'));
       socket.data.accountType = 'internal';
       socket.data.userId = decoded.id;
+      // Rol her zaman canlı dokümandan okunur, token'dan değil — sohbet
+      // yetkisinin alınması anında etkili olur.
       socket.data.role = live.role;
+      socket.data.canChat = CHAT_ROLES.has(live.role);
       return next();
     }
 
@@ -71,6 +86,15 @@ function initSocket(httpServer, { frontendUrl }) {
 
   io.on('connection', async (socket) => {
     if (socket.data.accountType === 'internal') {
+      // Bildirim kanalı — sohbet yetkisinden bağımsız, her personel kendi
+      // odasına girer.
+      socket.join(userRoom(socket.data.userId));
+
+      // Sohbetle ilgili odalara YALNIZ sohbet yetkisi olanlar girer. Buradaki
+      // erken çıkış olmazsa, bağlantıyı tüm rollere açmak STAFF_ROOM'a
+      // yayınlanan müşteri mesajlarını yetkisiz rollere sızdırırdı.
+      if (!socket.data.canChat) return;
+
       socket.join(STAFF_ROOM);
 
       // Staff explicitly join the one conversation they currently have open
@@ -119,4 +143,4 @@ function getIO() {
   return io;
 }
 
-module.exports = { initSocket, getIO, STAFF_ROOM, conversationRoom };
+module.exports = { initSocket, getIO, STAFF_ROOM, conversationRoom, userRoom };

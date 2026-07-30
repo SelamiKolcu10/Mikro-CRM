@@ -6,6 +6,10 @@ import api from './api';
 const authService = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   me: () => api.get('/auth/me'),
+
+  // Yeni şifre kuralı backend'de: en az 8 karakter, en az bir harf ve bir rakam.
+  changePassword: (currentPassword, newPassword) =>
+    api.patch('/auth/change-password', { currentPassword, newPassword }),
 };
 
 export default authService;

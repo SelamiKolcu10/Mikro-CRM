@@ -6,6 +6,7 @@ const TaskActivity = require('../models/TaskActivity');
 const { ROLES, DEPARTMENTS } = require('../config/permissions');
 const { taskScope, canApproveTask, canActOnTask } = require('../utils/taskScope');
 const { computeWorkload } = require('../utils/workloadCalculator');
+const notificationService = require('../services/notificationService');
 
 const COMMENT_USER_POPULATE = { path: 'comments.user', select: 'name email role' };
 
@@ -160,6 +161,10 @@ const createTask = async (req, res, next) => {
 
     await task.populate(TASK_POPULATE);
 
+    // Atanan kişiye haber ver. Bilerek await ediliyor ama hata fırlatmıyor
+    // (bkz. notificationService) — bildirim gitmezse görev yine oluşmuş olur.
+    await notificationService.taskAssigned({ task, assignedByUser: req.user });
+
     res.status(201).json({ success: true, data: task });
   } catch (error) {
     next(error);
@@ -200,6 +205,14 @@ const updateTaskStatus = async (req, res, next) => {
       toStatus: status,
     });
     await task.populate(TASK_POPULATE);
+
+    // Görevi atayan kişi ilerlemeden haberdar olsun.
+    await notificationService.taskStatusChanged({
+      task,
+      fromStatus: previousStatus,
+      toStatus: status,
+      changedByUser: req.user,
+    });
 
     res.json({ success: true, data: task });
   } catch (error) {
@@ -422,7 +435,11 @@ const addTaskComment = async (req, res, next) => {
     await task.save();
     await task.populate(COMMENT_USER_POPULATE);
 
-    res.status(201).json({ success: true, data: task.comments[task.comments.length - 1] });
+    const comment = task.comments[task.comments.length - 1];
+    // Görevin atananı ve atayanı haberdar olsun (yorumu yazan hariç).
+    await notificationService.taskCommented({ task, comment, authorUser: req.user });
+
+    res.status(201).json({ success: true, data: comment });
   } catch (error) {
     next(error);
   }

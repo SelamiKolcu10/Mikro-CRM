@@ -28,7 +28,8 @@
           "cameraPermission": "Fatura fotoğrafı çekebilmek için kamera erişimi gerekiyor.",
           "photosPermission": "Galerinizden fatura görseli seçebilmek için erişim gerekiyor."
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }

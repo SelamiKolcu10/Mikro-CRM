@@ -3,6 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { ROLE_LABELS } from '../../config/permissions';
 import { HiOutlineLogout, HiOutlineMenu } from 'react-icons/hi';
+import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
   const { user, customerUser, isInternal, logout } = useAuth();
@@ -59,6 +60,10 @@ const Navbar = () => {
             EN
           </button>
         </div>
+
+        {/* Bildirim çanı — yalnız personel. Bildirim uçları `protect` ile
+            korunuyor, portal oturumları erişemez. */}
+        {isInternal && <NotificationBell />}
 
         {/* User Info */}
         {(user || customerUser) && (

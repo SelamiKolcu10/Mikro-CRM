@@ -1,4 +1,5 @@
 import {
+  HiOutlineMail,
   HiOutlineViewGrid,
   HiOutlineUsers,
   HiOutlineChatAlt2,
@@ -108,6 +109,9 @@ export const INTERNAL_NAV = [
       { path: '/access-control', icon: HiOutlineKey, labelKey: 'nav.accessControl', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN] },
       { path: '/approvals', icon: HiOutlineClipboardCheck, labelKey: 'nav.approvals', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN], badgeKey: 'pendingApprovals' },
       { path: '/audit-log', icon: HiOutlineClipboardList, labelKey: 'nav.auditLog', roles: [ROLES.SUPER_ADMIN, ROLES.INTERN] },
+      // Yalnız super_admin: mail gövdelerinde kişiye özel metinler ve alıcı
+      // adresleri var (denetim kaydından farklı olarak intern'e açılmadı).
+      { path: '/mail-logs', icon: HiOutlineMail, labelKey: 'nav.mailLogs', roles: [ROLES.SUPER_ADMIN] },
     ],
   },
 ];

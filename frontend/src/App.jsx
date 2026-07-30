@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { SocketProvider } from './context/SocketContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { DEFAULT_ROUTE_BY_ROLE } from './config/permissions';
 import Layout from './components/layout/Layout';
 import PortalLayout from './components/layout/PortalLayout';
@@ -14,6 +15,7 @@ import Invoices from './pages/Invoices';
 import UserManagement from './pages/UserManagement';
 import SpendingDashboard from './pages/SpendingDashboard';
 import AuditLog from './pages/AuditLog';
+import MailLogs from './pages/MailLogs';
 import ForcePasswordChange from './pages/ForcePasswordChange';
 import ChatDashboard from './pages/ChatDashboard';
 import AccessControlMatrix from './pages/AccessControlMatrix';
@@ -88,9 +90,17 @@ const App = () => {
     <LanguageProvider>
       <AuthProvider>
         <SocketProvider>
+        {/* Bildirimler soketi dinliyor → SocketProvider'ın İÇİNDE olmalı. */}
+        <NotificationProvider>
         <BrowserRouter>
+          {/* Toaster kapsayıcısı sağ üst köşeyi kaplıyor ve navbar'ın üstüne
+              biniyor — bildirim çanı oraya eklendikten sonra gerçek fare
+              tıklamaları çana değil bu kapsayıcıya gidiyordu (çan tıklanamaz
+              hale gelmişti). Kapsayıcıyı navbar'ın ALTINA indiriyoruz;
+              toast'lar yine sağ üstte çıkar, sadece çubuğun altından. */}
           <Toaster
             position="top-right"
+            containerStyle={{ top: 76 }}
             toastOptions={{
               className: 'toast-custom',
               duration: 3000,
@@ -197,6 +207,9 @@ const App = () => {
               <Route path="/audit-log" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.INTERN]}><AuditLog /></RoleGuard>
               } />
+              <Route path="/mail-logs" element={
+                <RoleGuard allow={[ROLES.SUPER_ADMIN]}><MailLogs /></RoleGuard>
+              } />
               <Route path="/chat" element={
                 <RoleGuard allow={[ROLES.SUPER_ADMIN, ROLES.STAFF, ROLES.SUPPORT, ROLES.INTERN]}><ChatDashboard /></RoleGuard>
               } />
@@ -215,6 +228,7 @@ const App = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+        </NotificationProvider>
         </SocketProvider>
       </AuthProvider>
     </LanguageProvider>

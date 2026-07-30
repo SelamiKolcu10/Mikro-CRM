@@ -95,7 +95,8 @@
     "closeSidebar": "Menüyü Kapat",
     "deals": "Fırsatlar",
     "catalog": "Ürün Kataloğu",
-    "quotes": "Teklifler"
+    "quotes": "Teklifler",
+    "mailLogs": "Mail Gönderimleri"
   },
   "users": {
     "title": "Kullanıcı Yönetimi",
@@ -1062,5 +1063,14 @@
       "rejected": "Reddedildi",
       "expired": "Süresi Doldu"
     }
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "markAllRead": "Tümünü okundu yap",
+    "empty": "Henüz bildirim yok.",
+    "justNow": "şimdi",
+    "minutesAgo": "{n} dk önce",
+    "hoursAgo": "{n} sa önce",
+    "daysAgo": "{n} gün önce"
   }
 }

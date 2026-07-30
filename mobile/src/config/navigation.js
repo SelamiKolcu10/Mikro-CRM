@@ -83,6 +83,10 @@ export const NAV_GROUPS = [
       { name: 'AccessControl', label: 'Erişim Kontrolü', icon: 'key-outline', roles: [R.SUPER_ADMIN, R.INTERN] },
       { name: 'Approvals', label: 'Onay Kuyruğu', icon: 'checkmark-done-outline', roles: [R.SUPER_ADMIN, R.INTERN] },
       { name: 'AuditLog', label: 'Denetim Kaydı', icon: 'clipboard-outline', roles: [R.SUPER_ADMIN, R.INTERN] },
+      // Yalnız super_admin: mail gövdelerinde kişiye özel metinler ve alıcı
+      // adresleri var. Denetim kaydından farklı olarak intern'e açılmadı
+      // (backend routes/mailLogRoutes.js aynı kuralı zorluyor).
+      { name: 'MailLogs', label: 'Mail Gönderimleri', icon: 'mail-outline', roles: [R.SUPER_ADMIN] },
     ],
   },
 ];

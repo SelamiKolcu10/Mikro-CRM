@@ -38,7 +38,7 @@ const getPublicQuote = async (req, res, next) => {
         note: 'Müşteri teklifi public bağlantı üzerinden görüntüledi.',
       });
 
-      notifyQuoteEvent('quote:viewed', quoteData);
+      await notifyQuoteEvent('quote:viewed', quoteData);
     }
 
     res.json({
@@ -94,7 +94,7 @@ const acceptPublicQuote = async (req, res, next) => {
     });
 
     const quoteData = withComputedTotals(quote);
-    notifyQuoteEvent('quote:accepted', quoteData);
+    await notifyQuoteEvent('quote:accepted', quoteData);
 
     res.json({
       success: true,
@@ -143,7 +143,7 @@ const rejectPublicQuote = async (req, res, next) => {
     });
 
     const quoteData = withComputedTotals(quote);
-    notifyQuoteEvent('quote:rejected', quoteData);
+    await notifyQuoteEvent('quote:rejected', quoteData);
 
     res.json({
       success: true,

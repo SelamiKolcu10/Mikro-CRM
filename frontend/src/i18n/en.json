@@ -95,7 +95,8 @@
     "closeSidebar": "Close Menu",
     "deals": "Deals",
     "catalog": "Product Catalog",
-    "quotes": "Quotes"
+    "quotes": "Quotes",
+    "mailLogs": "Mail Log"
   },
   "users": {
     "title": "User Management",
@@ -1062,5 +1063,14 @@
       "rejected": "Rejected",
       "expired": "Expired"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet.",
+    "justNow": "just now",
+    "minutesAgo": "{n}m ago",
+    "hoursAgo": "{n}h ago",
+    "daysAgo": "{n}d ago"
   }
 }
