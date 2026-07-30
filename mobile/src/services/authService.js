@@ -10,6 +10,10 @@ const authService = {
   // Yeni şifre kuralı backend'de: en az 8 karakter, en az bir harf ve bir rakam.
   changePassword: (currentPassword, newPassword) =>
     api.patch('/auth/change-password', { currentPassword, newPassword }),
+
+  // Sunucu tarafı çıkış — hesabın tokenVersion'ını artırıp önceden üretilmiş
+  // bütün token'ları geçersiz kılar (bkz. backend authController.logout).
+  logout: () => api.post('/auth/logout'),
 };
 
 export default authService;

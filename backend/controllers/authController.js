@@ -227,4 +227,36 @@ const changePassword = async (req, res, next) => {
   }
 };
 
-module.exports = { login, getMe, changePassword };
+/**
+ * @route   POST /api/auth/logout
+ * @desc    Sunucu tarafı çıkış. JWT durumsuzdur — istemciden silmek token'ı
+ *          geçersiz KILMAZ, sadece o cihazda görünmez yapar. Kopyalanmış bir
+ *          token (ör. paylaşılan bilgisayarda localStorage'dan alınmış)
+ *          çıkıştan sonra da 7 gün boyunca çalışmaya devam ederdi.
+ *
+ *          tokenVersion'ı bir artırmak, o hesap için ÖNCEDEN üretilmiş bütün
+ *          token'ları anında geçersiz kılar (bkz. authMiddleware.protect,
+ *          portalAuth.protectPortal, socket handshake ve iki fatura servisi —
+ *          hepsi canlı değerle karşılaştırıyor).
+ *
+ *          Bilinen ve kabul edilen yan etki: token'lar cihaz bazında değil
+ *          hesap bazında iptal edilir, yani bir cihazda çıkış yapmak diğer
+ *          oturumları da düşürür. Cihaz bazlı çıkış için refresh-token akışı
+ *          gerekir (bkz. SECURITY.md).
+ *
+ *          `protect` değil `identify` arkasında: hem personel hem portal
+ *          hesabına hizmet etmesi ve zorunlu parola değiştirme kapısı açıkken
+ *          bile çıkışın çalışması gerekiyor.
+ */
+const logout = async (req, res, next) => {
+  try {
+    const account = req.accountType === 'internal' ? req.user : req.customerUser;
+    account.bumpTokenVersion();
+    await account.save();
+    res.json({ success: true, message: 'Oturum kapatıldı.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { login, getMe, changePassword, logout };

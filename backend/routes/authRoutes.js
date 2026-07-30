@@ -1,5 +1,5 @@
 const express = require('express');
-const { login, getMe, changePassword } = require('../controllers/authController');
+const { login, getMe, changePassword, logout } = require('../controllers/authController');
 const { identify } = require('../middleware/identify');
 const { authRateLimiter } = require('../middleware/security');
 const { handleValidationErrors } = require('../middleware/validate');
@@ -16,5 +16,9 @@ router.get('/me', identify, getMe);
 // Runs behind `identify`, not `protect` — must stay reachable even while
 // `protect` is blocking every other internal route (mustChangePassword).
 router.patch('/change-password', identify, changePasswordValidators, handleValidationErrors, changePassword);
+// Aynı gerekçeyle `identify` arkasında: hem personel hem portal hesabına
+// hizmet eder ve zorunlu parola değiştirme kapısı açıkken de çalışmalıdır —
+// parolasını değiştiremeyen birinin çıkış yapabilmesi gerekir.
+router.post('/logout', identify, logout);
 
 module.exports = router;

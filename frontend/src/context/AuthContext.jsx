@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import authService from '../services/authService';
 import { clearLookupCache } from '../utils/lookupCache';
 
 const AuthContext = createContext();
@@ -48,7 +49,20 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Önce sunucuya haber ver: tokenVersion artar ve bu hesap için üretilmiş
+    // BÜTÜN token'lar anında ölür. Sadece istemciden silmek yetmez — JWT
+    // durumsuzdur, kopyalanmış bir token çıkıştan sonra da geçerli kalırdı.
+    //
+    // Hata bilerek yutuluyor: çevrimdışıyken, sunucu erişilemezken ya da token
+    // zaten geçersizken bile YEREL çıkış çalışmak zorunda. Aksi halde
+    // kullanıcı kapatamadığı bir oturumda kilitli kalır.
+    try {
+      await authService.logout();
+    } catch {
+      /* yerel oturum yine de kapatılır */
+    }
+
     localStorage.removeItem('micro-crm-token');
     setToken(null);
     setSession(null);
