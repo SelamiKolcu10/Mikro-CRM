@@ -4,7 +4,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/authorize');
 const { handleValidationErrors } = require('../middleware/validate');
 const { redactForIntern } = require('../middleware/redactForIntern');
-const { grantOverrideValidators } = require('../validators/permissionOverrideValidators');
+const { overrideIdValidators, grantOverrideValidators } = require('../validators/permissionOverrideValidators');
 const { PERMISSIONS } = require('../config/permissions');
 const { getOverrides, grantOverride, revokeOverride } = require('../controllers/permissionOverrideController');
 
@@ -15,6 +15,6 @@ router.use(protect);
 // halde bir kullanıcı kendine yetki verebilirdi.
 router.get('/', authorize(...PERMISSIONS.permissionOverrides.read), redactForIntern, getOverrides);
 router.post('/', authorize(...PERMISSIONS.permissionOverrides.write), grantOverrideValidators, handleValidationErrors, grantOverride);
-router.delete('/:id', authorize(...PERMISSIONS.permissionOverrides.write), revokeOverride);
+router.delete('/:id', overrideIdValidators, handleValidationErrors, authorize(...PERMISSIONS.permissionOverrides.write), revokeOverride);
 
 module.exports = router;

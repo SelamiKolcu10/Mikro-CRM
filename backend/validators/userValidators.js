@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const { ALL_ROLES, ROLES, DEPARTMENTS } = require('../config/permissions');
 
 // createUser deliberately excludes super_admin — mirrors the same guard
@@ -52,7 +52,16 @@ const updateContactInfoValidators = [
     .withMessage('Geçerli bir GitHub adresi giriniz.'),
 ];
 
+
+// Doğrulanmamış bir :id Mongoose'a ham gider ve CastError'a düşer; kimlik
+// biçimini kapıda kesmek hem hata mesajını netleştirir hem de gereksiz DB
+// sorgusunu engeller.
+const userIdValidators = [
+  param('id').isMongoId().withMessage('Geçersiz kullanıcı kimliği.'),
+];
+
 module.exports = {
+  userIdValidators,
   createUserValidators,
   approveUserValidators,
   updateUserRoleValidators,

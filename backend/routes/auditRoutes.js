@@ -4,6 +4,8 @@ const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/authorize');
 const { redactForIntern } = require('../middleware/redactForIntern');
 const { getAuditLogs, getAuditLog, getAuditChainStatus, getAuditActors } = require('../controllers/auditController');
+const { auditIdValidators } = require('../validators/auditValidators');
+const { handleValidationErrors } = require('../middleware/validate');
 const { PERMISSIONS, ROLES } = require('../config/permissions');
 
 // Denetim kaydı — okuma: super_admin + intern (aktör e-postası maskeli).
@@ -15,6 +17,6 @@ router.get('/verify', authorize(...PERMISSIONS.auditLog.read), getAuditChainStat
 router.get('/actors', authorize(ROLES.SUPER_ADMIN), getAuditActors);
 
 router.get('/', authorize(...PERMISSIONS.auditLog.read), redactForIntern, getAuditLogs);
-router.get('/:id', authorize(...PERMISSIONS.auditLog.read), redactForIntern, getAuditLog);
+router.get('/:id', auditIdValidators, handleValidationErrors, authorize(...PERMISSIONS.auditLog.read), redactForIntern, getAuditLog);
 
 module.exports = router;

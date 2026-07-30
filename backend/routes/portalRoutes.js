@@ -6,6 +6,7 @@ const { getMyMessages, sendMyMessage, markMyRead, submitRating } = require('../c
 const { protectPortal } = require('../middleware/portalAuth');
 const { handleValidationErrors } = require('../middleware/validate');
 const {
+  feedbackIdValidators,
   updateProfileValidators,
   changePasswordValidators,
   createTicketValidators,
@@ -19,7 +20,7 @@ router.patch('/auth/password', protectPortal, changePasswordValidators, handleVa
 router.patch('/profile', protectPortal, updateProfileValidators, handleValidationErrors, updateProfile);
 
 router.get('/feedbacks', protectPortal, getMyFeedbacks);
-router.get('/feedbacks/:id', protectPortal, getMyFeedback);
+router.get('/feedbacks/:id', protectPortal, feedbackIdValidators, handleValidationErrors, getMyFeedback);
 router.post('/feedbacks', protectPortal, createTicketValidators, handleValidationErrors, createMyFeedback);
 
 // Müşterinin kendi başvuruları (Lead) — "Taleplerim"de destek talepleriyle

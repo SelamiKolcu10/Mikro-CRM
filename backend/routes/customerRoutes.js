@@ -17,6 +17,7 @@ const { handleValidationErrors } = require('../middleware/validate');
 const {
   createCustomerValidators,
   updateCustomerValidators,
+  customerIdValidators,
   getTimelineValidators,
   logActivityValidators,
 } = require('../validators/customerValidators');
@@ -47,8 +48,8 @@ router.route('/:id')
   .put(updateCustomerValidators, handleValidationErrors, authorizeOrQueue('customers', 'write', ...WRITE_ROLES), updateCustomer)
   .delete(authorizeOrQueue('customers', 'delete', ...WRITE_ROLES), deleteCustomer);
 
-router.post('/:id/portal-access', authorize(...WRITE_ROLES), grantPortalAccess);
-router.patch('/:id/portal-access/disable', authorize(...WRITE_ROLES), disablePortalAccess);
+router.post('/:id/portal-access', customerIdValidators, handleValidationErrors, authorize(...WRITE_ROLES), grantPortalAccess);
+router.patch('/:id/portal-access/disable', customerIdValidators, handleValidationErrors, authorize(...WRITE_ROLES), disablePortalAccess);
 
 // Birleşik müşteri timeline'ı — herkes okuyabilir (deal öğeleri controller
 // içinde deals.read'e göre ayrıca filtrelenir, bkz. customerController.js).

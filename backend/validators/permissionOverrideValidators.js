@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const { OVERRIDABLE_RESOURCES } = require('../config/permissions');
 
 const grantOverrideValidators = [
@@ -8,4 +8,9 @@ const grantOverrideValidators = [
   body('rationale').optional({ checkFalsy: true }).trim().isLength({ max: 500 }).escape(),
 ];
 
-module.exports = { grantOverrideValidators };
+
+const overrideIdValidators = [
+  param('id').isMongoId().withMessage('Geçersiz yetki kaydı kimliği.'),
+];
+
+module.exports = { overrideIdValidators, grantOverrideValidators };

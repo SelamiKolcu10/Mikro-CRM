@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 const updateProfileValidators = [
   body('name').optional().trim().isLength({ min: 2, max: 100 }).withMessage('İsim 2-100 karakter olmalıdır.').escape(),
@@ -22,4 +22,9 @@ const createTicketValidators = [
   body('type').optional().isIn(['bug', 'feature', 'improvement']).withMessage('Geçersiz tür.'),
 ];
 
-module.exports = { updateProfileValidators, changePasswordValidators, createTicketValidators };
+
+const feedbackIdValidators = [
+  param('id').isMongoId().withMessage('Geçersiz talep kimliği.'),
+];
+
+module.exports = { feedbackIdValidators, updateProfileValidators, changePasswordValidators, createTicketValidators };
