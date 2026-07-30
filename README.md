@@ -39,6 +39,9 @@ npm run install-all
 # 3. .env dosyasını ayarla
 cp .env.example backend/.env
 # backend/.env dosyasını düzenle: MONGO_URI ve JWT_SECRET değerlerini gir
+# invoice-ocr-service/.env ve invoice-ocr-v2/.env içinde aynı JWT_SECRET değerini kullan
+# güçlü secret üretmek için:
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
 
 # 4. Demo verisini yükle (opsiyonel ama önerilen)
 npm run seed
@@ -50,6 +53,31 @@ npm run dev
 Uygulama şu adreslerde çalışacak:
 - **Frontend:** http://localhost:5173
 - **Backend:** http://localhost:5000
+
+## 🔐 GitHub Security Hardening
+
+Repo üzerinde aşağıdaki ayarları açın:
+
+1. **Settings → Code security and analysis**
+   - Secret scanning: **Enabled**
+   - Push protection: **Enabled**
+   - Dependabot alerts: **Enabled**
+   - Dependabot security updates: **Enabled**
+2. **CodeQL**
+   - Bu repoda `.github/workflows/codeql.yml` workflow'u eklidir.
+   - İsterseniz GitHub arayüzünden `Default setup` da etkinleştirilebilir; ikisini aynı anda kullanmayın.
+3. **Dependabot config**
+   - `.github/dependabot.yml` ile root, backend, frontend, invoice servisleri ve mobile için haftalık güncelleme PR'ları açılır.
+
+### JWT_SECRET Rotasyonu
+
+- Yeni secret üretin:
+  `node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"`
+- Aynı değeri şu ortamlarda güncelleyin:
+  - GitHub Actions Secrets
+  - Backend/servis environment variable'ları
+  - Local `.env` dosyaları (backend + invoice servisleri)
+- Deploy/restart sonrası mevcut token'lar geçersiz olabileceği için kullanıcılar tekrar giriş yapabilir.
 
 ### Demo Giriş Bilgileri
 - **E-posta:** admin@microcrm.com
