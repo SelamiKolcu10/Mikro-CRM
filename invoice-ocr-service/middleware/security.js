@@ -12,6 +12,28 @@ const hpp = require('hpp');
 function applySecurity(app, { frontendUrl }) {
   const origin = frontendUrl || 'http://localhost:5173';
 
+  // Bkz. backend/middleware/security.js — aynı gerekçe. Varsayılan KAPALI:
+  // vekil yokken açmak istemcinin X-Forwarded-For uydurup rate limit'i
+  // atlatmasına izin verir. Değer = güvenilen vekil sayısı.
+  if (process.env.TRUST_PROXY) {
+    const hops = Number(process.env.TRUST_PROXY);
+    app.set('trust proxy', Number.isNaN(hops) ? process.env.TRUST_PROXY : hops);
+  }
+
+  // Bkz. backend/middleware/security.js — aynı gerekçe ve aynı davranış.
+  if (process.env.NODE_ENV === 'production') {
+    if (!/^https:\/\//i.test(origin)) {
+      console.error(`❌ NODE_ENV=production iken FRONTEND_URL https olmalı (şu an: ${origin}).`);
+      process.exit(1);
+    }
+    if (process.env.TRUST_PROXY) {
+      app.use((req, res, next) => {
+        if (req.secure) return next();
+        return res.redirect(308, `https://${req.headers.host}${req.originalUrl}`);
+      });
+    }
+  }
+
   app.use(
     helmet({
       contentSecurityPolicy: {

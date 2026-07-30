@@ -12,6 +12,52 @@ const hpp = require('hpp');
 function applySecurity(app, { frontendUrl }) {
   const origin = frontendUrl || 'http://localhost:5173';
 
+  // Ters vekil (nginx/Cloudflare/Render...) arkasında çalışırken Express'in
+  // gerçek istemci IP'sini X-Forwarded-For'dan okuması gerekir; yoksa
+  // express-rate-limit TÜM istekleri vekilin tek IP'si sanar ve bir kullanıcı
+  // herkesin kotasını yakar.
+  //
+  // Bilerek env ile açılıyor, varsayılan KAPALI: vekil yokken bunu açmak
+  // istemcinin kendi X-Forwarded-For başlığını uydurup rate limit'i tamamen
+  // atlatmasına izin verir. Değer = güvenilen vekil sayısı (tek vekil için 1).
+  if (process.env.TRUST_PROXY) {
+    const hops = Number(process.env.TRUST_PROXY);
+    app.set('trust proxy', Number.isNaN(hops) ? process.env.TRUST_PROXY : hops);
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    // FRONTEND_URL aynı zamanda CORS origin'i — http ise tarayıcıya "bu
+    // güvensiz kaynağa kimlik bilgisi gönderebilirsin" demiş oluyoruz ve
+    // JWT'yi ağda açık taşıyan bir kurulumu kutsuyoruz. JWT_SECRET'te olduğu
+    // gibi (bkz. server.js) yanlış yapılandırmayla açılmaktansa açılmamak
+    // doğrusu: sessizce güvensiz çalışan bir sunucu en kötü sonuç.
+    if (!/^https:\/\//i.test(origin)) {
+      console.error(
+        `❌ NODE_ENV=production iken FRONTEND_URL https olmalı (şu an: ${origin}).\n` +
+          '   Düzeltin ya da yerel çalıştırma için NODE_ENV değerini production dışına alın.'
+      );
+      process.exit(1);
+    }
+
+    if (!process.env.TRUST_PROXY) {
+      // Kırmızı çizgi değil ama neredeyse her zaman hatadır: vekil arkasında
+      // TRUST_PROXY olmadan rate limit tüm istekleri tek IP sanar.
+      console.warn(
+        '⚠️  NODE_ENV=production ama TRUST_PROXY tanımsız. Ters vekil arkasındaysanız\n' +
+          '   rate limiting gerçek istemci IP\'sini göremez (bkz. .env.example).'
+      );
+    } else {
+      // http→https yönlendirmesi SADECE TRUST_PROXY varken eklenir. `req.secure`
+      // vekil başlığını ancak trust proxy açıkken dikkate alır; kapalıyken
+      // vekil arkasında her istek "güvensiz" görünür ve sonsuz yönlendirme
+      // döngüsü oluşurdu.
+      app.use((req, res, next) => {
+        if (req.secure) return next();
+        return res.redirect(308, `https://${req.headers.host}${req.originalUrl}`);
+      });
+    }
+  }
+
   app.use(
     helmet({
       // This is a JSON-only API (no HTML/inline scripts served), so a strict
