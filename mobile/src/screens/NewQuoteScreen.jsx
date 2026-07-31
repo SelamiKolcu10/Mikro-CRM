@@ -16,12 +16,25 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import customerService from '../services/customerService';
 import quoteService from '../services/quoteService';
+import CatalogPickerModal from '../components/CatalogPickerModal';
+import { CATALOG_CURRENCIES, DEFAULT_TAX_RATE } from '../config/catalog';
 import { computeLine, computeTotals } from '../utils/quoteTotals';
 import { formatMoney } from '../utils/format';
 import { colors, radius, space, font } from '../theme';
 
-const CURRENCIES = ['TRY', 'USD', 'EUR'];
-const emptyItem = () => ({ name: '', quantity: '1', unitPrice: '', discountRate: '0', taxRate: '20' });
+const CURRENCIES = CATALOG_CURRENCIES;
+
+// Sayısal alanlar TextInput'ta string tutulur, kaydederken Number'a çevrilir.
+// `productId` doluysa satır bir katalog ürününe bağlıdır: backend adı/açıklamayı
+// üründen snapshot'lar, ama validator yine de name+unitPrice bekliyor.
+const emptyItem = () => ({
+  name: '',
+  quantity: '1',
+  unitPrice: '',
+  discountRate: '0',
+  taxRate: String(DEFAULT_TAX_RATE),
+  productId: null,
+});
 
 // Lightweight dropdown — a tappable field that opens a modal list. Avoids a
 // native picker dependency (keeps Expo Go happy).
@@ -88,6 +101,7 @@ export default function NewQuoteScreen({ navigation }) {
   const [customers, setCustomers] = useState([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const [customerId, setCustomerId] = useState('');
   const [currency, setCurrency] = useState('TRY');
@@ -116,6 +130,27 @@ export default function NewQuoteScreen({ navigation }) {
     setItems((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
   }, []);
 
+  // Katalogdan gelen satır — web'deki addFromCatalog ile aynı davranış: ürünün
+  // fiyat/KDV'si ön doldurulur ama düzenlenebilir kalır (teklife özel indirim
+  // ya da fiyat verilebilsin). Boş duran ilk satır varsa onu doldurur, yoksa
+  // yeni satır ekler; aksi halde form hep boş bir satırla açıldığı için
+  // katalogdan ekleyen kullanıcı arada boş kalem bırakıyordu.
+  const addFromCatalog = useCallback((product) => {
+    const line = {
+      name: product.name,
+      quantity: '1',
+      unitPrice: String(product.unitPrice ?? ''),
+      discountRate: '0',
+      taxRate: String(product.taxRate ?? DEFAULT_TAX_RATE),
+      productId: product._id,
+    };
+    setItems((prev) => {
+      const blankIdx = prev.findIndex((it) => !it.name.trim() && !it.productId);
+      if (blankIdx === -1) return [...prev, line];
+      return prev.map((it, i) => (i === blankIdx ? line : it));
+    });
+  }, []);
+
   const totals = computeTotals(items);
 
   const parseDate = (s) => {
@@ -139,6 +174,10 @@ export default function NewQuoteScreen({ navigation }) {
         unitPrice: Number(it.unitPrice) || 0,
         discountRate: Number(it.discountRate) || 0,
         taxRate: Number(it.taxRate) || 0,
+        // Yalnız katalog satırlarında gönderilir; backend ürünü bulup adı ve
+        // açıklamayı snapshot'lar. Serbest satırda alan hiç bulunmamalı —
+        // validator boş stringi geçersiz ObjectId sayıyor.
+        ...(it.productId ? { productId: it.productId } : {}),
       }));
     if (cleanItems.length === 0) {
       Alert.alert('Eksik bilgi', 'En az bir geçerli kalem ekleyin (ad ve miktar).');
@@ -209,10 +248,7 @@ export default function NewQuoteScreen({ navigation }) {
         <View style={styles.itemsHeader}>
           <Text style={styles.sectionTitle}>KALEMLER</Text>
           <View style={styles.itemsActions}>
-            <TouchableOpacity
-              style={styles.smallBtnGhost}
-              onPress={() => Alert.alert('Yakında', 'Katalogdan ekleme bir sonraki adımda.')}
-            >
+            <TouchableOpacity style={styles.smallBtnGhost} onPress={() => setPickerOpen(true)}>
               <Ionicons name="cube-outline" size={14} color={colors.primary} />
               <Text style={styles.smallBtnGhostText}>Katalogdan</Text>
             </TouchableOpacity>
@@ -227,6 +263,12 @@ export default function NewQuoteScreen({ navigation }) {
           const line = computeLine(it);
           return (
             <View key={idx} style={styles.itemCard}>
+              {!!it.productId && (
+                <View style={styles.catalogTag}>
+                  <Ionicons name="cube" size={11} color={colors.primary} />
+                  <Text style={styles.catalogTagText}>Katalog ürünü</Text>
+                </View>
+              )}
               <View style={styles.itemTop}>
                 <TextInput
                   style={styles.itemName}
@@ -294,6 +336,12 @@ export default function NewQuoteScreen({ navigation }) {
 
         <View style={{ height: space.xl }} />
       </ScrollView>
+
+      <CatalogPickerModal
+        visible={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={addFromCatalog}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -336,6 +384,8 @@ const styles = StyleSheet.create({
   smallBtnGhostText: { color: colors.primary, fontSize: font.xs, fontWeight: '700' },
 
   itemCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: space.md, marginBottom: space.md },
+  catalogTag: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, backgroundColor: colors.primarySoft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full, marginBottom: space.sm },
+  catalogTagText: { fontSize: 10, fontWeight: '700', color: colors.primary },
   itemTop: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.sm },
   itemName: { flex: 1, fontSize: font.md, fontWeight: '600', color: colors.text, borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 4 },
   itemNums: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },

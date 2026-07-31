@@ -1,41 +1,48 @@
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import feedbackService from '../services/feedbackService';
+import {
+  FEEDBACK_TYPES,
+  FEEDBACK_PRIORITIES,
+  FEEDBACK_STATUSES,
+  PLAN_LABEL,
+  typeMeta,
+  priorityMeta,
+  statusMeta,
+} from '../config/feedbacks';
+import { formatMoney } from '../utils/format';
 import { colors, radius, space, font, chartColors } from '../theme';
 
-// NOTE: Static placeholder data for now — laid out like the target design.
-// Wiring these to real backend endpoints (customers, revenue, feedbacks) is
-// the "devreye sokma" step we do next, one card at a time.
-const STATS = [
-  { key: 'customers', label: 'TOPLAM MÜŞTERİ', value: '15', icon: 'people-outline', tint: colors.primary, bg: colors.primarySoft },
-  { key: 'revenue', label: 'AYLIK GELİR', value: '$1.771', sub: '/ay', icon: 'trending-up-outline', tint: colors.success, bg: colors.successSoft },
-  { key: 'openBugs', label: 'AÇIK HATALAR', value: '5', sub: '4 çözüm bekliyor', icon: 'alert-circle-outline', tint: colors.danger, bg: colors.dangerSoft },
-  { key: 'atRisk', label: 'RİSK ALTINDAKİ GELİR', value: '$1.421', sub: 'Premium müşterilerden', icon: 'warning-outline', tint: colors.warm, bg: colors.warnSoft },
-];
+// Web'deki Dashboard.jsx ile aynı iki uçtan beslenir:
+//   GET /feedbacks/stats/summary  → kartlar + üç dağılım grafiği
+//   GET /feedbacks?sort=-revenueImpact&limit=5 → gelir etkisi listesi
+// Sayıların tamamı backend'den gelir; burada hiçbir şey hesaplanmaz, yalnız
+// biçimlendirilir. MRR/revenueImpact USD (Customer.mrr web'de de $ gösterir).
 
-const FEEDBACKS = [
-  { rank: 1, title: 'Kontrol paneli 15+ saniyede yükleniyor', tags: ['Hata', 'VIP', 'Kritik'], revenue: '$499/ay' },
-  { rank: 2, title: 'Giriş sayfası mobilde çöküyor', tags: ['Hata', 'VIP', 'Kritik'], revenue: '$499/ay' },
-  { rank: 3, title: 'Veri dışa aktarımı bozuk CSV dosyaları oluşturuyor', tags: ['Hata', 'Premium', 'Kritik'], revenue: '$350/ay', highlight: true },
-  { rank: 4, title: 'API istek limiti çok kısıtlayıcı', tags: ['İyileştirme', 'VIP', 'Kritik'], revenue: '$299/ay' },
-];
+// Donut yerine yığılmış çubuk: chartColors sırası web'in PLAN_COLORS'ıyla
+// aynı anlamı taşır (ücretsiz → nötr gri, VIP → vurgulu turuncu).
+const PLAN_ORDER = ['free', 'starter', 'premium', 'vip'];
 
-// Alan adı bilerek `count` — `value` DEĞİL. Aşağıda bu sayılar inline style
-// içinde kullanılıyor (flex, width) ve Reanimated'in babel plugin'i bir style
-// prop'unda gördüğü her `.value` erişimini tip kontrolü yapmadan shared value
-// sanıp render'a console.warn enjekte ediyor. Düz sayı olmaları fark etmiyor;
-// isim `value` olduğu sürece uyarı geri gelir.
-const PLAN_DISTRIBUTION = [
-  { label: 'Ücretsiz', count: 3, color: chartColors[0] },
-  { label: 'Başlangıç', count: 3, color: chartColors[1] },
-  { label: 'Premium', count: 3, color: chartColors[2] },
-  { label: 'VIP', count: 6, color: chartColors[3] },
-];
-
-const TYPE_DISTRIBUTION = [
-  { label: 'Hata', count: 6, color: colors.danger },
-  { label: 'Özellik', count: 7, color: colors.primary },
-  { label: 'İyileştirme', count: 4, color: colors.success },
-];
+// DİKKAT — alan adı bilerek `count`, `value` DEĞİL. Aşağıda bu sayılar inline
+// style içinde kullanılıyor (flex, width) ve Reanimated'in babel plugin'i bir
+// style prop'unda gördüğü her `.value` erişimini tip kontrolü yapmadan shared
+// value sanıp render'a console.warn enjekte ediyor. Düz sayı olmaları fark
+// etmiyor; isim `value` olduğu sürece sarı uyarı bandı geri gelir.
+const toBars = (group, keys, meta) =>
+  keys.map((key) => ({
+    key,
+    label: meta(key).label,
+    count: group?.[key] || 0,
+    color: meta(key).fg,
+  }));
 
 function Card({ children, style }) {
   return <View style={[styles.card, style]}>{children}</View>;
@@ -45,60 +52,186 @@ function SectionTitle({ children }) {
   return <Text style={styles.sectionTitle}>{children}</Text>;
 }
 
+function StatCard({ label, value, sub, unit, icon, tint, bg }) {
+  return (
+    <Card style={styles.statCard}>
+      <View style={[styles.statIcon, { backgroundColor: bg }]}>
+        <Ionicons name={icon} size={18} color={tint} />
+      </View>
+      <Text style={styles.statLabel} numberOfLines={1}>{label}</Text>
+      <View style={styles.statValueRow}>
+        <Text style={styles.statValue}>{value}</Text>
+        {!!unit && <Text style={styles.statValueUnit}>{unit}</Text>}
+      </View>
+      {!!sub && <Text style={styles.statSub} numberOfLines={1}>{sub}</Text>}
+    </Card>
+  );
+}
+
+// Ortak yatay çubuk listesi — tür/öncelik/durum dağılımlarının üçü de bunu
+// kullanır. En uzun çubuk %100; bölen en az 1 (hepsi sıfırken NaN olmasın).
+function BarCard({ items }) {
+  const max = Math.max(1, ...items.map((i) => i.count));
+  return (
+    <Card>
+      {items.map((it) => (
+        <View key={it.key} style={styles.barRow}>
+          <Text style={styles.barLabel} numberOfLines={1}>{it.label}</Text>
+          <View style={styles.barTrack}>
+            <View
+              style={[styles.barFill, { width: `${(it.count / max) * 100}%`, backgroundColor: it.color }]}
+            />
+          </View>
+          <Text style={styles.barValue}>{it.count}</Text>
+        </View>
+      ))}
+    </Card>
+  );
+}
+
 export default function DashboardScreen() {
-  const maxType = Math.max(...TYPE_DISTRIBUTION.map((t) => t.count));
-  const planTotal = PLAN_DISTRIBUTION.reduce((s, p) => s + p.count, 0);
+  const [stats, setStats] = useState(null);
+  const [topFeedbacks, setTopFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async () => {
+    try {
+      const [statsRes, feedbacksRes] = await Promise.all([
+        feedbackService.getStats(),
+        feedbackService.getAll({ sort: '-revenueImpact', limit: 5 }),
+      ]);
+      setStats(statsRes.data.data);
+      setTopFeedbacks(feedbacksRes.data.data);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Kontrol paneli yüklenemedi.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error && !stats) {
+    return (
+      <View style={styles.center}>
+        <Ionicons name="cloud-offline-outline" size={40} color={colors.textFaint} />
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
+  const planDistribution = PLAN_ORDER.map((plan, i) => ({
+    key: plan,
+    label: PLAN_LABEL[plan],
+    count: stats.customersByPlan?.[plan] || 0,
+    color: chartColors[i],
+  }));
+  const planTotal = planDistribution.reduce((s, p) => s + p.count, 0);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
       <Text style={styles.h1}>Kontrol Paneli</Text>
       <Text style={styles.h1sub}>Gelir odaklı geri bildirim özeti</Text>
 
       {/* Stat cards — 2×2 */}
       <View style={styles.statGrid}>
-        {STATS.map((s) => (
-          <Card key={s.key} style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: s.bg }]}>
-              <Ionicons name={s.icon} size={18} color={s.tint} />
-            </View>
-            <Text style={styles.statLabel} numberOfLines={1}>{s.label}</Text>
-            <View style={styles.statValueRow}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              {!!s.sub && s.key === 'revenue' && <Text style={styles.statValueUnit}>{s.sub}</Text>}
-            </View>
-            {!!s.sub && s.key !== 'revenue' && <Text style={styles.statSub} numberOfLines={1}>{s.sub}</Text>}
-          </Card>
-        ))}
+        <StatCard
+          label="TOPLAM MÜŞTERİ"
+          value={stats.totalCustomers}
+          icon="people-outline"
+          tint={colors.primary}
+          bg={colors.primarySoft}
+        />
+        <StatCard
+          label="AYLIK GELİR"
+          value={formatMoney(stats.totalMRR, 'USD')}
+          unit="/ay"
+          icon="trending-up-outline"
+          tint={colors.success}
+          bg={colors.successSoft}
+        />
+        <StatCard
+          label="AÇIK HATALAR"
+          value={stats.openBugs}
+          sub={`${stats.inProgressCount} çözüm bekliyor`}
+          icon="alert-circle-outline"
+          tint={colors.danger}
+          bg={colors.dangerSoft}
+        />
+        <StatCard
+          label="RİSK ALTINDAKİ GELİR"
+          value={formatMoney(stats.revenueAtRisk, 'USD')}
+          sub="Açık geri bildirimlerden"
+          icon="warning-outline"
+          tint={colors.warm}
+          bg={colors.warnSoft}
+        />
       </View>
 
       {/* Revenue-impacting feedback */}
       <SectionTitle>En Yüksek Gelir Etkili Geri Bildirimler</SectionTitle>
       <Card>
-        {FEEDBACKS.map((f, idx) => (
-          <View
-            key={f.rank}
-            style={[
-              styles.fbRow,
-              f.highlight && styles.fbRowHighlight,
-              idx < FEEDBACKS.length - 1 && styles.fbDivider,
-            ]}
-          >
-            <View style={[styles.fbRank, f.highlight && styles.fbRankHi]}>
-              <Text style={[styles.fbRankText, f.highlight && styles.fbRankTextHi]}>{f.rank}</Text>
-            </View>
-            <View style={styles.fbBody}>
-              <Text style={styles.fbTitle} numberOfLines={2}>{f.title}</Text>
-              <View style={styles.fbTags}>
-                {f.tags.map((t) => (
-                  <View key={t} style={styles.tag}>
-                    <Text style={styles.tagText}>{t}</Text>
-                  </View>
-                ))}
+        {topFeedbacks.map((fb, idx) => {
+          // Listede zaten gelir etkisine göre sıralı geldiği için ilk satır
+          // "en kritik olan" — vurguyu ona veriyoruz, keyfi bir satıra değil.
+          const highlight = idx === 0;
+          const tags = [
+            typeMeta(fb.type).label,
+            fb.customer?.plan ? PLAN_LABEL[fb.customer.plan] : null,
+            priorityMeta(fb.priority).label,
+          ].filter(Boolean);
+
+          return (
+            <View
+              key={fb._id}
+              style={[
+                styles.fbRow,
+                highlight && styles.fbRowHighlight,
+                idx < topFeedbacks.length - 1 && styles.fbDivider,
+              ]}
+            >
+              <View style={[styles.fbRank, highlight && styles.fbRankHi]}>
+                <Text style={[styles.fbRankText, highlight && styles.fbRankTextHi]}>{idx + 1}</Text>
               </View>
+              <View style={styles.fbBody}>
+                <Text style={styles.fbTitle} numberOfLines={2}>{fb.title}</Text>
+                <View style={styles.fbTags}>
+                  {tags.map((t) => (
+                    <View key={t} style={styles.tag}>
+                      <Text style={styles.tagText}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+              <Text style={styles.fbRevenue}>{formatMoney(fb.revenueImpact, 'USD')}/ay</Text>
             </View>
-            <Text style={styles.fbRevenue}>{f.revenue}</Text>
-          </View>
-        ))}
+          );
+        })}
+        {topFeedbacks.length === 0 && <Text style={styles.empty}>Henüz geri bildirim yok.</Text>}
       </Card>
 
       {/* Plan distribution — stacked bar (no native chart lib needed) */}
@@ -109,13 +242,17 @@ export default function DashboardScreen() {
           <Text style={styles.planTotalLabel}>Toplam Müşteri</Text>
         </View>
         <View style={styles.stackBar}>
-          {PLAN_DISTRIBUTION.map((p) => (
-            <View key={p.label} style={{ flex: p.count, backgroundColor: p.color }} />
-          ))}
+          {planTotal === 0 ? (
+            <View style={styles.stackEmpty} />
+          ) : (
+            planDistribution
+              .filter((p) => p.count > 0)
+              .map((p) => <View key={p.key} style={{ flex: p.count, backgroundColor: p.color }} />)
+          )}
         </View>
         <View style={styles.planLegend}>
-          {PLAN_DISTRIBUTION.map((p) => (
-            <View key={p.label} style={styles.planLegendItem}>
+          {planDistribution.map((p) => (
+            <View key={p.key} style={styles.planLegendItem}>
               <View style={[styles.legendDot, { backgroundColor: p.color }]} />
               <Text style={styles.legendLabel}>{p.label}</Text>
               <Text style={styles.legendValue}>{p.count}</Text>
@@ -124,19 +261,14 @@ export default function DashboardScreen() {
         </View>
       </Card>
 
-      {/* Type distribution — bars */}
       <SectionTitle>Tür Dağılımı</SectionTitle>
-      <Card>
-        {TYPE_DISTRIBUTION.map((t) => (
-          <View key={t.label} style={styles.barRow}>
-            <Text style={styles.barLabel}>{t.label}</Text>
-            <View style={styles.barTrack}>
-              <View style={[styles.barFill, { width: `${(t.count / maxType) * 100}%`, backgroundColor: t.color }]} />
-            </View>
-            <Text style={styles.barValue}>{t.count}</Text>
-          </View>
-        ))}
-      </Card>
+      <BarCard items={toBars(stats.byType, FEEDBACK_TYPES, typeMeta)} />
+
+      <SectionTitle>Öncelik Dağılımı</SectionTitle>
+      <BarCard items={toBars(stats.byPriority, FEEDBACK_PRIORITIES, priorityMeta)} />
+
+      <SectionTitle>Durum Dağılımı</SectionTitle>
+      <BarCard items={toBars(stats.byStatus, FEEDBACK_STATUSES, statusMeta)} />
 
       <View style={{ height: space.xl }} />
     </ScrollView>
@@ -146,6 +278,16 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+    padding: space.xl,
+    gap: space.md,
+  },
+  errorText: { fontSize: font.md, color: colors.textMuted, textAlign: 'center' },
+  empty: { fontSize: font.sm, color: colors.textMuted, paddingVertical: space.md, textAlign: 'center' },
   h1: { fontSize: font.xxl, fontWeight: '800', color: colors.text, letterSpacing: -0.3 },
   h1sub: { fontSize: font.md, color: colors.textMuted, marginTop: 2, marginBottom: space.lg },
 
@@ -212,6 +354,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: space.lg,
   },
+  stackEmpty: { flex: 1, backgroundColor: colors.bg },
   planLegend: { flexDirection: 'row', flexWrap: 'wrap' },
   planLegendItem: { flexDirection: 'row', alignItems: 'center', width: '50%', paddingVertical: space.xs },
   legendDot: { width: 10, height: 10, borderRadius: radius.full, marginRight: space.sm },
@@ -219,8 +362,8 @@ const styles = StyleSheet.create({
   legendValue: { fontSize: font.sm, fontWeight: '700', color: colors.text, marginRight: space.md },
 
   barRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: space.sm, gap: space.md },
-  barLabel: { width: 84, fontSize: font.sm, color: colors.text },
+  barLabel: { width: 104, fontSize: font.sm, color: colors.text },
   barTrack: { flex: 1, height: 8, borderRadius: radius.full, backgroundColor: colors.bg, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.full },
-  barValue: { width: 20, textAlign: 'right', fontSize: font.sm, fontWeight: '700', color: colors.text },
+  barValue: { width: 24, textAlign: 'right', fontSize: font.sm, fontWeight: '700', color: colors.text },
 });

@@ -13,10 +13,13 @@ import {
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import useKeyboardOpen from '../utils/useKeyboardOpen';
 import { colors, radius, space, font } from '../theme';
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  // Ortalama yalnız klavye kapalıyken — açıkken form zıplamasın.
+  const keyboardOpen = useKeyboardOpen();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +54,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={keyboardOpen ? styles.scroll : styles.scrollCentered}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -159,7 +162,20 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
+  // DİKKAT: iki ayrı, SABİT stil nesnesi — `[a, b && c]` gibi satır içi dizi
+  // KULLANMA. Dizi her render'da yeni kimlik alır, ScrollView içeriğini
+  // yeniden kurar ve odaktaki TextInput'un odağı düşer; onFocus→setFocused
+  // zaten render tetiklediği için bu focus↔blur döngüsüne dönüşüyor (imleç
+  // anında kayboluyordu). Ölçüldü: sabit referansla döngü yok.
   scroll: {
+    flexGrow: 1,
+    paddingHorizontal: space.xl,
+    paddingVertical: space.xxl,
+  },
+  // Klavye KAPALIYKEN kullanılır — dikey ortalama. Klavye açıkken yukarıdaki
+  // ortalamasız sürüme geçilir, yoksa kap kısaldıkça içerik yeniden ortalanıp
+  // form zıplar (bkz. utils/useKeyboardOpen.js).
+  scrollCentered: {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: space.xl,
@@ -213,14 +229,16 @@ const styles = StyleSheet.create({
     height: 52,
     marginBottom: space.lg,
   },
+  // DİKKAT: buraya gölge/elevation EKLEME. Odaklanınca TextInput'u saran
+  // View'a gölge eklemek Android'de native katmanı yeniden kurduruyor ve
+  // input'un odağı düşüyor; onFocus→setFocused zaten render tetiklediği için
+  // bu focus↔blur döngüsüne dönüşüp imleci anında kaybettiriyordu (ölçüldü:
+  // 750 ms içinde FOCUS→BLUR→FOCUS→BLUR, sonra klavye kapanıyor).
+  // RN 0.76+'da `shadow*` propları artık Android'de de işleniyor, yani
+  // "iOS'a özel, zararsız" değiller. Odak göstergesi kenarlık rengi.
   inputWrapFocused: {
     borderColor: colors.primary,
     backgroundColor: '#fff',
-    shadowColor: colors.primary,
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
   },
   leftIcon: { marginRight: space.sm },
   input: {

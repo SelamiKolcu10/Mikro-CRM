@@ -41,7 +41,11 @@ const getInvoices = async (req, res, next) => {
 
     const limit = Math.min(parseInt(rawLimit, 10) || 50, 100);
 
+    // `eInvoice.pdfBase64` fatura başına yüzlerce KB tutabilen resmî PDF'in
+    // base64'ü. Listede hiçbir işe yaramıyor (indirme ayrı uçtan yapılıyor:
+    // GET /:id/einvoice/pdf), o yüzden hem Mongo'dan hem yanıttan dışlanıyor.
     const invoices = await Invoice.find(filter)
+      .select('-eInvoice.pdfBase64')
       .populate(INVOICE_POPULATE)
       .sort({ createdAt: -1 })
       .limit(limit + 1);
@@ -50,10 +54,24 @@ const getInvoices = async (req, res, next) => {
     const page = hasMore ? invoices.slice(0, limit) : invoices;
     const nextCursor = hasMore ? page[page.length - 1].createdAt : null;
 
+    // Alan dışlandığı için "PDF var mı" bilgisi de kaybolurdu; istemciler
+    // eInvoice.hasPdf'e bakıyor (bkz. eInvoiceController.eInvoiceView) ve
+    // detay ekranı ilk durumu bu listeden alıyor, dolayısıyla bayrak şart.
+    // Ayrı ve _id-only bir sorgu: büyük alanı çekmeden kimde olduğunu söyler.
+    const pdfIds = await Invoice.find(
+      { _id: { $in: page.map((inv) => inv._id) }, 'eInvoice.pdfBase64': { $ne: null } },
+      { _id: 1 },
+    ).lean();
+    const hasPdfSet = new Set(pdfIds.map((d) => String(d._id)));
+
     res.json({
       success: true,
       data: {
-        items: page.map((inv) => withComputedTotals(inv)),
+        items: page.map((inv) => {
+          const obj = withComputedTotals(inv);
+          if (obj.eInvoice) obj.eInvoice.hasPdf = hasPdfSet.has(String(obj._id));
+          return obj;
+        }),
         hasMore,
         nextCursor,
       },
@@ -191,11 +209,22 @@ const generateFromQuote = async (req, res, next) => {
  */
 const getInvoice = async (req, res, next) => {
   try {
-    const invoice = await Invoice.findById(req.params.id).populate(INVOICE_POPULATE);
+    // Listedeki ile aynı gerekçe: base64 PDF yanıta girmez, indirme ayrı uçtan.
+    const invoice = await Invoice.findById(req.params.id)
+      .select('-eInvoice.pdfBase64')
+      .populate(INVOICE_POPULATE);
     if (!invoice) {
       return res.status(404).json({ success: false, error: 'Fatura bulunamadı.' });
     }
-    res.json({ success: true, data: withComputedTotals(invoice) });
+
+    const hasPdf = await Invoice.exists({
+      _id: invoice._id,
+      'eInvoice.pdfBase64': { $ne: null },
+    });
+
+    const data = withComputedTotals(invoice);
+    if (data.eInvoice) data.eInvoice.hasPdf = !!hasPdf;
+    res.json({ success: true, data });
   } catch (error) {
     next(error);
   }

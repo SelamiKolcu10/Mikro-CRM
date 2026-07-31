@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import useKeyboardOpen from '../utils/useKeyboardOpen';
 import { colors, radius, space, font } from '../theme';
 
 // Backend ile BİREBİR aynı kural (bkz. backend/validators/authValidators.js
@@ -38,6 +39,8 @@ const RULES = [
  */
 export default function ForcePasswordChangeScreen() {
   const { changePassword, logout, session } = useAuth();
+  // Ortalama yalnız klavye kapalıyken — açıkken form zıplamasın.
+  const keyboardOpen = useKeyboardOpen();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -109,7 +112,7 @@ export default function ForcePasswordChangeScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, !keyboardOpen && styles.scrollCentered]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -179,10 +182,12 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   scroll: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: space.xl,
     paddingVertical: space.xxl,
   },
+  // Dikey ortalama BİLEREK ayrı — bkz. LoginScreen'deki aynı not ve
+  // utils/useKeyboardOpen.js.
+  scrollCentered: { justifyContent: 'center' },
   logoBox: {
     width: 56,
     height: 56,
@@ -231,14 +236,15 @@ const styles = StyleSheet.create({
     height: 52,
     marginBottom: space.lg,
   },
+  // DİKKAT: buraya gölge/elevation EKLEME. Odaklanınca TextInput'u saran
+  // View'a gölge eklemek Android'de native katmanı yeniden kurduruyor ve
+  // input'un odağı düşüyor; onFocus→setFocused zaten render tetiklediği için
+  // bu focus↔blur döngüsüne dönüşüp imleci anında kaybettiriyordu.
+  // RN 0.76+'da `shadow*` propları artık Android'de de işleniyor, yani
+  // "iOS'a özel, zararsız" değiller. Odak göstergesi kenarlık rengi.
   inputWrapFocused: {
     borderColor: colors.primary,
     backgroundColor: '#fff',
-    shadowColor: colors.primary,
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
   },
   leftIcon: { marginRight: space.sm },
   input: {

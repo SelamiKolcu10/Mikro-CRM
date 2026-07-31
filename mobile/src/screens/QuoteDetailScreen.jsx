@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { Ionicons } from '@expo/vector-icons';
 import quoteService from '../services/quoteService';
 import { formatMoney, formatDate } from '../utils/format';
+import { downloadAndSharePdf } from '../utils/downloadPdf';
 import { colors, radius, space, font } from '../theme';
 
 const STATUS_LABEL = {
@@ -23,6 +24,7 @@ export default function QuoteDetailScreen({ route }) {
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -39,6 +41,22 @@ export default function QuoteDetailScreen({ route }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // PDF'i sunucu üretir (puppeteer HTML→PDF); cihazda önbelleğe yazılıp
+  // sistemin paylaş sayfasına devredilir — bkz. utils/downloadPdf.js.
+  const downloadPdf = async () => {
+    setPdfBusy(true);
+    try {
+      await downloadAndSharePdf(
+        () => quoteService.getPdf(quote._id),
+        `${quote.quoteNumber || 'teklif'}.pdf`,
+      );
+    } catch (err) {
+      Alert.alert('PDF alınamadı', err.response?.data?.error || 'Dosya indirilemedi.');
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   if (loading) {
     return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
@@ -115,12 +133,17 @@ export default function QuoteDetailScreen({ route }) {
       )}
 
       <TouchableOpacity
-        style={styles.pdfBtn}
+        style={[styles.pdfBtn, pdfBusy && styles.pdfBtnBusy]}
         activeOpacity={0.85}
-        onPress={() => Alert.alert('Yakında', 'PDF indirme bir sonraki adımda eklenecek.')}
+        onPress={downloadPdf}
+        disabled={pdfBusy}
       >
-        <Ionicons name="download-outline" size={18} color={colors.primary} />
-        <Text style={styles.pdfBtnText}>PDF İndir</Text>
+        {pdfBusy ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Ionicons name="download-outline" size={18} color={colors.primary} />
+        )}
+        <Text style={styles.pdfBtnText}>{pdfBusy ? 'Hazırlanıyor…' : 'PDF İndir'}</Text>
       </TouchableOpacity>
 
       <View style={{ height: space.xl }} />
@@ -165,6 +188,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.primary,
     borderRadius: radius.md, height: 48,
   },
+  pdfBtnBusy: { opacity: 0.6 },
   pdfBtnText: { color: colors.primary, fontSize: font.md, fontWeight: '700' },
 
   errorText: { color: colors.danger, textAlign: 'center', marginBottom: space.md },
