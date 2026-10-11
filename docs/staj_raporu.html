@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Micro-CRM — Staj Proje Sonuç Raporu</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #7c3aed;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --bg-subtle: #f8fafc;
+      --bg-card: #ffffff;
+      --success: #059669;
+      --warning: #d97706;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 11pt;
+      background: #fff;
+    }
+
+    /* ── Print Styles ── */
+    @media print {
+      body { font-size: 10pt; }
+      .cover-page { page-break-after: always; }
+      .section { page-break-inside: avoid; }
+      .no-print { display: none !important; }
+      @page { margin: 2cm 2.5cm; size: A4; }
+    }
+
+    /* ── Cover Page ── */
+    .cover-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8ecf8 50%, #f5f0ff 100%);
+      position: relative;
+    }
+
+    .cover-page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .cover-logo {
+      font-size: 3.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .cover-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.02em;
+    }
+
+    .cover-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin-bottom: 3rem;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .cover-meta strong {
+      color: var(--primary-dark);
+    }
+
+    .cover-divider {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 2px;
+      margin: 2rem 0;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      padding: 0.4rem 1.2rem;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Main Content ── */
+    .content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 2.5rem;
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 2.5rem;
+    }
+
+    .section-number {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      text-align: center;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-right: 0.6rem;
+      vertical-align: middle;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 1.2rem 0 0.6rem;
+    }
+
+    p {
+      margin-bottom: 0.8rem;
+      text-align: justify;
+    }
+
+    /* ── Tech Stack Table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+    }
+
+    thead th {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    thead th:first-child { border-radius: 6px 0 0 0; }
+    thead th:last-child { border-radius: 0 6px 0 0; }
+
+    tbody td {
+      padding: 0.55rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--bg-subtle);
+    }
+
+    tbody tr:last-child td:first-child { border-radius: 0 0 0 6px; }
+    tbody tr:last-child td:last-child { border-radius: 0 0 6px 0; }
+
+    /* ── Feature Cards ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin: 1rem 0;
+    }
+
+    @media print {
+      .feature-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .feature-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      transition: none;
+    }
+
+    .feature-card .icon {
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .feature-card .title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+      color: var(--text);
+    }
+
+    .feature-card .desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* ── Architecture Diagram ── */
+    .architecture {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ── Stat Cards ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.8rem;
+      margin: 1rem 0;
+    }
+
+    .stat-card {
+      text-align: center;
+      background: linear-gradient(135deg, #eff6ff, #f0f0ff);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 0.5rem;
+    }
+
+    .stat-card .number {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-top: 0.3rem;
+    }
+
+    /* ── Timeline ── */
+    .timeline {
+      position: relative;
+      padding-left: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--accent));
+      border-radius: 1px;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1rem;
+      padding-left: 1rem;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -1.5rem;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    .timeline-date {
+      font-size: 0.8rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .timeline-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+
+    .timeline-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Lists ── */
+    ul {
+      padding-left: 1.3rem;
+      margin: 0.5rem 0;
+    }
+
+    li {
+      margin-bottom: 0.3rem;
+    }
+
+    /* ── Code Block ── */
+    code {
+      background: #f1f5f9;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+      font-family: 'Courier New', monospace;
+      color: var(--primary-dark);
+    }
+
+    /* ── Highlight Box ── */
+    .highlight-box {
+      background: linear-gradient(135deg, #eff6ff, #f5f0ff);
+      border-left: 4px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+
+    .highlight-box strong {
+      color: var(--primary-dark);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    /* ── Print helper: avoid orphan sections ── */
+    @media print {
+      h2, h3 { page-break-after: avoid; }
+      .stat-row, .feature-grid, table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════ KAPAK ════════════════════════════════════════════ -->
+<div class="cover-page">
+  <div class="cover-logo">🎯</div>
+  <h1 class="cover-title">Micro-CRM</h1>
+  <p class="cover-subtitle">Revenue-Driven Feedback Prioritization — Gelir Odaklı Geri Bildirim Önceliklendirme Platformu</p>
+
+  <div class="cover-divider"></div>
+
+  <div class="cover-meta">
+    <div><strong>Proje Türü:</strong> Staj Projesi — Web + Mobil Uygulama</div>
+    <div><strong>Hazırlayan:</strong> Selami Kolçu</div>
+    <div><strong>Başlangıç Tarihi:</strong> Temmuz 2026</div>
+    <div><strong>Bitiş Tarihi:</strong> Eylül 2026</div>
+    <div><strong>Platform:</strong> Web (React 19) &amp; Android (React Native / Expo)</div>
+  </div>
+
+  <span class="cover-badge">Proje Sonuç / Tanıtım Raporu</span>
+</div>
+
+<!-- ════════════════════════════════════════════ İÇERİK ════════════════════════════════════════════ -->
+<div class="content">
+
+  <!-- ── 1. PROJE ÖZETİ ── -->
+  <div class="section">
+    <h2><span class="section-number">1</span> Projenin Özeti ve Amacı</h2>
+    <p>
+      <strong>Micro-CRM</strong>, SaaS ürün ekiplerinin farklı kanallardan (Twitter, Discord, E-posta, Uygulama İçi) gelen
+      müşteri geri bildirimlerini <strong>gelir etkisine (MRR — Monthly Recurring Revenue)</strong> göre otomatik olarak
+      önceliklendirmesini sağlayan kapsamlı bir CRM (Müşteri İlişkileri Yönetimi) platformudur.
+    </p>
+    <div class="highlight-box">
+      <strong>Temel Mantık:</strong> VIP müşterinin kritik hatası &gt; Free kullanıcının kozmetik isteği.
+      <br>Her geri bildirimin arkasındaki müşterinin ödeme planı ve aylık geliri görülerek, hangi sorunun önce çözülmesi
+      gerektiği veri odaklı şekilde belirlenir.
+    </div>
+    <p>
+      Proje, staj süresi boyunca <strong>hem web hem mobil (Android)</strong> platformlarda tamamen çalışır hale getirilmiştir.
+      Yalnızca bir CRM değil; lead yönetimi, teklif motoru, fatura OCR, görev/proje takibi, canlı chat,
+      müşteri portalı ve rol tabanlı erişim kontrolü gibi modülleri kapsayan <strong>uçtan uca bir iş yönetimi çözümüdür</strong>.
+    </p>
+  </div>
+
+  <!-- ── 2. RAKAMLARLA PROJE ── -->
+  <div class="section">
+    <h2><span class="section-number">2</span> Rakamlarla Proje</h2>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="number">23+</div>
+        <div class="label">Web Sayfası</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">37</div>
+        <div class="label">Mobil Ekran</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">25</div>
+        <div class="label">Veritabanı Modeli</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">3</div>
+        <div class="label">Mikroservis</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. TEKNOLOJİ STACK ── -->
+  <div class="section">
+    <h2><span class="section-number">3</span> Teknoloji Stack</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Katman</th>
+          <th>Teknoloji</th>
+          <th>Versiyon</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Web Frontend</td><td>React (Vite)</td><td>19</td></tr>
+        <tr><td>Mobil Uygulama</td><td>React Native (Expo)</td><td>SDK 57 / RN 0.86</td></tr>
+        <tr><td>State Yönetimi</td><td>Context API</td><td>—</td></tr>
+        <tr><td>Backend</td><td>Node.js + Express</td><td>v18+</td></tr>
+        <tr><td>Veritabanı</td><td>MongoDB Atlas (Mongoose)</td><td>—</td></tr>
+        <tr><td>Kimlik Doğrulama</td><td>JWT (JSON Web Token)</td><td>—</td></tr>
+        <tr><td>Gerçek Zamanlı</td><td>Socket.io</td><td>v4.8</td></tr>
+        <tr><td>PDF Üretimi</td><td>Puppeteer (Chrome Headless)</td><td>v25</td></tr>
+        <tr><td>OCR (Fatura)</td><td>Tesseract.js + Sharp</td><td>Yerli</td></tr>
+        <tr><td>Test</td><td>Jest</td><td>—</td></tr>
+        <tr><td>Çok Dilli</td><td>i18n (Türkçe / İngilizce)</td><td>—</td></tr>
+        <tr><td>Tema</td><td>Dark Mode</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 4. MİMARİ ── -->
+  <div class="section">
+    <h2><span class="section-number">4</span> Sistem Mimarisi</h2>
+    <div class="architecture">┌──────────────┐    ┌──────────────┐
+│  React Web   │    │ React Native │
+│  (Vite)      │    │ (Expo/Android│
+│  :5173       │    │  Emülatör)   │
+└──────┬───────┘    └──────┬───────┘
+       │    REST + Socket.io    │
+       └───────────┬───────────┘
+                   ▼
+          ┌────────────────┐
+          │  Express API   │
+          │  (Node.js)     │
+          │  :5000         │
+          └───────┬────────┘
+                  │
+     ┌────────────┼────────────┐
+     ▼            ▼            ▼
+┌─────────┐ ┌──────────┐ ┌──────────┐
+│ MongoDB │ │ Socket.io│ │Puppeteer │
+│ Atlas   │ │ Server   │ │ PDF Gen  │
+└─────────┘ └──────────┘ └──────────┘
+
+          ┌────────────────┐
+          │ OCR Servis v2  │
+          │ (Tesseract.js) │
+          │  :5002         │
+          └────────────────┘</div>
+  </div>
+
+  <!-- ── 5. MODÜLLER ── -->
+  <div class="section">
+    <h2><span class="section-number">5</span> Uygulama Modülleri</h2>
+
+    <h3>5.1 — Ana CRM Modülleri</h3>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <div class="title">Dashboard</div>
+        <div class="desc">Özet istatistikler, gelir dağılımı, son aktiviteler ve KPI kartları ile anlık görünüm.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">👥</div>
+        <div class="title">Müşteri Yönetimi</div>
+        <div class="desc">Müşteri CRUD, plan/MRR takibi, çoklu filtreleme (plan, kaynak, gelir aralığı), zaman çizelgesi.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💬</div>
+        <div class="title">Geri Bildirim Önceliklendirme</div>
+        <div class="desc">Otomatik öncelik hesaplama (MRR'a göre), tür/durum filtreleme, gelir etkisi sıralaması.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📋</div>
+        <div class="title">Lead &amp; Deal Pipeline</div>
+        <div class="desc">Potansiyel müşteri formları, atama sistemi, satış fırsatları pipeline'ı, olay geçmişi.</div>
+      </div>
+    </div>
+
+    <h3>5.2 — İş Süreçleri</h3>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">📄</div>
+        <div class="title">Teklif Motoru</div>
+        <div class="desc">Kalemsel indirim, KDV hesabı, atomik numara üretimi (TEK-2026-XXXX), Puppeteer ile vektör PDF, müşteri onay portalı (public token).</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🧾</div>
+        <div class="title">Fatura &amp; OCR</div>
+        <div class="desc">Satış faturaları + gelen fatura OCR (Tesseract.js). Toplu yükleme, KDV kırılımı, satır bazlı ayrıştırma.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">✅</div>
+        <div class="title">Görev &amp; Proje Yönetimi</div>
+        <div class="desc">Kanban benzeri görev takibi, departman/kişi ataması, GitHub-tarzı katkı ısı haritası (365 gün).</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📅</div>
+        <div class="title">Takvim</div>
+        <div class="desc">Görev ve etkinliklerin takvim görünümü, tarih bazlı filtreleme.</div>
+      </div>
+    </div>
+
+    <h3>5.3 — İletişim &amp; Raporlama</h3>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">💭</div>
+        <div class="title">Canlı Chat (Socket.io)</div>
+        <div class="desc">Gerçek zamanlı mesajlaşma, konuşma geçmişi, müşteri-personel iletişimi, bildirimler.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📈</div>
+        <div class="title">Harcama Raporları</div>
+        <div class="desc">Gelir-gider analizi, müşteri bazlı MRR dağılımı, trend grafikleri.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛒</div>
+        <div class="title">Ürün Kataloğu</div>
+        <div class="desc">SKU, birim fiyat, KDV oranı, stok yönetimi, arşivleme, satış geçmişi.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔔</div>
+        <div class="title">Bildirim Sistemi</div>
+        <div class="desc">Socket.io tabanlı anlık bildirimler, teklif onayı/ret bildirimi, görev ataması.</div>
+      </div>
+    </div>
+
+    <h3>5.4 — Yönetim &amp; Güvenlik</h3>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">🔐</div>
+        <div class="title">Rol Tabanlı Erişim (RBAC)</div>
+        <div class="desc">Super Admin, Staff, Accountant, Support, Intern rolleri. Sayfa ve API bazlı erişim kontrolü.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🌐</div>
+        <div class="title">Müşteri Self-Servis Portalı</div>
+        <div class="desc">Müşterilerin kendi hesaplarıyla giriş yapıp destek talebi oluşturması, chat ve profil yönetimi.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📝</div>
+        <div class="title">Denetim Logu (Audit Log)</div>
+        <div class="desc">Tüm CRUD işlemlerinin kayıt altına alınması, kim-ne-ne zaman takibi.</div>
+      </div>
+      <div class="feature-card">
+        <div class="icon">👤</div>
+        <div class="title">Kullanıcı Yönetimi</div>
+        <div class="desc">Personel oluşturma, ilk giriş şifre değiştirme zorunluluğu, erişim matrisi, onay mekanizması.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 6. MOBİL UYGULAMA ── -->
+  <div class="section">
+    <h2><span class="section-number">6</span> Mobil Uygulama (Android)</h2>
+    <p>
+      Web uygulamasının tüm modülleri, <strong>React Native + Expo SDK 57</strong> kullanılarak Android platformuna taşınmıştır.
+      Mobil uygulama toplam <strong>37 ekran</strong> içermektedir ve aynı backend API'sini kullanarak web ile tam veri senkronizasyonu sağlar.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Modül</th>
+          <th>Ekranlar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Giriş &amp; Kimlik</td><td>Login, Force Password Change, Profile</td></tr>
+        <tr><td>Ana Panel</td><td>Dashboard, Notifications</td></tr>
+        <tr><td>CRM</td><td>Customers, Customer Profile, Customer Invoices, Feedbacks</td></tr>
+        <tr><td>Satış</td><td>Leads, Lead Detail, Deals, Deal Detail, New Deal</td></tr>
+        <tr><td>Teklifler</td><td>Quotes, Quote Detail, New Quote, Catalog</td></tr>
+        <tr><td>Finans</td><td>Invoices (Satış + OCR), Invoice Detail, OCR Detail, Spending</td></tr>
+        <tr><td>Operasyon</td><td>Tasks, Task Detail, Task Activity, Projects, Project Detail, Calendar</td></tr>
+        <tr><td>İletişim</td><td>Chat, Conversation</td></tr>
+        <tr><td>Yönetim</td><td>Users, User Detail, Audit Log, Mail Logs, Access Control, Approvals</td></tr>
+      </tbody>
+    </table>
+
+    <div class="highlight-box">
+      <strong>Teknik Not:</strong> Mobil uygulama, emülatörden backend'e
+      <code>10.0.2.2:5000</code> adresi üzerinden bağlanır. Socket.io ile gerçek zamanlı bildirimler mobilde de aktiftir.
+    </div>
+  </div>
+
+  <!-- ── 7. VERİ MODELİ ── -->
+  <div class="section">
+    <h2><span class="section-number">7</span> Veritabanı Modelleri</h2>
+    <p>
+      MongoDB Atlas üzerinde toplam <strong>25 Mongoose şeması</strong> kullanılmaktadır.
+      Temel modeller ve ilişkileri:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Açıklama</th>
+          <th>İlişki</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>User</td><td>Personel hesapları (RBAC)</td><td>Task, AuditLog</td></tr>
+        <tr><td>CustomerUser</td><td>Müşteri portal hesapları</td><td>Customer</td></tr>
+        <tr><td>Customer</td><td>Müşteri bilgileri (plan, MRR)</td><td>Feedback, Invoice, Quote</td></tr>
+        <tr><td>Feedback</td><td>Geri bildirimler</td><td>Customer → revenueImpact</td></tr>
+        <tr><td>Lead / LeadEvent</td><td>Potansiyel müşteri + olay geçmişi</td><td>User (atama)</td></tr>
+        <tr><td>Deal / DealEvent</td><td>Satış fırsatı + pipeline</td><td>Customer, Lead</td></tr>
+        <tr><td>Quote / QuoteEvent</td><td>Teklif + revizyon/onay akışı</td><td>Customer, CatalogProduct</td></tr>
+        <tr><td>Invoice</td><td>Satış + OCR faturaları</td><td>Customer, Quote</td></tr>
+        <tr><td>CatalogProduct</td><td>Ürün kataloğu</td><td>Quote kalemleri</td></tr>
+        <tr><td>Task / TaskActivity</td><td>Görev + katkı geçmişi</td><td>User, Project</td></tr>
+        <tr><td>Project</td><td>Proje yönetimi</td><td>Task</td></tr>
+        <tr><td>Conversation / Message</td><td>Canlı chat</td><td>User, CustomerUser</td></tr>
+        <tr><td>Notification</td><td>Bildirimler</td><td>User</td></tr>
+        <tr><td>AuditLog</td><td>Denetim kaydı</td><td>User</td></tr>
+        <tr><td>PermissionOverride</td><td>Özel izin yönetimi</td><td>User</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 8. GELİŞTİRME SÜRECİ ── -->
+  <div class="section">
+    <h2><span class="section-number">8</span> Geliştirme Süreci</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">Temmuz 2026 (Başlangıç)</div>
+        <div class="timeline-title">v1.0 — Temel CRM</div>
+        <div class="timeline-desc">Müşteri yönetimi, geri bildirim önceliklendirme, JWT auth, dark mode, i18n.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Temmuz 2026 (1. Hafta)</div>
+        <div class="timeline-title">v1.1 — Fatura OCR Modülü</div>
+        <div class="timeline-desc">Akıllı fatura okuma (önce OpenAI, sonra yerli Tesseract.js), KDV ayrıştırma, toplu yükleme.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Temmuz 2026 (2. Hafta)</div>
+        <div class="timeline-title">v1.3 — Görev &amp; Katkı Takibi</div>
+        <div class="timeline-desc">Görev yönetimi, GitHub-tarzı contribution heatmap, departman/kişi filtresi.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Temmuz 2026 (3. Hafta)</div>
+        <div class="timeline-title">v1.5 — Teklif Motoru &amp; Katalog</div>
+        <div class="timeline-desc">Ürün kataloğu, kalemsel teklif, Puppeteer PDF, public onay portalı, Socket.io bildirimleri.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Temmuz – Eylül 2026</div>
+        <div class="timeline-title">Lead/Deal, Chat, RBAC, Proje, Takvim, Portal</div>
+        <div class="timeline-desc">Satış pipeline'ı, canlı mesajlaşma, rol tabanlı erişim, müşteri self-servis, proje yönetimi, takvim.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Eylül 2026</div>
+        <div class="timeline-title">Mobil Uygulama (Android)</div>
+        <div class="timeline-desc">Tüm modüllerin React Native + Expo ile Android'e taşınması. 37 ekran.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">21 Eylül 2026</div>
+        <div class="timeline-title">Proje Tamamlandı</div>
+        <div class="timeline-desc">Web + mobil platform teslime hazır hale getirildi.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 9. API ENDPOINTLERİ ── -->
+  <div class="section">
+    <h2><span class="section-number">9</span> API Yapısı (Özet)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Modül</th>
+          <th>Başlıca Endpoint'ler</th>
+          <th>Metotlar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Auth</td><td>/api/auth/login, /register, /me</td><td>POST, GET</td></tr>
+        <tr><td>Customers</td><td>/api/customers, /:id, /:id/timeline</td><td>CRUD</td></tr>
+        <tr><td>Feedbacks</td><td>/api/feedbacks, /stats/summary</td><td>CRUD + Stats</td></tr>
+        <tr><td>Leads</td><td>/api/leads, /:id/assign</td><td>CRUD + Assign</td></tr>
+        <tr><td>Deals</td><td>/api/deals, /:id/events</td><td>CRUD + Events</td></tr>
+        <tr><td>Quotes</td><td>/api/quotes, /:id/pdf, /public/:token</td><td>CRUD + PDF + Public</td></tr>
+        <tr><td>Invoices</td><td>/api/invoices, /upload, /bulk-upload</td><td>CRUD + OCR</td></tr>
+        <tr><td>Catalog</td><td>/api/catalog</td><td>CRUD</td></tr>
+        <tr><td>Tasks</td><td>/api/tasks, /activities, /heatmap</td><td>CRUD + Heatmap</td></tr>
+        <tr><td>Projects</td><td>/api/projects</td><td>CRUD</td></tr>
+        <tr><td>Chat</td><td>/api/conversations, /messages</td><td>CRUD + Socket</td></tr>
+        <tr><td>Users</td><td>/api/users, /approvals</td><td>CRUD + RBAC</td></tr>
+        <tr><td>Audit</td><td>/api/audit-logs</td><td>GET</td></tr>
+        <tr><td>Notifications</td><td>/api/notifications</td><td>GET + PATCH</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 10. SONUÇ ── -->
+  <div class="section">
+    <h2><span class="section-number">10</span> Sonuç ve Değerlendirme</h2>
+    <p>
+      Bu staj projesi kapsamında, sıfırdan tasarlanıp geliştirilen <strong>Micro-CRM</strong> platformu
+      hem <strong>web (React 19)</strong> hem de <strong>mobil (React Native / Expo)</strong> ortamlarında
+      tam işlevsel hale getirilmiştir.
+    </p>
+    <p>
+      Proje süresince aşağıdaki yetkinlikler kazanılmış ve uygulanmıştır:
+    </p>
+    <ul>
+      <li><strong>Full-Stack Geliştirme:</strong> React, React Native, Node.js, Express, MongoDB ile uçtan uca uygulama geliştirme.</li>
+      <li><strong>Gerçek Zamanlı İletişim:</strong> Socket.io ile canlı chat ve bildirim altyapısı.</li>
+      <li><strong>Mikroservis Mimarisi:</strong> Ana backend + bağımsız OCR servisi ayrı portlarda.</li>
+      <li><strong>Güvenlik:</strong> JWT kimlik doğrulama, RBAC, ilk giriş şifre zorunluluğu, rate limiting, input sanitization.</li>
+      <li><strong>PDF ve OCR:</strong> Puppeteer ile sunucu taraflı PDF üretimi, Tesseract.js ile yerel fatura okuma.</li>
+      <li><strong>Mobil Geliştirme:</strong> React Native + Expo ile Android platformuna uyarlama, 37 ekranlık tam kapsamlı mobil deneyim.</li>
+      <li><strong>Uluslararasılaştırma:</strong> Türkçe ve İngilizce dil desteği (i18n).</li>
+      <li><strong>Test:</strong> Jest ile unit test yazımı (KDV hesaplama, fatura ayrıştırma).</li>
+    </ul>
+    <div class="highlight-box">
+      <strong>Toplam Kapsam:</strong> 23+ web sayfası, 37 mobil ekran, 25 veritabanı modeli, 3 mikroservis, 44+ unit test.
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    Micro-CRM — Staj Proje Sonuç Raporu &bull; Selami Kolçu &bull; Eylül 2026
+    <br>
+    <span class="no-print" style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; display: inline-block;">
+      💡 Bu sayfayı PDF olarak kaydetmek için <strong>Ctrl + P → "PDF olarak kaydet"</strong> seçeneğini kullanın.
+    </span>
+  </div>
+
+</div>
+
+</body>
+</html>

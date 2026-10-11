@@ -172,6 +172,12 @@ Detaylar için [invoice-ocr-v2/README.md](invoice-ocr-v2/README.md).
 
 ## 🔄 Değişiklik Geçmişi (Changelog)
 
+- **2026-09-21** — 🎓 **Staj Projesi Tamamlandı — Web + Mobil CRM Platformu**
+  - **Web Uygulaması (React 19 + Vite):** Dashboard, Müşteri Yönetimi, Geri Bildirim Önceliklendirme, Lead/Deal Pipeline, Teklif Motoru (PDF üretimi + müşteri onay portalı), Fatura & OCR, Görev/Proje Yönetimi, Takvim, Canlı Chat (Socket.io), Ürün Kataloğu, Harcama Raporları, Kullanıcı & Rol Yönetimi (RBAC), Müşteri Self-Servis Portalı, Denetim Logu, Bildirimler — toplam **23+ sayfa** ile tam kapsamlı CRM.
+  - **Mobil Uygulama (React Native + Expo SDK 57):** Android platformunda 37 ekran — Dashboard, Müşteriler, Geri Bildirimler, Lead/Deal detay, Teklif oluşturma, Fatura (Satış + OCR), Görevler, Projeler, Takvim, Chat, Kullanıcı Yönetimi, Profil, Bildirimler ve daha fazlası.
+  - **Ortak Backend (Node.js + Express + MongoDB Atlas):** 25 Mongoose modeli, JWT kimlik doğrulama, rol tabanlı erişim kontrolü (RBAC), Socket.io gerçek zamanlı iletişim, Puppeteer PDF üretimi, Tesseract.js yerel OCR.
+  - **Teknik Öne Çıkanlar:** İki dilli (TR/EN), Dark Mode, GitHub-tarzı Contribution Heatmap, atomik teklif numarası üretimi, müşteri zaman çizelgesi, public token ile kimliksiz teklif onayı, toplu fatura OCR.
+
 - **2026-07-23** — 🎯 **Katalog, Form Atama ve Çoklu Filtre Geliştirmeleri**
   - **Müşteriler Çoklu Filtre (Customers Multi-Filter):** Müşteriler sayfasında, geri bildirimler sayfasına benzer şekilde Plan, Kaynak ve Aylık Gelir (MRR) aralıklarına (Ücretsiz, Düşük 1-199, Yüksek 200+) göre `<select>` bazlı eşzamanlı çoklu filtreleme eklendi.
   - **Katalog Birim Düzeltmesi:** Ürün düzenleme kısmındaki `catalog.unit.month` gibi doğrudan key yazan kısımlar i18n objesi içinde `unitLabel` olacak şekilde düzenlendi ve düzeltildi.

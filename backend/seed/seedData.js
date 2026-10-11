@@ -10,10 +10,12 @@
  * choice instead of an accident.
  */
 const mongoose = require('mongoose');
+const dns = require('dns');
 const dotenv = require('dotenv');
 const path = require('path');
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const User = require('../models/User');
 const Customer = require('../models/Customer');
