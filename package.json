@@ -16,7 +16,7 @@
     "verify:customers": "node scripts/verify-customer-timeline.js"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
+    "concurrently": "^9.2.5",
     "puppeteer": "^25.3.0"
   }
 }
